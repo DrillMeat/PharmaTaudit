@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .nav {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .nav a {
+            display: inline-block;
+            margin: 0 15px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .nav a:hover {
+            background-color: #0056b3;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section h2 {
+            color: #555;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .task-card, .pharmacy-card {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        .task-card h3, .pharmacy-card h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.pending { background-color: #ffc107; color: #000; }
+        .status.in_progress { background-color: #17a2b8; color: #fff; }
+        .status.completed { background-color: #28a745; color: #fff; }
+        .status.cancelled { background-color: #dc3545; color: #fff; }
+        .priority {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .priority.low { background-color: #6c757d; color: #fff; }
+        .priority.medium { background-color: #fd7e14; color: #fff; }
+        .priority.high { background-color: #e83e8c; color: #fff; }
+        .priority.urgent { background-color: #dc3545; color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 Task Management System</h1>
+        
+        <div class="nav">
+            <a href="{% url 'home' %}">Home</a>
+            <a href="{% url 'task_list' %}">All Tasks</a>
+            <a href="{% url 'pharmacy_list' %}">Pharmacies</a>
+            <a href="/admin/">Admin</a>
+        </div>
+
+        <div class="section">
+            <h2>📋 Recent Tasks</h2>
+            {% if tasks %}
+                {% for task in tasks %}
+                <div class="task-card">
+                    <h3><a href="{% url 'task_detail' task.id %}">{{ task.title }}</a></h3>
+                    <p><strong>Pharmacy:</strong> {{ task.pharmacy.name }}</p>
+                    <p><strong>Assigned to:</strong> {{ task.assigned_to.username }}</p>
+                    <span class="status {{ task.status }}">{{ task.get_status_display }}</span>
+                    <span class="priority {{ task.priority }}">{{ task.get_priority_display }}</span>
+                    <p><strong>Created:</strong> {{ task.created_at|date:"M d, Y H:i" }}</p>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p>No tasks available yet. <a href="/admin/">Create some tasks in the admin panel</a></p>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <h2>🏥 Pharmacies</h2>
+            {% if pharmacies %}
+                {% for pharmacy in pharmacies %}
+                <div class="pharmacy-card">
+                    <h3>{{ pharmacy.name }}</h3>
+                    <p><strong>Address:</strong> {{ pharmacy.address }}</p>
+                    <p><strong>Phone:</strong> {{ pharmacy.phone }}</p>
+                    <p><strong>Email:</strong> {{ pharmacy.email }}</p>
+                    <p><strong>License:</strong> {{ pharmacy.license_number }}</p>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p>No pharmacies registered yet. <a href="/admin/">Add pharmacies in the admin panel</a></p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

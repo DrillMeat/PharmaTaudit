@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Registration Step 1</title>
+  <style>
+    label { display: block; margin-top: 10px; }
+    .hidden { display: none; }
+    .error { color: red; }
+  </style>
+</head>
+<body>
+  <h2>Registration - Step 1</h2>
+  <form id="step1Form">
+    <label>
+      Select your role:
+      <select id="roleSelect" required>
+        <option value="" disabled selected>Select role</option>
+        <option value="employee">Employee</option>
+        <option value="rga">RGA</option>
+      </select>
+    </label>
+    <label>
+      Email:
+      <input type="email" id="emailInput" required />
+    </label>
+    <label>
+      Passport (password):
+      <input type="password" id="passportInput" required />
+    </label>
+    <div id="errorMsg" class="error"></div>
+    <button type="submit">Next</button>
+  </form>
+
+  <script>
+    const step1Form = document.getElementById('step1Form');
+    const errorMsg = document.getElementById('errorMsg');
+
+    // Define the correct passport (password) for access
+    const correctPassport = "YourSecretPassport"; // Replace with the real passport
+
+    step1Form.addEventListener('submit', function(event) {
+      event.preventDefault(); // Prevent form submission to server
+      
+      errorMsg.textContent = ''; // Clear previous errors
+
+      const role = document.getElementById('roleSelect').value;
+      const email = document.getElementById('emailInput').value.trim();
+      const passport = document.getElementById('passportInput').value.trim();
+
+      // Validate role selected
+      if (!role) {
+        errorMsg.textContent = 'Please select a role.';
+        return;
+      }
+
+      // Validate email format (HTML5 email type input handles basic check)
+      if (!email) {
+        errorMsg.textContent = 'Please enter your email.';
+        return;
+      }
+
+      // Validate passport matches the given password
+      if (passport !== correctPassport) {
+        errorMsg.textContent = 'Incorrect passport. Access denied.';
+        return;
+      }
+
+      // If all validations pass:
+      // Proceed to next step - placeholder for now
+      alert(`Role: ${role}\nEmail: ${email}\nPassport accepted. Proceeding to next step...`);
+
+      // Here you would trigger showing the next part of the form dynamically
+    });
+  </script>
+</body>
+</html>

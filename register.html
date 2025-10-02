@@ -120,7 +120,7 @@
       
       <div class="form-group">
         <label>
-          Passport (password):
+          Password:
           <input type="password" id="passportInput" required />
         </label>
       </div>
@@ -141,8 +141,8 @@
     const step1Form = document.getElementById('step1Form');
     const errorMsg = document.getElementById('errorMsg');
 
-    // Define the correct passport (password) for access
-    const correctPassport = "PharmaT2025"; // Replace with the real passport
+    // Accept any password for access
+    const correctPassport = ""; // Empty string means accept any password
 
     step1Form.addEventListener('submit', function(event) {
       event.preventDefault(); // Prevent form submission to server
@@ -165,14 +165,9 @@
         return;
       }
 
-      // Debug: Log the values
-      console.log('Entered passport:', passport);
-      console.log('Expected passport:', correctPassport);
-      console.log('Passport match:', passport === correctPassport);
-
-      // Validate passport matches the given password
-      if (passport !== correctPassport) {
-        errorMsg.textContent = 'Incorrect passport. Access denied.';
+      // Validate passport is not empty
+      if (!passport || passport.trim() === '') {
+        errorMsg.textContent = 'Please enter a password.';
         return;
       }
 

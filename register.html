@@ -207,11 +207,11 @@
           errorMsg.style.display = 'block';
         } else {
           console.log('User saved successfully:', data);
-          // Success - proceed to next step
+          // Success - proceed to audit
           alert(`Registration successful!\nRole: ${role}\nEmail: ${email}\nProceeding to audit...`);
           
-          // Here you would redirect to the audit page
-          // window.location.href = 'audit.html';
+          // Redirect to audit page
+          window.location.href = 'audit.html';
         }
       } catch (err) {
         console.error('Unexpected error:', err);

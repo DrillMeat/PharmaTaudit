@@ -4,40 +4,142 @@
   <meta charset="UTF-8" />
   <title>Registration Step 1</title>
   <style>
-    label { display: block; margin-top: 10px; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 450px;
+    }
+    
+    h2 {
+      color: #2d5a27;
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 28px;
+      font-weight: 600;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 15px;
+      color: #333;
+      font-weight: 500;
+    }
+    
+    select, input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      box-sizing: border-box;
+    }
+    
+    select:focus, input:focus {
+      outline: none;
+      border-color: #4caf50;
+      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+    }
+    
+    button {
+      background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+      color: white;
+      padding: 14px 30px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+      margin-top: 10px;
+    }
+    
+    button:hover {
+      background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    .error {
+      color: #f44336;
+      background: #ffebee;
+      padding: 10px 15px;
+      border-radius: 6px;
+      margin-top: 10px;
+      border-left: 4px solid #f44336;
+      font-size: 14px;
+    }
+    
     .hidden { display: none; }
-    .error { color: red; }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
   </style>
 </head>
 <body>
-  <h2>Registration - Step 1</h2>
-  <form id="step1Form">
-    <label>
-      Select your role:
-      <select id="roleSelect" required>
-        <option value="" disabled selected>Select role</option>
-        <option value="employee">Employee</option>
-        <option value="rga">RGA</option>
-      </select>
-    </label>
-    <label>
-      Email:
-      <input type="email" id="emailInput" required />
-    </label>
-    <label>
-      Passport (password):
-      <input type="password" id="passportInput" required />
-    </label>
-    <div id="errorMsg" class="error"></div>
-    <button type="submit">Next</button>
-  </form>
+  <div class="container">
+    <h2>Registration - Step 1</h2>
+    <form id="step1Form">
+      <div class="form-group">
+        <label>
+          Select your role:
+          <select id="roleSelect" required>
+            <option value="" disabled selected>Select role</option>
+            <option value="employee">Employee</option>
+            <option value="rga">RGA</option>
+          </select>
+        </label>
+      </div>
+      
+      <div class="form-group">
+        <label>
+          Email:
+          <input type="email" id="emailInput" required />
+        </label>
+      </div>
+      
+      <div class="form-group">
+        <label>
+          Passport (password):
+          <input type="password" id="passportInput" required />
+        </label>
+      </div>
+      
+      <div id="errorMsg" class="error"></div>
+      <button type="submit">Next</button>
+    </form>
+  </div>
 
   <script>
     const step1Form = document.getElementById('step1Form');
     const errorMsg = document.getElementById('errorMsg');
 
     // Define the correct passport (password) for access
+<<<<<<< HEAD
     const correctPassport = "PharmaT2025"; // Replace with the real passport
+=======
+ // Replace with the real passport
+>>>>>>> 0784232 (Improve register page styling with green theme and modern design)
 
     step1Form.addEventListener('submit', function(event) {
       event.preventDefault(); // Prevent form submission to server

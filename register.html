@@ -193,42 +193,26 @@
 
         console.log('Attempting to save user:', { role, email });
 
-        // Test Supabase connection first
-        const { data: testData, error: testError } = await supabase
-          .from('users')
-          .select('count')
-          .limit(1);
+        // Call serverless API to avoid CORS/network issues
+        const apiResponse = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role, email })
+        });
 
-        if (testError) {
-          console.error('Supabase connection test failed:', testError);
-          throw new Error(`Database connection failed: ${testError.message}`);
+        const result = await apiResponse.json();
+        if (!apiResponse.ok) {
+          console.error('API error:', result);
+          throw new Error(result?.error || 'Failed to save via API');
         }
 
-        console.log('Supabase connection successful');
-
-        // Insert user data into Supabase
-        const { data, error } = await supabase
-          .from('users')
-          .insert([
-            {
-              email: email,
-              role: role
-            }
-          ])
-          .select();
-
-        if (error) {
-          console.error('Supabase insert error:', error);
-          throw new Error(`Failed to save user: ${error.message}`);
-        }
-
-        console.log('User saved successfully:', data);
+        console.log('User saved successfully via API:', result);
         
-        // Success - proceed to audit
-        alert(`Registration successful!\nRole: ${role}\nEmail: ${email}\nProceeding to audit...`);
+        // Success - proceed to welcome page
+        alert(`Registration successful!\nRole: ${role}\nEmail: ${email}\nWelcome to PharmaT Audit!`);
         
-        // Redirect to audit page
-        window.location.href = 'audit.html';
+        // Redirect to welcome page
+        window.location.href = 'welcome.html';
 
       } catch (err) {
         console.error('Registration error:', err);

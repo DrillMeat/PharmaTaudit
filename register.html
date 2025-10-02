@@ -116,6 +116,16 @@
           Email:
           <input type="email" id="emailInput" required />
         </label>
+        <button type="button" id="sendCodeBtn" style="margin-top:10px; width:100%">Send verification code</button>
+      </div>
+
+      <div class="form-group hidden" id="codeGroup">
+        <label>
+          Enter code from email:
+          <input type="text" id="codeInput" placeholder="6-digit code" />
+        </label>
+        <button type="button" id="verifyCodeBtn" style="margin-top:10px; width:100%">Verify code</button>
+        <div id="verifyMsg" class="error" style="display:none"></div>
       </div>
       
       <div class="form-group">
@@ -146,6 +156,10 @@
     
     const step1Form = document.getElementById('step1Form');
     const errorMsg = document.getElementById('errorMsg');
+    const sendCodeBtn = document.getElementById('sendCodeBtn');
+    const verifyCodeBtn = document.getElementById('verifyCodeBtn');
+    const codeGroup = document.getElementById('codeGroup');
+    const verifyMsg = document.getElementById('verifyMsg');
 
     // Accept any password for access
     const correctPassport = ""; // Empty string means accept any password
@@ -177,9 +191,88 @@
         return;
       }
 
+      // Ensure email verified before proceeding
+      const isVerified = codeGroup.dataset.verified === 'true';
+      if (!isVerified) {
+        errorMsg.textContent = 'Please verify your email with the code.';
+        errorMsg.style.display = 'block';
+        return;
+      }
+
       // If all validations pass, save to database
       console.log('All validations passed, saving to database...');
       saveUserToDatabase(role, email);
+    });
+
+    // Send verification code
+    sendCodeBtn.addEventListener('click', async () => {
+      const email = document.getElementById('emailInput').value.trim();
+      errorMsg.style.display = 'none';
+      verifyMsg.style.display = 'none';
+      codeGroup.dataset.verified = 'false';
+      if (!email) {
+        errorMsg.textContent = 'Please enter your email first.';
+        errorMsg.style.display = 'block';
+        return;
+      }
+      sendCodeBtn.disabled = true;
+      sendCodeBtn.textContent = 'Sending...';
+      try {
+        const resp = await fetch('/api/send-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const result = await resp.json();
+        if (!resp.ok) throw new Error(result?.error || 'Failed to send code');
+        codeGroup.classList.remove('hidden');
+        verifyMsg.style.display = 'none';
+        if (result?.devCode) {
+          verifyMsg.style.display = 'block';
+          verifyMsg.textContent = `Dev code (for testing): ${result.devCode}`;
+        }
+      } catch (e) {
+        errorMsg.textContent = e.message;
+        errorMsg.style.display = 'block';
+      } finally {
+        sendCodeBtn.disabled = false;
+        sendCodeBtn.textContent = 'Send verification code';
+      }
+    });
+
+    // Verify code
+    verifyCodeBtn.addEventListener('click', async () => {
+      const email = document.getElementById('emailInput').value.trim();
+      const code = document.getElementById('codeInput').value.trim();
+      verifyMsg.style.display = 'none';
+      if (!email || !code) {
+        verifyMsg.textContent = 'Enter the code sent to your email.';
+        verifyMsg.style.display = 'block';
+        return;
+      }
+      verifyCodeBtn.disabled = true;
+      verifyCodeBtn.textContent = 'Verifying...';
+      try {
+        const resp = await fetch('/api/verify-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, code })
+        });
+        const result = await resp.json();
+        if (!resp.ok) throw new Error(result?.error || 'Verification failed');
+        codeGroup.dataset.verified = 'true';
+        verifyMsg.style.display = 'block';
+        verifyMsg.style.background = '#e8f5e8';
+        verifyMsg.style.color = '#2d5a27';
+        verifyMsg.textContent = 'Email verified successfully!';
+      } catch (e) {
+        verifyMsg.style.display = 'block';
+        verifyMsg.textContent = e.message;
+        codeGroup.dataset.verified = 'false';
+      } finally {
+        verifyCodeBtn.disabled = false;
+        verifyCodeBtn.textContent = 'Verify code';
+      }
     });
 
     // Function to save user data to Supabase

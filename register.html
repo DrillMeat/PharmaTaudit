@@ -165,6 +165,11 @@
         return;
       }
 
+      // Debug: Log the values
+      console.log('Entered passport:', passport);
+      console.log('Expected passport:', correctPassport);
+      console.log('Passport match:', passport === correctPassport);
+
       // Validate passport matches the given password
       if (passport !== correctPassport) {
         errorMsg.textContent = 'Incorrect passport. Access denied.';
@@ -172,6 +177,7 @@
       }
 
       // If all validations pass, save to database
+      console.log('All validations passed, saving to database...');
       saveUserToDatabase(role, email);
     });
 
@@ -195,8 +201,9 @@
           ]);
 
         if (error) {
-          console.error('Error saving user:', error);
-          errorMsg.textContent = 'Error saving registration. Please try again.';
+          console.error('Supabase error:', error);
+          console.error('Error details:', error.message);
+          errorMsg.textContent = `Error saving registration: ${error.message}`;
           errorMsg.style.display = 'block';
         } else {
           console.log('User saved successfully:', data);

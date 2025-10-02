@@ -136,7 +136,13 @@
     const SUPABASE_URL = 'https://xsrppkeysfjkxkbpfbog.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzcnBwa2V5c2Zqa3hrYnBmYm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzNDI2NjcsImV4cCI6MjA3NDkxODY2N30.sLZtdQ80_Q-OlX7wD4bDoaLEVOBBMF7Qfga_Ju299t8';
     
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: false
+      }
+    });
     
     const step1Form = document.getElementById('step1Form');
     const errorMsg = document.getElementById('errorMsg');
@@ -185,6 +191,21 @@
         submitBtn.textContent = 'Saving...';
         submitBtn.disabled = true;
 
+        console.log('Attempting to save user:', { role, email });
+
+        // Test Supabase connection first
+        const { data: testData, error: testError } = await supabase
+          .from('users')
+          .select('count')
+          .limit(1);
+
+        if (testError) {
+          console.error('Supabase connection test failed:', testError);
+          throw new Error(`Database connection failed: ${testError.message}`);
+        }
+
+        console.log('Supabase connection successful');
+
         // Insert user data into Supabase
         const { data, error } = await supabase
           .from('users')
@@ -193,28 +214,30 @@
               email: email,
               role: role
             }
-          ]);
+          ])
+          .select();
 
         if (error) {
-          console.error('Supabase error:', error);
-          console.error('Error details:', error.message);
-          errorMsg.textContent = `Error saving registration: ${error.message}`;
-          errorMsg.style.display = 'block';
-        } else {
-          console.log('User saved successfully:', data);
-          // Success - proceed to audit
-          alert(`Registration successful!\nRole: ${role}\nEmail: ${email}\nProceeding to audit...`);
-          
-          // Redirect to audit page
-          window.location.href = 'audit.html';
+          console.error('Supabase insert error:', error);
+          throw new Error(`Failed to save user: ${error.message}`);
         }
+
+        console.log('User saved successfully:', data);
+        
+        // Success - proceed to audit
+        alert(`Registration successful!\nRole: ${role}\nEmail: ${email}\nProceeding to audit...`);
+        
+        // Redirect to audit page
+        window.location.href = 'audit.html';
+
       } catch (err) {
-        console.error('Unexpected error:', err);
-        errorMsg.textContent = 'An unexpected error occurred. Please try again.';
+        console.error('Registration error:', err);
+        errorMsg.textContent = `Registration failed: ${err.message}`;
         errorMsg.style.display = 'block';
       } finally {
         // Reset button state
-        submitBtn.textContent = originalText;
+        const submitBtn = document.querySelector('button[type="submit"]');
+        submitBtn.textContent = 'Next';
         submitBtn.disabled = false;
       }
     }

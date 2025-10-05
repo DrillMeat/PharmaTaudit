@@ -206,6 +206,7 @@
 
     // Send verification code
     sendCodeBtn.addEventListener('click', async () => {
+      console.log('Send code button clicked!');
       const email = document.getElementById('emailInput').value.trim();
       errorMsg.style.display = 'none';
       verifyMsg.style.display = 'none';
@@ -217,6 +218,7 @@
         return;
       }
       
+      console.log('Sending request for email:', email);
       sendCodeBtn.disabled = true;
       sendCodeBtn.textContent = 'Sending...';
       
@@ -256,16 +258,11 @@
               result.setupInstructions.map(instruction => `<small>• ${instruction}</small>`).join('<br>');
           }
         } else if (result?.ok === true) {
-          // API returned ok:true - generate a dev code for testing
-          const devCode = Math.floor(100000 + Math.random() * 900000).toString();
-          verifyMsg.style.background = '#fff3cd';
-          verifyMsg.style.color = '#856404';
-          verifyMsg.style.borderLeft = '4px solid #ffc107';
-          verifyMsg.innerHTML = `
-            <strong>Development Mode:</strong><br>
-            API working but email not configured. Your verification code is: <strong>${devCode}</strong><br>
-            <small>Email service needs configuration</small>
-          `;
+          // Email sent successfully
+          verifyMsg.style.background = '#d4edda';
+          verifyMsg.style.color = '#155724';
+          verifyMsg.style.borderLeft = '4px solid #28a745';
+          verifyMsg.textContent = 'Verification code sent to your email!';
         } else if (result?.emailError) {
           // Email sending failed but we have a fallback code
           verifyMsg.style.background = '#fff3cd';

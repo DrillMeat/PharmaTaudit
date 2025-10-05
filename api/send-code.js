@@ -79,7 +79,8 @@ export default async function handler(req, res) {
           res.status(200).json({ 
             ok: true, 
             id: emailJson?.id,
-            message: 'Verification code sent to your email'
+            message: 'Verification code sent to your email',
+            emailSent: true
           });
           return;
         } else {

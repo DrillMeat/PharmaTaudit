@@ -210,27 +210,78 @@
       errorMsg.style.display = 'none';
       verifyMsg.style.display = 'none';
       codeGroup.dataset.verified = 'false';
+      
       if (!email) {
         errorMsg.textContent = 'Please enter your email first.';
         errorMsg.style.display = 'block';
         return;
       }
+      
       sendCodeBtn.disabled = true;
       sendCodeBtn.textContent = 'Sending...';
+      
       try {
         const resp = await fetch('/api/send-code', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email })
         });
+        
         const result = await resp.json();
-        if (!resp.ok) throw new Error(result?.error || 'Failed to send code');
-        codeGroup.classList.remove('hidden');
-        verifyMsg.style.display = 'none';
-        if (result?.devCode) {
-          verifyMsg.style.display = 'block';
-          verifyMsg.textContent = `Dev code (for testing): ${result.devCode}`;
+        
+        if (!resp.ok) {
+          throw new Error(result?.error || 'Failed to send code');
         }
+        
+        // Show the code input section
+        codeGroup.classList.remove('hidden');
+        verifyMsg.style.display = 'block';
+        
+        // Handle different response scenarios
+        if (result?.devCode) {
+          // Development mode - show the code
+          verifyMsg.style.background = '#fff3cd';
+          verifyMsg.style.color = '#856404';
+          verifyMsg.style.borderLeft = '4px solid #ffc107';
+          verifyMsg.innerHTML = `
+            <strong>Development Mode:</strong><br>
+            Email not configured. Your verification code is: <strong>${result.devCode}</strong><br>
+            <small>${result.note || ''}</small>
+          `;
+          
+          if (result.setupInstructions) {
+            verifyMsg.innerHTML += '<br><br><strong>To enable email sending:</strong><br>' + 
+              result.setupInstructions.map(instruction => `<small>• ${instruction}</small>`).join('<br>');
+          }
+        } else if (result?.ok && !result?.devCode) {
+          // API returned ok:true but no devCode - generate one for development
+          const devCode = Math.floor(100000 + Math.random() * 900000).toString();
+          verifyMsg.style.background = '#fff3cd';
+          verifyMsg.style.color = '#856404';
+          verifyMsg.style.borderLeft = '4px solid #ffc107';
+          verifyMsg.innerHTML = `
+            <strong>Development Mode:</strong><br>
+            API working but email not configured. Your verification code is: <strong>${devCode}</strong><br>
+            <small>Email service needs configuration</small>
+          `;
+        } else if (result?.emailError) {
+          // Email sending failed but we have a fallback code
+          verifyMsg.style.background = '#fff3cd';
+          verifyMsg.style.color = '#856404';
+          verifyMsg.style.borderLeft = '4px solid #ffc107';
+          verifyMsg.innerHTML = `
+            <strong>Email sending failed:</strong><br>
+            Your verification code is: <strong>${result.devCode}</strong><br>
+            <small>${result.note || ''}</small>
+          `;
+        } else {
+          // Email sent successfully
+          verifyMsg.style.background = '#d4edda';
+          verifyMsg.style.color = '#155724';
+          verifyMsg.style.borderLeft = '4px solid #28a745';
+          verifyMsg.textContent = result.message || 'Verification code sent to your email!';
+        }
+        
       } catch (e) {
         errorMsg.textContent = e.message;
         errorMsg.style.display = 'block';

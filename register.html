@@ -238,6 +238,8 @@
         verifyMsg.style.display = 'block';
         
         // Handle different response scenarios
+        console.log('API Response:', result);
+        
         if (result?.devCode) {
           // Development mode - show the code
           verifyMsg.style.background = '#fff3cd';
@@ -253,8 +255,8 @@
             verifyMsg.innerHTML += '<br><br><strong>To enable email sending:</strong><br>' + 
               result.setupInstructions.map(instruction => `<small>• ${instruction}</small>`).join('<br>');
           }
-        } else if (result?.ok && !result?.devCode) {
-          // API returned ok:true but no devCode - generate one for development
+        } else if (result?.ok === true) {
+          // API returned ok:true - generate a dev code for testing
           const devCode = Math.floor(100000 + Math.random() * 900000).toString();
           verifyMsg.style.background = '#fff3cd';
           verifyMsg.style.color = '#856404';

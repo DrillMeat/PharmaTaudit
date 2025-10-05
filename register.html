@@ -202,6 +202,9 @@
         togglePassword.textContent = '👁';
       }
     });
+    
+    // Force deployment trigger
+    console.log('Password toggle initialized');
 
     step1Form.addEventListener('submit', function(event) {
       event.preventDefault(); // Prevent form submission to server

@@ -104,6 +104,7 @@ export default async function handler(req, res) {
 
     // Dev fallback when email provider not configured
     console.log('Using dev fallback - no RESEND_API_KEY or email failed');
+    console.log('Generated code:', code);
     res.status(200).json({ 
       ok: true, 
       devCode: code, 

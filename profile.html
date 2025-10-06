@@ -173,19 +173,7 @@
     }
     
     .remove-pharmacy {
-      background: #f44336;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
+      display: none; /* Hide the remove button next to dropdown */
     }
     
     .remove-pharmacy:hover {
@@ -220,6 +208,8 @@
       border-radius: 50%;
       width: 20px;
       height: 20px;
+      min-width: 20px;
+      min-height: 20px;
       cursor: pointer;
       font-size: 12px;
       font-weight: bold;
@@ -227,6 +217,7 @@
       align-items: center;
       justify-content: center;
       margin-left: 10px;
+      flex-shrink: 0;
     }
     
     .selected-pharmacy-remove:hover {

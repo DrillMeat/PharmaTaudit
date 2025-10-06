@@ -163,6 +163,13 @@
     .pharmacy-item select {
       flex: 1;
       margin-right: 10px;
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      background-color: white;
+      cursor: pointer;
     }
     
     .remove-pharmacy {
@@ -417,6 +424,9 @@
       select.required = true;
       populatePharmacyDropdown(select);
       
+      console.log('Select element created:', select);
+      console.log('Select options count:', select.children.length);
+      
       const removeBtn = document.createElement('button');
       removeBtn.type = 'button';
       removeBtn.className = 'remove-pharmacy';
@@ -448,10 +458,12 @@
       const pharmacyItems = pharmacyContainer.children;
       for (let i = 0; i < pharmacyItems.length; i++) {
         const removeBtn = pharmacyItems[i].querySelector('.remove-pharmacy');
-        if (pharmacyItems.length === 1) {
-          removeBtn.style.display = 'none';
-        } else {
-          removeBtn.style.display = 'block';
+        if (removeBtn) {
+          if (pharmacyItems.length === 1) {
+            removeBtn.style.display = 'none';
+          } else {
+            removeBtn.style.display = 'block';
+          }
         }
       }
     }

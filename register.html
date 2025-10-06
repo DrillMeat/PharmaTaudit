@@ -251,7 +251,12 @@
 
     // Login modal functionality
     loginBtnTop.addEventListener('click', function() {
+      console.log('Login button clicked!');
+      console.log('Modal element:', loginModal);
       loginModal.style.display = 'flex';
+      loginModal.style.alignItems = 'center';
+      loginModal.style.justifyContent = 'center';
+      console.log('Modal display set to flex');
     });
 
     closeLoginModal.addEventListener('click', function() {

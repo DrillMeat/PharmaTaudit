@@ -46,7 +46,7 @@
       font-weight: 500;
     }
     
-    input, textarea {
+    input, textarea, select {
       width: 100%;
       padding: 12px 15px;
       border: 2px solid #e0e0e0;
@@ -57,7 +57,21 @@
       font-family: inherit;
     }
     
-    input:focus, textarea:focus {
+    select {
+      background-color: white;
+      cursor: pointer;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    select option {
+      padding: 8px 12px;
+      white-space: normal;
+      word-wrap: break-word;
+    }
+    
+    input:focus, textarea:focus, select:focus {
       outline: none;
       border-color: #4caf50;
       box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);

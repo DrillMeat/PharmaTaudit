@@ -506,7 +506,7 @@
       if (selectedIndex && !selectedPharmacyData.find(p => p.index === selectedIndex)) {
         // Check if user has reached the maximum number of pharmacies
         if (selectedPharmacyData.length >= maxPharmacies) {
-          alert(`You can only select up to ${maxPharmacies} pharmacy${maxPharmacies > 1 ? 'ies' : ''}.`);
+          alert(`You can only select up to ${maxPharmacies} pharmacy${maxPharmacies > 1 ? 'ies' : ''}. Please remove a pharmacy first.`);
           selectElement.value = ''; // Reset selection
           return;
         }
@@ -527,6 +527,12 @@
     
     // Update selected pharmacies display
     function updateSelectedPharmaciesDisplay() {
+      // Safety check: remove excess pharmacies if somehow more than maxPharmacies exist
+      if (selectedPharmacyData.length > maxPharmacies) {
+        selectedPharmacyData.splice(maxPharmacies);
+        console.log(`Removed excess pharmacies. Now have ${selectedPharmacyData.length} pharmacies.`);
+      }
+      
       if (selectedPharmacyData.length > 0) {
         selectedPharmacies.style.display = 'block';
         selectedPharmaciesList.innerHTML = '';

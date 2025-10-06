@@ -206,18 +206,18 @@
       color: white;
       border: none;
       border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      min-width: 20px;
-      min-height: 20px;
+      width: 24px;
+      height: 24px;
+      min-width: 24px;
+      min-height: 24px;
       cursor: pointer;
-      font-size: 12px;
-      font-weight: bold;
+      font-size: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
       margin-left: 10px;
       flex-shrink: 0;
+      transition: background-color 0.2s;
     }
     
     .selected-pharmacy-remove:hover {
@@ -524,7 +524,7 @@
             <div class="selected-pharmacy-info">
               <strong>${pharmacy.region}</strong> - ${pharmacy.address}
             </div>
-            <button type="button" class="selected-pharmacy-remove" data-index="${index}">-</button>
+            <button type="button" class="selected-pharmacy-remove" data-index="${index}">🗑️</button>
           `;
           selectedPharmaciesList.appendChild(pharmacyDiv);
         });

@@ -418,7 +418,22 @@
 
       } catch (err) {
         console.error('Registration error:', err);
-        errorMsg.textContent = `Registration failed: ${err.message}`;
+        
+        // Check if it's a duplicate email error
+        if (err.message.includes('duplicate key value violates unique constraint') || 
+            err.message.includes('users_email_key') ||
+            err.message.includes('duplicate')) {
+          errorMsg.innerHTML = `
+            <div style="text-align: center;">
+              <p style="margin: 0 0 15px 0; font-weight: 600;">User is already registered</p>
+              <button type="button" id="loginBtn" style="background: #4caf50; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                Log In
+              </button>
+            </div>
+          `;
+        } else {
+          errorMsg.textContent = `Registration failed: ${err.message}`;
+        }
         errorMsg.style.display = 'block';
       } finally {
         // Reset button state
@@ -427,6 +442,15 @@
         submitBtn.disabled = false;
       }
     }
+    
+    // Handle Log In button click
+    document.addEventListener('click', function(e) {
+      if (e.target.id === 'loginBtn') {
+        // For now, redirect to a simple login page or show alert
+        alert('Login functionality will be implemented. For now, please use a different email address.');
+        // You can redirect to a login page here: window.location.href = 'login.html';
+      }
+    });
   </script>
 </body>
 </html>

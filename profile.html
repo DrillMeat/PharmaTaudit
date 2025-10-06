@@ -474,14 +474,7 @@
       console.log('Select element created:', select);
       console.log('Select options count:', select.children.length);
       
-      const removeBtn = document.createElement('button');
-      removeBtn.type = 'button';
-      removeBtn.className = 'remove-pharmacy';
-      removeBtn.textContent = 'Remove';
-      removeBtn.style.display = pharmacyContainer.children.length === 0 ? 'none' : 'block';
-      
       pharmacyItem.appendChild(select);
-      pharmacyItem.appendChild(removeBtn);
       
       return pharmacyItem;
     }
@@ -500,20 +493,6 @@
       }
     }
     
-    // Update remove buttons visibility
-    function updateRemoveButtons() {
-      const pharmacyItems = pharmacyContainer.children;
-      for (let i = 0; i < pharmacyItems.length; i++) {
-        const removeBtn = pharmacyItems[i].querySelector('.remove-pharmacy');
-        if (removeBtn) {
-          if (pharmacyItems.length === 1) {
-            removeBtn.style.display = 'none';
-          } else {
-            removeBtn.style.display = 'block';
-          }
-        }
-      }
-    }
     
     // Handle pharmacy selection
     function handlePharmacySelection(selectElement) {
@@ -664,13 +643,11 @@
             const newPharmacy = createPharmacyItem();
             pharmacyContainer.insertBefore(newPharmacy, addBtn);
             updateAddButton();
-            updateRemoveButtons();
           }
         });
       }
       
       updateAddButton();
-      updateRemoveButtons();
     }
     
     // Handle remove pharmacy button clicks
@@ -678,7 +655,6 @@
       if (e.target.classList.contains('remove-pharmacy')) {
         e.target.closest('.pharmacy-item').remove();
         updateAddButton();
-        updateRemoveButtons();
       }
     });
     

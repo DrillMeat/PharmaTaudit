@@ -600,6 +600,12 @@
     // Initialize
     initializePharmacySelection();
     
+    // Also populate the initial dropdown if it exists
+    const initialDropdown = document.querySelector('.pharmacy-select');
+    if (initialDropdown) {
+      populatePharmacyDropdown(initialDropdown);
+    }
+    
     // Auto-focus first input
     document.getElementById('firstName').focus();
   </script>

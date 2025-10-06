@@ -489,8 +489,9 @@
       const currentPharmacies = pharmacyContainer.children.length;
       const addBtn = document.getElementById('addPharmacyBtn');
       if (addBtn) {
-        addBtn.disabled = currentPharmacies >= maxPharmacies;
-        if (currentPharmacies >= maxPharmacies) {
+        const isAtLimit = selectedPharmacyData.length >= maxPharmacies;
+        addBtn.disabled = isAtLimit;
+        if (isAtLimit) {
           addBtn.textContent = `Maximum ${maxPharmacies} pharmacy${maxPharmacies > 1 ? 'ies' : ''} reached`;
         } else {
           addBtn.textContent = '+ Add Another Pharmacy';
@@ -503,6 +504,13 @@
     function handlePharmacySelection(selectElement) {
       const selectedIndex = selectElement.value;
       if (selectedIndex && !selectedPharmacyData.find(p => p.index === selectedIndex)) {
+        // Check if user has reached the maximum number of pharmacies
+        if (selectedPharmacyData.length >= maxPharmacies) {
+          alert(`You can only select up to ${maxPharmacies} pharmacy${maxPharmacies > 1 ? 'ies' : ''}.`);
+          selectElement.value = ''; // Reset selection
+          return;
+        }
+        
         const pharmacy = pharmacies[parseInt(selectedIndex)];
         selectedPharmacyData.push({
           index: selectedIndex,
@@ -512,6 +520,7 @@
           hours: pharmacy.hours
         });
         updateSelectedPharmaciesDisplay();
+        updateAddButton();
         selectElement.value = ''; // Reset selection
       }
     }
@@ -542,6 +551,7 @@
     function removeSelectedPharmacy(index) {
       selectedPharmacyData.splice(index, 1);
       updateSelectedPharmaciesDisplay();
+      updateAddButton();
     }
     
     // Form submission

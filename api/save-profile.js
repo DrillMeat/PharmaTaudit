@@ -5,10 +5,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { firstName, lastName, pharmacies, role } = req.body || {};
+    const { firstName, lastName, pharmacyAddress, role, email } = req.body || {};
     
     // Validate required fields
-    if (!firstName || !lastName || !pharmacies || !Array.isArray(pharmacies) || pharmacies.length === 0) {
+    if (!firstName || !lastName || !pharmacyAddress) {
       res.status(400).json({ error: 'All fields are required' });
       return;
     }
@@ -19,20 +19,6 @@ export default async function handler(req, res) {
       return;
     }
     
-    // Validate pharmacy count based on role
-    const pharmacyLimits = {
-      'employee': 1,
-      'rga': 5
-    };
-    
-    const maxPharmacies = pharmacyLimits[role];
-    if (pharmacies.length > maxPharmacies) {
-      res.status(400).json({ 
-        error: `Maximum ${maxPharmacies} pharmacy${maxPharmacies > 1 ? 'ies' : ''} allowed for ${role}` 
-      });
-      return;
-    }
-    
     const SUPABASE_URL = 'https://xsrppkeysfjkxkbpfbog.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzcnBwa2V5c2Zqa3hrYnBmYm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzNDI2NjcsImV4cCI6MjA3NDkxODY2N30.sLZtdQ80_Q-OlX7wD4bDoaLEVOBBMF7Qfga_Ju299t8';
     
@@ -40,8 +26,9 @@ export default async function handler(req, res) {
     const profileData = {
       first_name: firstName,
       last_name: lastName,
-      pharmacies: pharmacies,
+      pharmacy_address: pharmacyAddress,
       role: role,
+      email: email,
       created_at: new Date().toISOString()
     };
     
@@ -72,8 +59,9 @@ export default async function handler(req, res) {
       profile: {
         firstName,
         lastName,
-        pharmacies,
-        role
+        pharmacyAddress,
+        role,
+        email
       }
     });
     

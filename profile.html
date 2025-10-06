@@ -46,7 +46,7 @@
       font-weight: 500;
     }
     
-    input {
+    input, textarea {
       width: 100%;
       padding: 12px 15px;
       border: 2px solid #e0e0e0;
@@ -54,68 +54,18 @@
       font-size: 16px;
       transition: all 0.3s ease;
       box-sizing: border-box;
+      font-family: inherit;
     }
     
-    input:focus {
+    input:focus, textarea:focus {
       outline: none;
       border-color: #4caf50;
       box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
     }
     
-    .pharmacy-section {
-      margin-top: 20px;
-    }
-    
-    .pharmacy-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 15px;
-      padding: 15px;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      background: #f9f9f9;
-    }
-    
-    .pharmacy-item input {
-      flex: 1;
-      margin-right: 10px;
-      border: none;
-      background: white;
-      padding: 10px;
-    }
-    
-    .remove-pharmacy {
-      background: #f44336;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 8px 12px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    
-    .remove-pharmacy:hover {
-      background: #d32f2f;
-    }
-    
-    .add-pharmacy {
-      background: #4caf50;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 20px;
-      cursor: pointer;
-      font-size: 14px;
-      margin-top: 10px;
-    }
-    
-    .add-pharmacy:hover {
-      background: #45a049;
-    }
-    
-    .add-pharmacy:disabled {
-      background: #ccc;
-      cursor: not-allowed;
+    textarea {
+      resize: vertical;
+      min-height: 80px;
     }
     
     button {
@@ -142,6 +92,13 @@
       transform: translateY(0);
     }
     
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
     .error {
       color: #f44336;
       background: #ffebee;
@@ -152,19 +109,22 @@
       font-size: 14px;
     }
     
-    .hidden { display: none; }
+    .success {
+      color: #155724;
+      background: #d4edda;
+      padding: 10px 15px;
+      border-radius: 6px;
+      margin-top: 10px;
+      border-left: 4px solid #28a745;
+      font-size: 14px;
+    }
     
     .form-group {
       margin-bottom: 20px;
     }
     
-    .pharmacy-limit-info {
-      background: #e3f2fd;
-      padding: 10px 15px;
-      border-radius: 6px;
-      margin-bottom: 15px;
-      font-size: 14px;
-      color: #1976d2;
+    .required {
+      color: #f44336;
     }
   </style>
 </head>
@@ -176,36 +136,29 @@
     <form id="profileForm">
       <div class="form-group">
         <label>
-          First Name:
-          <input type="text" id="firstName" required />
+          First Name <span class="required">*</span>:
+          <input type="text" id="firstName" required placeholder="Enter your first name" />
         </label>
       </div>
       
       <div class="form-group">
         <label>
-          Last Name:
-          <input type="text" id="lastName" required />
+          Last Name <span class="required">*</span>:
+          <input type="text" id="lastName" required placeholder="Enter your last name" />
         </label>
       </div>
       
-      <div class="pharmacy-section">
-        <label>Pharmacies You Work In:</label>
-        <div class="pharmacy-limit-info" id="pharmacyLimitInfo">
-          You can add up to <span id="pharmacyLimit">1</span> pharmacy.
-        </div>
-        
-        <div id="pharmaciesList">
-          <div class="pharmacy-item">
-            <input type="text" placeholder="Enter pharmacy name" class="pharmacy-input" required />
-            <button type="button" class="remove-pharmacy hidden">Remove</button>
-          </div>
-        </div>
-        
-        <button type="button" id="addPharmacy" class="add-pharmacy">+ Add Another Pharmacy</button>
+      <div class="form-group">
+        <label>
+          Pharmacy Address <span class="required">*</span>:
+          <textarea id="pharmacyAddress" required placeholder="Enter the full address of the pharmacy you work at"></textarea>
+        </label>
       </div>
       
       <div id="errorMsg" class="error" style="display: none;"></div>
-      <button type="submit">Complete Profile</button>
+      <div id="successMsg" class="success" style="display: none;"></div>
+      
+      <button type="submit" id="submitBtn">Complete Profile</button>
     </form>
   </div>
 
@@ -225,147 +178,79 @@
     
     const profileForm = document.getElementById('profileForm');
     const errorMsg = document.getElementById('errorMsg');
-    const addPharmacyBtn = document.getElementById('addPharmacy');
-    const pharmaciesList = document.getElementById('pharmaciesList');
-    const pharmacyLimitInfo = document.getElementById('pharmacyLimitInfo');
-    const pharmacyLimitSpan = document.getElementById('pharmacyLimit');
+    const successMsg = document.getElementById('successMsg');
+    const submitBtn = document.getElementById('submitBtn');
     
-    // Get user role from session storage or URL parameters
+    // Get user role and email from session storage or URL parameters
     let userRole = 'employee'; // default
+    let userEmail = '';
+    
     const urlParams = new URLSearchParams(window.location.search);
     const roleParam = urlParams.get('role');
+    const emailParam = urlParams.get('email');
+    
     if (roleParam) {
       userRole = roleParam;
     } else {
-      // Try to get from session storage
       const storedRole = sessionStorage.getItem('userRole');
       if (storedRole) {
         userRole = storedRole;
       }
     }
     
-    // Set pharmacy limits based on role
-    const pharmacyLimits = {
-      'employee': 1,
-      'rga': 5
-    };
-    
-    const maxPharmacies = pharmacyLimits[userRole] || 1;
-    pharmacyLimitSpan.textContent = maxPharmacies;
-    
-    // Update add button state
-    function updateAddButton() {
-      const currentPharmacies = pharmaciesList.children.length;
-      addPharmacyBtn.disabled = currentPharmacies >= maxPharmacies;
-      if (currentPharmacies >= maxPharmacies) {
-        addPharmacyBtn.textContent = `Maximum ${maxPharmacies} pharmacy${maxPharmacies > 1 ? 'ies' : ''} reached`;
-      } else {
-        addPharmacyBtn.textContent = '+ Add Another Pharmacy';
+    if (emailParam) {
+      userEmail = emailParam;
+    } else {
+      const storedEmail = sessionStorage.getItem('userEmail');
+      if (storedEmail) {
+        userEmail = storedEmail;
       }
     }
-    
-    // Add pharmacy field
-    addPharmacyBtn.addEventListener('click', function() {
-      const currentPharmacies = pharmaciesList.children.length;
-      if (currentPharmacies < maxPharmacies) {
-        const pharmacyItem = document.createElement('div');
-        pharmacyItem.className = 'pharmacy-item';
-        pharmacyItem.innerHTML = `
-          <input type="text" placeholder="Enter pharmacy name" class="pharmacy-input" required />
-          <button type="button" class="remove-pharmacy">Remove</button>
-        `;
-        pharmaciesList.appendChild(pharmacyItem);
-        updateAddButton();
-        updateRemoveButtons();
-      }
-    });
-    
-    // Update remove buttons visibility
-    function updateRemoveButtons() {
-      const pharmacyItems = pharmaciesList.children;
-      for (let i = 0; i < pharmacyItems.length; i++) {
-        const removeBtn = pharmacyItems[i].querySelector('.remove-pharmacy');
-        if (pharmacyItems.length === 1) {
-          removeBtn.classList.add('hidden');
-        } else {
-          removeBtn.classList.remove('hidden');
-        }
-      }
-    }
-    
-    // Remove pharmacy field
-    pharmaciesList.addEventListener('click', function(e) {
-      if (e.target.classList.contains('remove-pharmacy')) {
-        e.target.closest('.pharmacy-item').remove();
-        updateAddButton();
-        updateRemoveButtons();
-      }
-    });
     
     // Form submission
-    profileForm.addEventListener('submit', function(event) {
+    profileForm.addEventListener('submit', async function(event) {
       event.preventDefault();
       
-      errorMsg.textContent = '';
       errorMsg.style.display = 'none';
+      successMsg.style.display = 'none';
       
       const firstName = document.getElementById('firstName').value.trim();
       const lastName = document.getElementById('lastName').value.trim();
+      const pharmacyAddress = document.getElementById('pharmacyAddress').value.trim();
       
       // Validate required fields
-      if (!firstName || !lastName) {
+      if (!firstName || !lastName || !pharmacyAddress) {
         errorMsg.textContent = 'Please fill in all required fields.';
         errorMsg.style.display = 'block';
         return;
       }
       
-      // Collect pharmacy names
-      const pharmacyInputs = document.querySelectorAll('.pharmacy-input');
-      const pharmacies = Array.from(pharmacyInputs)
-        .map(input => input.value.trim())
-        .filter(name => name.length > 0);
+      // Show loading state
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving...';
       
-      if (pharmacies.length === 0) {
-        errorMsg.textContent = 'Please enter at least one pharmacy name.';
-        errorMsg.style.display = 'block';
-        return;
-      }
-      
-      // Validate pharmacy count
-      if (pharmacies.length > maxPharmacies) {
-        errorMsg.textContent = `You can only add up to ${maxPharmacies} pharmacy${maxPharmacies > 1 ? 'ies' : ''}.`;
-        errorMsg.style.display = 'block';
-        return;
-      }
-      
-      // Save profile data
-      saveProfileData(firstName, lastName, pharmacies, userRole);
-    });
-    
-    // Save profile data to database
-    async function saveProfileData(firstName, lastName, pharmacies, role) {
       try {
-        // Show loading state
-        const submitBtn = document.querySelector('button[type="submit"]');
-        const originalText = submitBtn.textContent;
-        submitBtn.textContent = 'Saving...';
-        submitBtn.disabled = true;
+        // Save profile data to database
+        const profileData = {
+          first_name: firstName,
+          last_name: lastName,
+          pharmacy_address: pharmacyAddress,
+          role: userRole,
+          email: userEmail,
+          created_at: new Date().toISOString()
+        };
         
-        console.log('Saving profile:', { firstName, lastName, pharmacies, role });
+        console.log('Saving profile:', profileData);
         
         // Call serverless API to save profile
         const apiResponse = await fetch('/api/save-profile', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            firstName,
-            lastName,
-            pharmacies,
-            role
-          })
+          body: JSON.stringify(profileData)
         });
         
         const result = await apiResponse.json();
+        
         if (!apiResponse.ok) {
           console.error('API error:', result);
           throw new Error(result?.error || 'Failed to save profile');
@@ -373,9 +258,14 @@
         
         console.log('Profile saved successfully:', result);
         
-        // Success - redirect to welcome page
-        alert(`Profile completed successfully!\nWelcome ${firstName} ${lastName}!`);
-        window.location.href = 'welcome.html';
+        // Success - show success message and redirect
+        successMsg.textContent = `Profile completed successfully! Welcome ${firstName} ${lastName}!`;
+        successMsg.style.display = 'block';
+        
+        // Redirect to welcome page after a short delay
+        setTimeout(() => {
+          window.location.href = 'welcome.html';
+        }, 2000);
         
       } catch (err) {
         console.error('Profile save error:', err);
@@ -383,15 +273,13 @@
         errorMsg.style.display = 'block';
       } finally {
         // Reset button state
-        const submitBtn = document.querySelector('button[type="submit"]');
-        submitBtn.textContent = 'Complete Profile';
         submitBtn.disabled = false;
+        submitBtn.textContent = 'Complete Profile';
       }
-    }
+    });
     
-    // Initialize
-    updateAddButton();
-    updateRemoveButtons();
+    // Auto-focus first input
+    document.getElementById('firstName').focus();
   </script>
 </body>
 </html>

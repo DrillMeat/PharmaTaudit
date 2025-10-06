@@ -251,12 +251,9 @@
 
     // Login modal functionality
     loginBtnTop.addEventListener('click', function() {
-      console.log('Login button clicked!');
-      console.log('Modal element:', loginModal);
       loginModal.style.display = 'flex';
       loginModal.style.alignItems = 'center';
       loginModal.style.justifyContent = 'center';
-      console.log('Modal display set to flex');
     });
 
     closeLoginModal.addEventListener('click', function() {
@@ -597,23 +594,6 @@
       }
     });
     
-    // Test login button
-    console.log('Login button element:', loginBtnTop);
-    console.log('Login modal element:', loginModal);
-    
-    // Simple test to see if JavaScript is working
-    console.log('JavaScript is working!');
-    
-    // Test if button click works
-    if (loginBtnTop) {
-      console.log('Login button found!');
-      // Add a simple click test
-      loginBtnTop.addEventListener('click', function() {
-        alert('Login button clicked!');
-      });
-    } else {
-      console.log('Login button NOT found!');
-    }
   </script>
 </body>
 </html>

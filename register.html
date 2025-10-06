@@ -603,11 +603,14 @@
     
     // Simple test to see if JavaScript is working
     console.log('JavaScript is working!');
-    alert('JavaScript is working!');
     
     // Test if button click works
     if (loginBtnTop) {
       console.log('Login button found!');
+      // Add a simple click test
+      loginBtnTop.addEventListener('click', function() {
+        alert('Login button clicked!');
+      });
     } else {
       console.log('Login button NOT found!');
     }

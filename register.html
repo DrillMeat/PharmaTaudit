@@ -520,7 +520,7 @@
         alert(`Registration successful!\nRole: ${role}\nEmail: ${email}\nNow complete your profile.`);
         
         // Redirect to profile completion page
-        window.location.href = `profile.html?role=${role}`;
+        window.location.href = `profile.html?role=${role}&email=${email}`;
 
       } catch (err) {
         console.error('Registration error:', err);
@@ -583,7 +583,7 @@
         if (response.ok) {
           // Login successful
           alert(`Welcome back! Role: ${result.role}`);
-          window.location.href = 'welcome.html';
+          window.location.href = 'profile.html';
         } else {
           loginErrorMsg.textContent = result.error || 'Login failed';
           loginErrorMsg.style.display = 'block';

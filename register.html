@@ -98,7 +98,12 @@
 </head>
 <body>
   <div class="container">
-    <h2>Registration - Step 1</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h2 style="margin: 0;">Registration - Step 1</h2>
+      <button id="loginBtnTop" style="background: #2196F3; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px;">
+        Log In
+      </button>
+    </div>
     <form id="step1Form">
       <div class="form-group">
         <label>
@@ -145,6 +150,40 @@
     </form>
   </div>
 
+  <!-- Login Modal -->
+  <div id="loginModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 40px; border-radius: 15px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1); width: 100%; max-width: 400px; margin: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h2 style="margin: 0; color: #2d5a27;">Log In</h2>
+        <button id="closeLoginModal" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">&times;</button>
+      </div>
+      
+      <form id="loginForm">
+        <div class="form-group">
+          <label>
+            Email:
+            <input type="email" id="loginEmail" required />
+          </label>
+        </div>
+        
+        <div class="form-group">
+          <label>
+            Password:
+            <div style="position: relative;">
+              <input type="password" id="loginPassword" required style="padding-right: 40px; width: 100%;" />
+              <button type="button" id="toggleLoginPassword" style="position: absolute; right: 10px; top: 50%; transform: translateY(-80%); background: none; border: none; cursor: pointer; padding: 4px; color: #666; font-size: 18px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
+                👁
+              </button>
+            </div>
+          </label>
+        </div>
+        
+        <div id="loginErrorMsg" class="error" style="display: none;"></div>
+        <button type="submit" style="width: 100%;">Log In</button>
+      </form>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     // Supabase configuration
@@ -168,6 +207,13 @@
     const codeInput = document.getElementById('codeInput');
     const passportInput = document.getElementById('passportInput');
     const togglePassword = document.getElementById('togglePassword');
+    const loginModal = document.getElementById('loginModal');
+    const loginBtnTop = document.getElementById('loginBtnTop');
+    const closeLoginModal = document.getElementById('closeLoginModal');
+    const loginForm = document.getElementById('loginForm');
+    const loginErrorMsg = document.getElementById('loginErrorMsg');
+    const loginPassword = document.getElementById('loginPassword');
+    const toggleLoginPassword = document.getElementById('toggleLoginPassword');
 
     // Password requirements
     const correctPasswords = {
@@ -200,6 +246,37 @@
       } else {
         passportInput.type = 'password';
         togglePassword.textContent = '👁';
+      }
+    });
+
+    // Login modal functionality
+    loginBtnTop.addEventListener('click', function() {
+      loginModal.style.display = 'flex';
+    });
+
+    closeLoginModal.addEventListener('click', function() {
+      loginModal.style.display = 'none';
+      loginErrorMsg.style.display = 'none';
+      loginForm.reset();
+    });
+
+    // Close modal when clicking outside
+    loginModal.addEventListener('click', function(e) {
+      if (e.target === loginModal) {
+        loginModal.style.display = 'none';
+        loginErrorMsg.style.display = 'none';
+        loginForm.reset();
+      }
+    });
+
+    // Login password visibility toggle
+    toggleLoginPassword.addEventListener('click', function() {
+      if (loginPassword.type === 'password') {
+        loginPassword.type = 'text';
+        toggleLoginPassword.textContent = '🙈';
+      } else {
+        loginPassword.type = 'password';
+        toggleLoginPassword.textContent = '👁';
       }
     });
     
@@ -269,6 +346,33 @@
       console.log('Sending request for email:', email);
       sendCodeBtn.disabled = true;
       sendCodeBtn.textContent = 'Sending...';
+      
+      // Check if email is already registered
+      try {
+        const checkEmailResponse = await fetch('/api/check-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        
+        const emailCheckResult = await checkEmailResponse.json();
+        if (emailCheckResult.exists) {
+          errorMsg.innerHTML = `
+            <div style="text-align: center;">
+              <p style="margin: 0 0 15px 0; font-weight: 600; color: #f44336;">User is already registered</p>
+              <button type="button" id="loginBtnFromError" style="background: #4caf50; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                Log In Instead
+              </button>
+            </div>
+          `;
+          errorMsg.style.display = 'block';
+          sendCodeBtn.disabled = false;
+          sendCodeBtn.textContent = 'Send verification code';
+          return;
+        }
+      } catch (emailCheckError) {
+        console.log('Email check failed, proceeding with code sending:', emailCheckError);
+      }
       
       try {
         const resp = await fetch('/api/send-code', {
@@ -445,10 +549,46 @@
     
     // Handle Log In button click
     document.addEventListener('click', function(e) {
-      if (e.target.id === 'loginBtn') {
-        // For now, redirect to a simple login page or show alert
-        alert('Login functionality will be implemented. For now, please use a different email address.');
-        // You can redirect to a login page here: window.location.href = 'login.html';
+      if (e.target.id === 'loginBtn' || e.target.id === 'loginBtnFromError') {
+        loginModal.style.display = 'flex';
+      }
+    });
+
+    // Login form submission
+    loginForm.addEventListener('submit', async function(event) {
+      event.preventDefault();
+      
+      loginErrorMsg.style.display = 'none';
+      
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+      
+      if (!email || !password) {
+        loginErrorMsg.textContent = 'Please fill in all fields.';
+        loginErrorMsg.style.display = 'block';
+        return;
+      }
+      
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+          // Login successful
+          alert(`Welcome back! Role: ${result.role}`);
+          window.location.href = 'welcome.html';
+        } else {
+          loginErrorMsg.textContent = result.error || 'Login failed';
+          loginErrorMsg.style.display = 'block';
+        }
+      } catch (error) {
+        loginErrorMsg.textContent = 'Login failed. Please try again.';
+        loginErrorMsg.style.display = 'block';
       }
     });
   </script>

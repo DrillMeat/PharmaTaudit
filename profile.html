@@ -263,6 +263,32 @@
     const pharmacyLimitInfo = document.getElementById('pharmacyLimitInfo');
     const pharmacyLimitSpan = document.getElementById('pharmacyLimit');
     
+    // Get user role and email from session storage or URL parameters
+    let userRole = 'employee'; // default
+    let userEmail = '';
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const roleParam = urlParams.get('role');
+    const emailParam = urlParams.get('email');
+    
+    if (roleParam) {
+      userRole = roleParam;
+    } else {
+      const storedRole = sessionStorage.getItem('userRole');
+      if (storedRole) {
+        userRole = storedRole;
+      }
+    }
+    
+    if (emailParam) {
+      userEmail = emailParam;
+    } else {
+      const storedEmail = sessionStorage.getItem('userEmail');
+      if (storedEmail) {
+        userEmail = storedEmail;
+      }
+    }
+    
     // Pharmacy data
     const pharmacies = [
       { region: "Москва", address: "г. Москва, ул. Химкинский б-р , д.14, к. 4", phone: "8-499-176-22-04", hours: "09.00-21.00" },
@@ -427,32 +453,6 @@
         } else {
           removeBtn.style.display = 'block';
         }
-      }
-    }
-    
-    // Get user role and email from session storage or URL parameters
-    let userRole = 'employee'; // default
-    let userEmail = '';
-    
-    const urlParams = new URLSearchParams(window.location.search);
-    const roleParam = urlParams.get('role');
-    const emailParam = urlParams.get('email');
-    
-    if (roleParam) {
-      userRole = roleParam;
-    } else {
-      const storedRole = sessionStorage.getItem('userRole');
-      if (storedRole) {
-        userRole = storedRole;
-      }
-    }
-    
-    if (emailParam) {
-      userEmail = emailParam;
-    } else {
-      const storedEmail = sessionStorage.getItem('userEmail');
-      if (storedEmail) {
-        userEmail = storedEmail;
       }
     }
     

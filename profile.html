@@ -368,6 +368,8 @@
     
     // Populate pharmacy dropdown
     function populatePharmacyDropdown(selectElement) {
+      console.log('Populating pharmacy dropdown...');
+      console.log('Pharmacies array length:', pharmacies.length);
       selectElement.innerHTML = '<option value="">Select your pharmacy</option>';
       pharmacies.forEach((pharmacy, index) => {
         const option = document.createElement('option');
@@ -375,10 +377,12 @@
         option.textContent = `${pharmacy.region} - ${pharmacy.address}`;
         selectElement.appendChild(option);
       });
+      console.log('Pharmacy dropdown populated with', selectElement.children.length, 'options');
     }
     
     // Create pharmacy selection item
     function createPharmacyItem() {
+      console.log('Creating pharmacy item...');
       const pharmacyItem = document.createElement('div');
       pharmacyItem.className = 'pharmacy-item';
       
@@ -548,6 +552,10 @@
     
     // Initialize pharmacy selection
     function initializePharmacySelection() {
+      console.log('Initializing pharmacy selection...');
+      console.log('User role:', userRole);
+      console.log('Max pharmacies:', maxPharmacies);
+      
       // Clear existing content
       pharmacyContainer.innerHTML = '';
       

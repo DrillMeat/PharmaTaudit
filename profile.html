@@ -180,54 +180,6 @@
       background: #d32f2f;
     }
     
-    .selected-pharmacies {
-      margin-top: 15px;
-    }
-    
-    .selected-pharmacy {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      padding: 8px 12px;
-      margin-bottom: 8px;
-      background: #e8f5e8;
-      border: 1px solid #4caf50;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    
-    .selected-pharmacy-info {
-      flex: 1;
-      color: #2d5a27;
-    }
-    
-    .selected-pharmacy-remove {
-      background: #f44336;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      min-width: 24px;
-      min-height: 24px;
-      max-width: 24px;
-      max-height: 24px;
-      cursor: pointer;
-      font-size: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-left: 10px;
-      margin-top: -2px;
-      flex-shrink: 0;
-      transition: background-color 0.2s;
-      padding: 0;
-      line-height: 1;
-    }
-    
-    .selected-pharmacy-remove:hover {
-      background: #d32f2f;
-    }
     
     .add-pharmacy {
       background: #4caf50;
@@ -281,10 +233,6 @@
           <div id="pharmacyLimitInfo" class="pharmacy-limit-info" style="display: none;">
             You can select up to <span id="pharmacyLimit">1</span> pharmacy.
           </div>
-          <div id="selectedPharmacies" class="selected-pharmacies" style="display: none;">
-            <h4 style="margin: 0 0 10px 0; color: #2d5a27; font-size: 16px;">Selected Pharmacies:</h4>
-            <div id="selectedPharmaciesList"></div>
-          </div>
         </label>
       </div>
       
@@ -316,9 +264,6 @@
     const pharmacyContainer = document.getElementById('pharmacyContainer');
     const pharmacyLimitInfo = document.getElementById('pharmacyLimitInfo');
     const pharmacyLimitSpan = document.getElementById('pharmacyLimit');
-    const selectedPharmacies = document.getElementById('selectedPharmacies');
-    const selectedPharmaciesList = document.getElementById('selectedPharmaciesList');
-    
     // Track selected pharmacies
     let selectedPharmacyData = [];
     
@@ -519,46 +464,11 @@
           phone: pharmacy.phone,
           hours: pharmacy.hours
         });
-        updateSelectedPharmaciesDisplay();
         updateAddButton();
         selectElement.value = ''; // Reset selection
       }
     }
     
-    // Update selected pharmacies display
-    function updateSelectedPharmaciesDisplay() {
-      // Safety check: remove excess pharmacies if somehow more than maxPharmacies exist
-      if (selectedPharmacyData.length > maxPharmacies) {
-        selectedPharmacyData.splice(maxPharmacies);
-        console.log(`Removed excess pharmacies. Now have ${selectedPharmacyData.length} pharmacies.`);
-      }
-      
-      if (selectedPharmacyData.length > 0) {
-        selectedPharmacies.style.display = 'block';
-        selectedPharmaciesList.innerHTML = '';
-        
-        selectedPharmacyData.forEach((pharmacy, index) => {
-          const pharmacyDiv = document.createElement('div');
-          pharmacyDiv.className = 'selected-pharmacy';
-          pharmacyDiv.innerHTML = `
-            <div class="selected-pharmacy-info">
-              <strong>${pharmacy.region}</strong> - ${pharmacy.address}
-            </div>
-            <button type="button" class="selected-pharmacy-remove" data-index="${index}">🗑️</button>
-          `;
-          selectedPharmaciesList.appendChild(pharmacyDiv);
-        });
-      } else {
-        selectedPharmacies.style.display = 'none';
-      }
-    }
-    
-    // Remove selected pharmacy
-    function removeSelectedPharmacy(index) {
-      selectedPharmacyData.splice(index, 1);
-      updateSelectedPharmaciesDisplay();
-      updateAddButton();
-    }
     
     // Form submission
     profileForm.addEventListener('submit', async function(event) {
@@ -686,13 +596,6 @@
       }
     });
     
-    // Handle selected pharmacy removal
-    selectedPharmaciesList.addEventListener('click', function(e) {
-      if (e.target.classList.contains('selected-pharmacy-remove')) {
-        const index = parseInt(e.target.getAttribute('data-index'));
-        removeSelectedPharmacy(index);
-      }
-    });
     
     // Initialize
     initializePharmacySelection();

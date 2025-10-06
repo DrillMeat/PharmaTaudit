@@ -406,11 +406,15 @@
 
         console.log('User saved successfully via API:', result);
         
-        // Success - proceed to welcome page
-        alert(`Registration successful!\nRole: ${role}\nEmail: ${email}\nWelcome to PharmaT Audit!`);
+        // Store user role for profile completion
+        sessionStorage.setItem('userRole', role);
+        sessionStorage.setItem('userEmail', email);
         
-        // Redirect to welcome page
-        window.location.href = 'welcome.html';
+        // Success - proceed to profile completion
+        alert(`Registration successful!\nRole: ${role}\nEmail: ${email}\nNow complete your profile.`);
+        
+        // Redirect to profile completion page
+        window.location.href = `profile.html?role=${role}`;
 
       } catch (err) {
         console.error('Registration error:', err);

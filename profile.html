@@ -140,6 +140,64 @@
     .required {
       color: #f44336;
     }
+    
+    .pharmacy-limit-info {
+      background: #e3f2fd;
+      padding: 10px 15px;
+      border-radius: 6px;
+      margin-top: 10px;
+      font-size: 14px;
+      color: #1976d2;
+    }
+    
+    .pharmacy-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      background: #f9f9f9;
+    }
+    
+    .pharmacy-item select {
+      flex: 1;
+      margin-right: 10px;
+    }
+    
+    .remove-pharmacy {
+      background: #f44336;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .remove-pharmacy:hover {
+      background: #d32f2f;
+    }
+    
+    .add-pharmacy {
+      background: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    
+    .add-pharmacy:hover {
+      background: #45a049;
+    }
+    
+    .add-pharmacy:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
@@ -165,9 +223,14 @@
       <div class="form-group">
         <label>
           Pharmacy <span class="required">*</span>:
-          <select id="pharmacySelect" required>
-            <option value="">Select your pharmacy</option>
-          </select>
+          <div id="pharmacyContainer">
+            <select class="pharmacy-select" required>
+              <option value="">Select your pharmacy</option>
+            </select>
+          </div>
+          <div id="pharmacyLimitInfo" class="pharmacy-limit-info" style="display: none;">
+            You can select up to <span id="pharmacyLimit">1</span> pharmacy.
+          </div>
         </label>
       </div>
       
@@ -196,7 +259,9 @@
     const errorMsg = document.getElementById('errorMsg');
     const successMsg = document.getElementById('successMsg');
     const submitBtn = document.getElementById('submitBtn');
-    const pharmacySelect = document.getElementById('pharmacySelect');
+    const pharmacyContainer = document.getElementById('pharmacyContainer');
+    const pharmacyLimitInfo = document.getElementById('pharmacyLimitInfo');
+    const pharmacyLimitSpan = document.getElementById('pharmacyLimit');
     
     // Pharmacy data
     const pharmacies = [
@@ -291,14 +356,74 @@
       { region: "Липецкая область", address: "ЛО, с.Троицкое, ул. Гагарина, дом 72", phone: "8-958-653-82-27", hours: "08.30-19.30" }
     ];
     
+    // Set pharmacy limits based on role
+    const pharmacyLimits = {
+      'employee': 1,
+      'rga': 5
+    };
+    
+    const maxPharmacies = pharmacyLimits[userRole] || 1;
+    pharmacyLimitSpan.textContent = maxPharmacies;
+    pharmacyLimitInfo.style.display = 'block';
+    
     // Populate pharmacy dropdown
-    function populatePharmacyDropdown() {
+    function populatePharmacyDropdown(selectElement) {
+      selectElement.innerHTML = '<option value="">Select your pharmacy</option>';
       pharmacies.forEach((pharmacy, index) => {
         const option = document.createElement('option');
         option.value = index;
         option.textContent = `${pharmacy.region} - ${pharmacy.address}`;
-        pharmacySelect.appendChild(option);
+        selectElement.appendChild(option);
       });
+    }
+    
+    // Create pharmacy selection item
+    function createPharmacyItem() {
+      const pharmacyItem = document.createElement('div');
+      pharmacyItem.className = 'pharmacy-item';
+      
+      const select = document.createElement('select');
+      select.className = 'pharmacy-select';
+      select.required = true;
+      populatePharmacyDropdown(select);
+      
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'remove-pharmacy';
+      removeBtn.textContent = 'Remove';
+      removeBtn.style.display = pharmacyContainer.children.length === 0 ? 'none' : 'block';
+      
+      pharmacyItem.appendChild(select);
+      pharmacyItem.appendChild(removeBtn);
+      
+      return pharmacyItem;
+    }
+    
+    // Update add button state
+    function updateAddButton() {
+      const currentPharmacies = pharmacyContainer.children.length;
+      const addBtn = document.getElementById('addPharmacyBtn');
+      if (addBtn) {
+        addBtn.disabled = currentPharmacies >= maxPharmacies;
+        if (currentPharmacies >= maxPharmacies) {
+          addBtn.textContent = `Maximum ${maxPharmacies} pharmacy${maxPharmacies > 1 ? 'ies' : ''} reached`;
+        } else {
+          addBtn.textContent = '+ Add Another Pharmacy';
+        }
+      }
+    }
+    
+    // Update remove buttons visibility
+    function updateRemoveButtons() {
+      const pharmacyItems = pharmacyContainer.children;
+      for (let i = 0; i < pharmacyItems.length; i++) {
+        const removeBtn = pharmacyItems[i].querySelector('.remove-pharmacy');
+        if (pharmacyItems.length === 1) {
+          removeBtn.style.display = 'none';
+        } else {
+          removeBtn.style.display = 'block';
+        }
+      }
     }
     
     // Get user role and email from session storage or URL parameters
@@ -336,18 +461,37 @@
       
       const firstName = document.getElementById('firstName').value.trim();
       const lastName = document.getElementById('lastName').value.trim();
-      const pharmacyIndex = document.getElementById('pharmacySelect').value;
+      
+      // Collect selected pharmacies
+      const pharmacySelects = document.querySelectorAll('.pharmacy-select');
+      const selectedPharmacies = [];
+      
+      for (let select of pharmacySelects) {
+        if (select.value) {
+          const pharmacyIndex = parseInt(select.value);
+          const pharmacy = pharmacies[pharmacyIndex];
+          selectedPharmacies.push({
+            region: pharmacy.region,
+            address: pharmacy.address,
+            phone: pharmacy.phone,
+            hours: pharmacy.hours
+          });
+        }
+      }
       
       // Validate required fields
-      if (!firstName || !lastName || !pharmacyIndex) {
+      if (!firstName || !lastName || selectedPharmacies.length === 0) {
         errorMsg.textContent = 'Please fill in all required fields.';
         errorMsg.style.display = 'block';
         return;
       }
       
-      // Get selected pharmacy data
-      const selectedPharmacy = pharmacies[parseInt(pharmacyIndex)];
-      const pharmacyAddress = selectedPharmacy.address;
+      // Validate pharmacy count
+      if (selectedPharmacies.length > maxPharmacies) {
+        errorMsg.textContent = `You can only select up to ${maxPharmacies} pharmacy${maxPharmacies > 1 ? 'ies' : ''}.`;
+        errorMsg.style.display = 'block';
+        return;
+      }
       
       // Show loading state
       submitBtn.disabled = true;
@@ -358,7 +502,7 @@
         const profileData = {
           first_name: firstName,
           last_name: lastName,
-          pharmacy_address: pharmacyAddress,
+          pharmacies: selectedPharmacies,
           role: userRole,
           email: userEmail,
           created_at: new Date().toISOString()
@@ -402,8 +546,49 @@
       }
     });
     
+    // Initialize pharmacy selection
+    function initializePharmacySelection() {
+      // Clear existing content
+      pharmacyContainer.innerHTML = '';
+      
+      // Add first pharmacy selection
+      const firstPharmacy = createPharmacyItem();
+      pharmacyContainer.appendChild(firstPharmacy);
+      
+      // Add "Add Pharmacy" button if user can select multiple
+      if (maxPharmacies > 1) {
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.id = 'addPharmacyBtn';
+        addBtn.className = 'add-pharmacy';
+        addBtn.textContent = '+ Add Another Pharmacy';
+        pharmacyContainer.appendChild(addBtn);
+        
+        addBtn.addEventListener('click', function() {
+          if (pharmacyContainer.children.length - 1 < maxPharmacies) {
+            const newPharmacy = createPharmacyItem();
+            pharmacyContainer.insertBefore(newPharmacy, addBtn);
+            updateAddButton();
+            updateRemoveButtons();
+          }
+        });
+      }
+      
+      updateAddButton();
+      updateRemoveButtons();
+    }
+    
+    // Handle remove pharmacy button clicks
+    pharmacyContainer.addEventListener('click', function(e) {
+      if (e.target.classList.contains('remove-pharmacy')) {
+        e.target.closest('.pharmacy-item').remove();
+        updateAddButton();
+        updateRemoveButtons();
+      }
+    });
+    
     // Initialize
-    populatePharmacyDropdown();
+    initializePharmacySelection();
     
     // Auto-focus first input
     document.getElementById('firstName').focus();

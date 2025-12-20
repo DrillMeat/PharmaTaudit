@@ -764,9 +764,17 @@
       }
 
       function mergeSubmissionsIntoState(targetState, submissions) {
+        // Track which tasks exist in the current submissions and which pharmacies we're updating
+        const existingTasks = new Set();
+        const updatedPharmacies = new Set();
+        
         submissions.forEach(item => {
           if (!item || !item.task_key) return;
           const indexKey = String(item.pharmacy_index);
+          const taskId = `${indexKey}:${item.task_key}`;
+          existingTasks.add(taskId);
+          updatedPharmacies.add(indexKey);
+          
           const store = ensurePharmacyState(indexKey);
           const existing = store[item.task_key];
           const existingUpdated = existing?.updatedAt ? new Date(existing.updatedAt).getTime() : 0;
@@ -783,6 +791,27 @@
               reviewedAt: item.reviewed_at || null
             });
           }
+        });
+        
+        // Reset tasks that no longer exist in the database (were deleted by employee)
+        // Only reset tasks for pharmacies we're currently updating
+        updatedPharmacies.forEach(indexKey => {
+          const store = targetState[indexKey];
+          if (!store) return;
+          
+          // Check all tasks - if a task was in state but is not in submissions, reset it
+          TASK_DEFINITIONS.forEach(task => {
+            const taskId = `${indexKey}:${task.key}`;
+            // If this task is not in the submissions, reset it to not_submitted
+            if (!existingTasks.has(taskId)) {
+              const currentEntry = store[task.key];
+              // Only reset if it was previously submitted (has a state other than not_submitted)
+              if (currentEntry && currentEntry.state && currentEntry.state !== 'not_submitted') {
+                console.log(`Resetting deleted task ${task.key} for pharmacy ${indexKey} to not_submitted`);
+                store[task.key] = createEmptyTaskEntry();
+              }
+            }
+          });
         });
       }
 

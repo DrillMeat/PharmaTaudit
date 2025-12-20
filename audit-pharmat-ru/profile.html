@@ -1,9 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-  <title>Complete Your Profile</title>
+  <title>Ваш профиль | Audit PharmaT RU</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -23,12 +22,6 @@
       box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
       width: 100%;
       max-width: 500px;
-    }
-
-    .top-row {
-      display: flex;
-      justify-content: flex-end;
-      margin-bottom: 10px;
     }
     
     h2 {
@@ -378,227 +371,68 @@
       border: 1px solid #6ee7b7;
       text-transform: uppercase;
     }
-
-    .logout-link {
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      color: #1f2933;
-      width: auto;
-      margin-top: 0;
-      padding: 10px 18px;
-      border-radius: 999px;
-      font-size: 14px;
-      font-weight: 600;
-      box-shadow: none;
-    }
-
-    .logout-link:hover {
-      background: #fef2f2;
-      border-color: #fecaca;
-      color: #b91c1c;
-      box-shadow: 0 6px 16px rgba(185, 28, 28, 0.12);
-    }
-
-    @media (max-width: 768px) {
-      body {
-        padding: 16px 12px;
-      }
-
-      .container {
-        padding: 24px 20px;
-        border-radius: 12px;
-      }
-
-      h2 {
-        font-size: 24px;
-        margin-bottom: 20px;
-      }
-
-      .subtitle {
-        font-size: 15px;
-        margin-bottom: 24px;
-      }
-
-      label {
-        margin-bottom: 12px;
-        font-size: 15px;
-      }
-
-      input, textarea, select {
-        padding: 14px 16px;
-        font-size: 16px;
-        min-height: 48px;
-      }
-
-      button {
-        padding: 16px 24px;
-        font-size: 17px;
-        min-height: 48px;
-      }
-
-      .top-row {
-        margin-bottom: 16px;
-      }
-
-      .logout-link {
-        padding: 12px 16px;
-        font-size: 15px;
-        min-height: 44px;
-      }
-
-      .pharmacy-item {
-        flex-direction: column;
-        gap: 12px;
-        padding: 12px;
-      }
-
-      .pharmacy-item select {
-        width: 100%;
-        margin-right: 0;
-        margin-bottom: 8px;
-      }
-
-      .remove-pharmacy {
-        width: 100%;
-        transform: none;
-        padding: 12px;
-        min-height: 44px;
-      }
-
-      .add-pharmacy {
-        width: 100%;
-        padding: 14px;
-        font-size: 15px;
-        min-height: 48px;
-      }
-
-      .selected-pharmacy-card {
-        padding: 12px;
-      }
-
-      .selected-pharmacy-header {
-        flex-direction: column;
-        gap: 12px;
-      }
-
-      .selected-pharmacy-remove {
-        width: 100%;
-        transform: none;
-        padding: 10px;
-        min-height: 44px;
-      }
-
-      .profile-summary {
-        padding: 20px;
-      }
-
-      .profile-summary h3 {
-        font-size: 20px;
-      }
-
-      .profile-summary dl {
-        grid-template-columns: 1fr;
-        gap: 8px 0;
-      }
-
-      .summary-actions {
-        flex-direction: column;
-        gap: 10px;
-      }
-
-      .summary-actions button {
-        width: 100%;
-      }
-    }
-
-    @media (max-width: 480px) {
-      body {
-        padding: 12px 8px;
-      }
-
-      .container {
-        padding: 20px 16px;
-      }
-
-      h2 {
-        font-size: 22px;
-      }
-
-      input, textarea, select {
-        padding: 16px;
-        font-size: 16px;
-      }
-
-      button {
-        padding: 18px 20px;
-        font-size: 18px;
-      }
-    }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="top-row">
-      <button type="button" class="logout-link" id="logoutButton">Log out</button>
-    </div>
-    <h2>Your Profile</h2>
-    <p class="subtitle" id="subtitleText" style="display:none;">Please provide your personal information and pharmacy details to continue.</p>
+    <h2>Ваш профиль</h2>
+    <p class="subtitle" id="subtitleText" style="display:none;">Укажите личные данные и выберите аптеку для продолжения.</p>
     <div id="profileSummary" class="profile-summary">
-      <h3>Saved profile</h3>
+      <h3>Сохранённый профиль</h3>
       <dl>
-        <dt>Name</dt>
+        <dt>Имя</dt>
         <dd id="summaryName">—</dd>
         <dt>Email</dt>
         <dd id="summaryEmail">—</dd>
-        <dt>Role</dt>
-        <dd id="summaryRole"><span class="summary-pill">Employee</span></dd>
-        <dt>Pharmacy</dt>
+        <dt>Роль</dt>
+        <dd id="summaryRole"><span class="summary-pill">Сотрудник</span></dd>
+        <dt>Аптеки</dt>
         <dd id="summaryPharmacy">—</dd>
       </dl>
       <div class="summary-actions">
-        <button type="button" id="backToTasksBtn" class="secondary-summary">Back to tasks</button>
-        <button type="button" id="editProfileBtn">Edit profile</button>
+        <button type="button" id="backToTasksBtn" class="secondary-summary">Назад к заданиям</button>
+        <button type="button" id="editProfileBtn">Редактировать профиль</button>
       </div>
     </div>
     
     <form id="profileForm">
       <div class="form-group">
         <label>
-          First Name <span class="required">*</span>:
-          <input type="text" id="firstName" required placeholder="Enter your first name" />
+          Имя <span class="required">*</span>:
+          <input type="text" id="firstName" required placeholder="Введите имя" />
         </label>
       </div>
       
       <div class="form-group">
         <label>
-          Last Name <span class="required">*</span>:
-          <input type="text" id="lastName" required placeholder="Enter your last name" />
+          Фамилия <span class="required">*</span>:
+          <input type="text" id="lastName" required placeholder="Введите фамилию" />
         </label>
       </div>
       
       <div class="form-group">
         <label>
-          Pharmacy <span class="required">*</span>:
+          Аптека <span class="required">*</span>:
           <div id="pharmacyContainer">
             <select class="pharmacy-select" required>
-              <option value="">Select your pharmacy</option>
+              <option value="">Выберите аптеку</option>
             </select>
           </div>
           <div id="pharmacyLimitInfo" class="pharmacy-limit-info" style="display: none;">
-            You can select up to <span id="pharmacyLimit">1</span> pharmacy.
+            Вы можете выбрать до <span id="pharmacyLimit">1</span> <span id="pharmacyLimitWord">аптек</span>.
           </div>
         </label>
       </div>
 
       <div id="selectedPharmacies" class="selected-pharmacies">
-        <h4>Selected Pharmacy</h4>
+        <h4>Выбранные аптеки</h4>
         <div id="selectedPharmaciesList"></div>
       </div>
       
       <div id="errorMsg" class="error" style="display: none;"></div>
       <div id="successMsg" class="success" style="display: none;"></div>
       
-      <button type="submit" id="submitBtn">Complete Profile</button>
+      <button type="submit" id="submitBtn">Сохранить профиль</button>
     </form>
   </div>
 
@@ -613,6 +447,7 @@
     const pharmacyContainer = document.getElementById('pharmacyContainer');
     const pharmacyLimitInfo = document.getElementById('pharmacyLimitInfo');
     const pharmacyLimitSpan = document.getElementById('pharmacyLimit');
+    const pharmacyLimitWord = document.getElementById('pharmacyLimitWord');
     const selectedPharmaciesPanel = document.getElementById('selectedPharmacies');
     const selectedPharmaciesList = document.getElementById('selectedPharmaciesList');
     const profileSummary = document.getElementById('profileSummary');
@@ -621,21 +456,7 @@
     const summaryRole = document.getElementById('summaryRole');
     const summaryPharmacy = document.getElementById('summaryPharmacy');
     const editProfileBtn = document.getElementById('editProfileBtn');
-    const logoutButton = document.getElementById('logoutButton');
     let savedProfileData = null;
-    function performLogout() {
-      try {
-        sessionStorage.removeItem('userRole');
-        sessionStorage.removeItem('userEmail');
-        sessionStorage.removeItem('profileFormData');
-      } catch (storageError) {
-        console.warn('Unable to clear session storage during logout', storageError);
-      }
-      window.location.href = 'register.html';
-    }
-
-    logoutButton?.addEventListener('click', performLogout);
-
     // Track selected pharmacies
     let selectedPharmacyData = [];
     
@@ -672,7 +493,7 @@
         savedProfileData = JSON.parse(storedProfile);
       }
     } catch (profileStorageError) {
-      console.warn('Unable to restore profile form data from session storage', profileStorageError);
+      console.warn('Не удалось восстановить данные профиля из sessionStorage', profileStorageError);
       savedProfileData = null;
     }
 
@@ -692,7 +513,8 @@
       const firstName = data?.first_name || '';
       const lastName = data?.last_name || '';
       const email = data?.email || userEmail || '—';
-      const role = (data?.role || userRole || 'employee').toUpperCase();
+      const roleCode = (data?.role || userRole || 'employee').toLowerCase();
+      const roleLabel = roleCode === 'rga' ? 'РГА' : 'Сотрудник';
 
       if (summaryName) {
         summaryName.textContent = (firstName || lastName)
@@ -703,7 +525,7 @@
         summaryEmail.textContent = email || '—';
       }
       if (summaryRole) {
-        summaryRole.innerHTML = `<span class="summary-pill">${role}</span>`;
+        summaryRole.innerHTML = `<span class="summary-pill">${roleLabel}</span>`;
       }
 
       if (summaryPharmacy) {
@@ -831,48 +653,38 @@
     };
     
     const maxPharmacies = pharmacyLimits[userRole] || 1;
+    function pluralizePharmacy(count) {
+      const absCount = Math.abs(count);
+      const lastDigit = absCount % 10;
+      const lastTwoDigits = absCount % 100;
+      if (lastDigit === 1 && lastTwoDigits !== 11) return 'аптеку';
+      if (lastDigit >= 2 && lastDigit <= 4 && (lastTwoDigits < 12 || lastTwoDigits > 14)) return 'аптеки';
+      return 'аптек';
+    }
+
     pharmacyLimitSpan.textContent = maxPharmacies;
+    if (pharmacyLimitWord) {
+      pharmacyLimitWord.textContent = pluralizePharmacy(maxPharmacies);
+    }
     pharmacyLimitInfo.style.display = 'block';
     
     // Populate pharmacy dropdown
     function populatePharmacyDropdown(selectElement) {
-      if (!selectElement) {
-        console.error('Cannot populate: selectElement is null or undefined');
-        return;
-      }
-      if (!pharmacies || pharmacies.length === 0) {
-        console.error('Cannot populate: pharmacies array is empty or undefined. Length:', pharmacies?.length);
-        console.error('Pharmacies variable:', pharmacies);
-        return;
-      }
       console.log('Populating pharmacy dropdown...');
       console.log('Pharmacies array length:', pharmacies.length);
-      console.log('First pharmacy:', pharmacies[0]);
-      
-      // Clear and populate
-      selectElement.innerHTML = '<option value="">Select your pharmacy</option>';
-      
+      selectElement.innerHTML = '<option value="">Выберите аптеку</option>';
       pharmacies.forEach((pharmacy, index) => {
-        if (!pharmacy || !pharmacy.region || !pharmacy.address) {
-          console.warn('Invalid pharmacy at index', index, pharmacy);
-          return;
-        }
         const option = document.createElement('option');
-        option.value = String(index);
+        option.value = index;
         option.textContent = `${pharmacy.region} - ${pharmacy.address}`;
         selectElement.appendChild(option);
       });
-      
       console.log('Pharmacy dropdown populated with', selectElement.children.length, 'options');
-      console.log('Select element:', selectElement);
-      console.log('Select options:', Array.from(selectElement.options).map(opt => opt.textContent));
     }
     
     // Create pharmacy selection item
     function createPharmacyItem() {
       console.log('Creating pharmacy item...');
-      console.log('Pharmacies available:', pharmacies ? pharmacies.length : 'NOT DEFINED');
-      
       const pharmacyItem = document.createElement('div');
       pharmacyItem.className = 'pharmacy-item';
       
@@ -884,20 +696,17 @@
         ? window.crypto.randomUUID()
         : `select-${Date.now()}-${Math.random().toString(16).slice(2)}`;
       select.dataset.selectId = selectId;
-      
-      // Populate BEFORE appending to ensure it works
       populatePharmacyDropdown(select);
       
       console.log('Select element created:', select);
       console.log('Select options count:', select.children.length);
-      console.log('Select HTML:', select.innerHTML.substring(0, 200));
       
       pharmacyItem.appendChild(select);
       
       const removeBtn = document.createElement('button');
       removeBtn.type = 'button';
       removeBtn.className = 'remove-pharmacy';
-      removeBtn.textContent = 'Remove';
+      removeBtn.textContent = 'Удалить';
       removeBtn.disabled = true;
       pharmacyItem.appendChild(removeBtn);
       
@@ -906,15 +715,14 @@
     
     // Update add button state
     function updateAddButton() {
-      const currentPharmacies = pharmacyContainer.children.length;
       const addBtn = document.getElementById('addPharmacyBtn');
       if (addBtn) {
         const isAtLimit = selectedPharmacyData.length >= maxPharmacies;
         addBtn.disabled = isAtLimit;
         if (isAtLimit) {
-          addBtn.textContent = `Maximum ${maxPharmacies} pharmacy${maxPharmacies > 1 ? 'ies' : ''} reached`;
+          addBtn.textContent = `Достигнут лимит: ${maxPharmacies} ${pluralizePharmacy(maxPharmacies)}`;
         } else {
-          addBtn.textContent = '+ Add Another Pharmacy';
+          addBtn.textContent = '+ Добавить аптеку';
         }
       }
     }
@@ -939,7 +747,7 @@
       }
 
       if (selectedPharmacyData.some(p => p.index === selectedIndex)) {
-        alert('This pharmacy is already selected. Please choose a different one.');
+        alert('Эта аптека уже выбрана. Пожалуйста, выберите другую.');
         selectElement.value = selectElement.dataset.selectedIndex || '';
         if (!selectElement.value) {
           const removeBtn = selectElement.closest('.pharmacy-item').querySelector('.remove-pharmacy');
@@ -952,7 +760,7 @@
 
         // Check if user has reached the maximum number of pharmacies
         if (selectedPharmacyData.length >= maxPharmacies) {
-          alert(`You can only select up to ${maxPharmacies} pharmacy${maxPharmacies > 1 ? 'ies' : ''}. Please remove a pharmacy first.`);
+          alert(`Вы можете выбрать только ${maxPharmacies} ${pluralizePharmacy(maxPharmacies)}. Удалите аптеку, чтобы добавить новую.`);
         selectElement.value = selectElement.dataset.selectedIndex || '';
           return;
         }
@@ -988,21 +796,21 @@
       
       // Validate required fields
       if (!firstName || !lastName || selectedPharmacyData.length === 0) {
-        errorMsg.textContent = 'Please fill in all required fields.';
+        errorMsg.textContent = 'Пожалуйста, заполните все обязательные поля.';
         errorMsg.style.display = 'block';
         return;
       }
       
       // Validate pharmacy count
       if (selectedPharmacyData.length > maxPharmacies) {
-        errorMsg.textContent = `You can only select up to ${maxPharmacies} pharmacy${maxPharmacies > 1 ? 'ies' : ''}.`;
+        errorMsg.textContent = `Вы можете выбрать только ${maxPharmacies} ${pluralizePharmacy(maxPharmacies)}.`;
         errorMsg.style.display = 'block';
         return;
       }
       
       // Show loading state
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Saving...';
+      submitBtn.textContent = 'Сохранение...';
       
       try {
         // Save profile data to database
@@ -1015,7 +823,7 @@
           created_at: new Date().toISOString()
         };
         
-        console.log('Saving profile:', profileData);
+        console.log('Сохранение профиля:', profileData);
         
         // Call serverless API to save profile
         const apiResponse = await fetch('/api/save-profile', {
@@ -1031,23 +839,23 @@
           throw new Error(result?.error || 'Failed to save profile');
         }
         
-        console.log('Profile saved successfully:', result);
+        console.log('Профиль успешно сохранён:', result);
         
         // Success - show success message and redirect
-        successMsg.textContent = `Profile completed successfully! Welcome ${firstName} ${lastName}!`;
+        successMsg.textContent = `Профиль успешно сохранён! Добро пожаловать, ${firstName} ${lastName}!`;
         successMsg.style.display = 'block';
         try {
           const serializedProfile = JSON.stringify(profileData);
           sessionStorage.setItem('profileFormData', serializedProfile);
           savedProfileData = JSON.parse(serializedProfile);
         } catch (cacheError) {
-          console.warn('Unable to cache profile form data', cacheError);
+          console.warn('Не удалось сохранить профиль в sessionStorage', cacheError);
         }
         try {
           sessionStorage.setItem('userRole', userRole);
           sessionStorage.setItem('userEmail', userEmail);
         } catch (persistError) {
-          console.warn('Unable to update user role/email in session storage', persistError);
+          console.warn('Не удалось обновить данные пользователя в sessionStorage', persistError);
         }
         try {
           if (userRole && userRole.toLowerCase() === 'rga') {
@@ -1080,7 +888,7 @@
             localStorage.setItem('pharmacyEmployees', JSON.stringify(employeesStore));
           }
         } catch (localErr) {
-          console.warn('Unable to update local assignment data', localErr);
+          console.warn('Не удалось обновить локальные данные распределения', localErr);
         }
         savedProfileData = profileData;
         
@@ -1094,13 +902,13 @@
         }, 2000);
         
       } catch (err) {
-        console.error('Profile save error:', err);
-        errorMsg.textContent = `Failed to save profile: ${err.message}`;
+        console.error('Ошибка сохранения профиля:', err);
+        errorMsg.textContent = `Не удалось сохранить профиль: ${err.message}`;
         errorMsg.style.display = 'block';
       } finally {
         // Reset button state
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Complete Profile';
+        submitBtn.textContent = 'Сохранить профиль';
       }
     });
     
@@ -1109,38 +917,13 @@
       console.log('Initializing pharmacy selection...');
       console.log('User role:', userRole);
       console.log('Max pharmacies:', maxPharmacies);
-      console.log('Pharmacies array available:', typeof pharmacies !== 'undefined', pharmacies ? pharmacies.length : 'N/A');
-      
-      // First, try to populate any existing select elements before clearing
-      const existingSelects = pharmacyContainer.querySelectorAll('.pharmacy-select');
-      console.log('Found', existingSelects.length, 'existing select element(s)');
-      existingSelects.forEach(function(select, idx) {
-        console.log(`Populating existing select ${idx}...`);
-        populatePharmacyDropdown(select);
-      });
       
       // Clear existing content
       pharmacyContainer.innerHTML = '';
       
       // Add first pharmacy selection
       const firstPharmacy = createPharmacyItem();
-      if (!firstPharmacy) {
-        console.error('Failed to create pharmacy item!');
-        return;
-      }
       pharmacyContainer.appendChild(firstPharmacy);
-      
-      // Immediately verify the dropdown was populated
-      const createdSelect = firstPharmacy.querySelector('.pharmacy-select');
-      if (createdSelect) {
-        console.log('Created select element found. Options count:', createdSelect.options.length);
-        if (createdSelect.options.length <= 1) {
-          console.error('Select element is empty! Attempting to repopulate...');
-          populatePharmacyDropdown(createdSelect);
-        }
-      } else {
-        console.error('Select element not found in created pharmacy item!');
-      }
       
       // Add "Add Pharmacy" button if user can select multiple
       if (maxPharmacies > 1) {
@@ -1148,7 +931,7 @@
         addBtn.type = 'button';
         addBtn.id = 'addPharmacyBtn';
         addBtn.className = 'add-pharmacy';
-        addBtn.textContent = '+ Add Another Pharmacy';
+        addBtn.textContent = '+ Добавить аптеку';
         pharmacyContainer.appendChild(addBtn);
         
         addBtn.addEventListener('click', function() {
@@ -1248,86 +1031,14 @@
       }
     });
     
-    // Ensure dropdown is populated when clicked (safety net)
-    pharmacyContainer.addEventListener('click', function(e) {
-      if (e.target.classList.contains('pharmacy-select') || e.target.closest('.pharmacy-select')) {
-        const select = e.target.classList.contains('pharmacy-select') 
-          ? e.target 
-          : e.target.closest('.pharmacy-select');
-        if (select && (select.children.length <= 1 || select.options.length <= 1)) {
-          console.log('Dropdown clicked but empty. Repopulating...');
-          populatePharmacyDropdown(select);
-        }
-      }
-    });
-    
-    // Also handle focus/mousedown events to ensure dropdown is populated before opening
-    document.addEventListener('mousedown', function(e) {
-      if (e.target.classList.contains('pharmacy-select') || e.target.closest('.pharmacy-select')) {
-        const select = e.target.classList.contains('pharmacy-select') 
-          ? e.target 
-          : e.target.closest('.pharmacy-select');
-        if (select && (select.children.length <= 1 || select.options.length <= 1)) {
-          console.log('Dropdown about to open but empty. Repopulating...');
-          populatePharmacyDropdown(select);
-        }
-      }
-    }, true);
-    
     
     // Initialize
-    console.log('=== INITIALIZING PHARMACY SELECTION ===');
-    console.log('Pharmacies array defined:', typeof pharmacies !== 'undefined');
-    console.log('Pharmacies count:', pharmacies ? pharmacies.length : 'N/A');
-    
     initializePharmacySelection();
     
-    // Ensure all pharmacy dropdowns are populated (safety check with multiple attempts)
-    function ensureDropdownsPopulated(attempt = 1) {
-      const allDropdowns = document.querySelectorAll('.pharmacy-select');
-      console.log(`Attempt ${attempt}: Found ${allDropdowns.length} pharmacy dropdown(s)`);
-      
-      let allPopulated = true;
-      allDropdowns.forEach(function(dropdown, index) {
-        const optionCount = dropdown.children.length;
-        console.log(`Dropdown ${index}: ${optionCount} options`);
-        if (optionCount <= 1) {
-          console.log(`Dropdown ${index} is empty or only has placeholder. Repopulating...`);
-          populatePharmacyDropdown(dropdown);
-          allPopulated = false;
-        } else {
-          console.log(`Dropdown ${index} has ${optionCount} options - OK`);
-        }
-      });
-      
-      // Retry up to 3 times if not all populated
-      if (!allPopulated && attempt < 3) {
-        setTimeout(() => ensureDropdownsPopulated(attempt + 1), 200);
-      } else if (allPopulated) {
-        console.log('All dropdowns successfully populated!');
-      }
-    }
-    
-    // Check immediately and after a short delay
-    setTimeout(() => ensureDropdownsPopulated(1), 50);
-    setTimeout(() => ensureDropdownsPopulated(2), 300);
-    setTimeout(() => ensureDropdownsPopulated(3), 1000);
-    
-    // Also ensure on window load
-    window.addEventListener('load', function() {
-      console.log('Window loaded - checking dropdowns again');
-      ensureDropdownsPopulated('window-load');
-    });
-    
-    // Force populate on DOMContentLoaded as well
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOMContentLoaded - checking dropdowns');
-        setTimeout(() => ensureDropdownsPopulated('dom-ready'), 100);
-      });
-    } else {
-      // DOM already loaded
-      setTimeout(() => ensureDropdownsPopulated('immediate'), 100);
+    // Also populate the initial dropdown if it exists
+    const initialDropdown = document.querySelector('.pharmacy-select');
+    if (initialDropdown) {
+      populatePharmacyDropdown(initialDropdown);
     }
 
     restoreFormValuesIfAvailable();
@@ -1346,7 +1057,7 @@
       }
       
       selectedPharmaciesPanel.style.display = 'block';
-      selectedPharmaciesPanel.querySelector('h4').textContent = selectedPharmacyData.length > 1 ? 'Selected Pharmacies' : 'Selected Pharmacy';
+      selectedPharmaciesPanel.querySelector('h4').textContent = selectedPharmacyData.length > 1 ? 'Выбранные аптеки' : 'Выбранная аптека';
       
       selectedPharmacyData.forEach(pharmacyInfo => {
         const pharmacy = pharmacies[parseInt(pharmacyInfo.index, 10)];
@@ -1366,7 +1077,7 @@
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
         removeBtn.className = 'selected-pharmacy-remove';
-        removeBtn.textContent = 'Remove';
+        removeBtn.textContent = 'Удалить';
         removeBtn.dataset.selectId = pharmacyInfo.selectId;
         
         header.appendChild(name);
@@ -1377,12 +1088,12 @@
         meta.className = 'selected-pharmacy-meta';
         if (pharmacy.phone) {
           const phone = document.createElement('span');
-          phone.textContent = `Phone: ${pharmacy.phone}`;
+          phone.textContent = `Телефон: ${pharmacy.phone}`;
           meta.appendChild(phone);
         }
         if (pharmacy.hours) {
           const hours = document.createElement('span');
-          hours.textContent = `Hours: ${pharmacy.hours}`;
+          hours.textContent = `График: ${pharmacy.hours}`;
           meta.appendChild(hours);
         }
         card.appendChild(meta);

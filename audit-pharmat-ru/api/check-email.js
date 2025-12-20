@@ -24,19 +24,8 @@ export default async function handler(req, res) {
     });
     
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Supabase error:', response.status, errorText);
-      
-      // Check if project might be paused
-      if (response.status === 503 || response.status === 502) {
-        res.status(503).json({ 
-          error: 'Database service unavailable. Your Supabase project may be paused. Please check your Supabase dashboard and restart the project if needed.',
-          exists: false
-        });
-        return;
-      }
-      
-      res.status(500).json({ error: `Database error: ${errorText || 'Unknown error'}` });
+      console.error('Supabase error:', await response.text());
+      res.status(500).json({ error: 'Database error' });
       return;
     }
     

@@ -1,0 +1,19 @@
+0 verbose cli /usr/local/bin/node /usr/local/lib/node_modules/npm/bin/npm-cli.js
+1 info using npm@10.9.2
+2 info using node@v22.16.0
+3 silly config load:file:/usr/local/lib/node_modules/npm/npmrc
+4 silly config load:file:/Users/moskovojtim/Audit PharmaT/.npmrc
+5 silly config load:file:/Users/moskovojtim/.npmrc
+6 silly config load:file:/usr/local/etc/npmrc
+7 verbose title npm exec vercel deploy --prod
+8 verbose argv "exec" "--" "vercel" "deploy" "--prod"
+9 verbose logfile logs-max:10 dir:/Users/moskovojtim/Audit PharmaT/.npm-cache/_logs/2025-11-09T18_27_14_505Z-
+10 verbose logfile /Users/moskovojtim/Audit PharmaT/.npm-cache/_logs/2025-11-09T18_27_14_505Z-debug-0.log
+11 silly logfile done cleaning log files
+12 verbose cwd /Users/moskovojtim/Audit PharmaT
+13 verbose os Darwin 24.6.0
+14 verbose node v22.16.0
+15 verbose npm  v10.9.2
+16 verbose exit 1
+17 verbose code 1
+18 error A complete log of this run can be found in: /Users/moskovojtim/Audit PharmaT/.npm-cache/_logs/2025-11-09T18_27_14_505Z-debug-0.log

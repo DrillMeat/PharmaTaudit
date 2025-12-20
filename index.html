@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <title>PharmaT audit</title>
 <style>
   body {
@@ -60,6 +61,56 @@
   
   .register-btn:active {
     transform: translateY(0);
+  }
+
+  @media (max-width: 768px) {
+    body {
+      padding: 16px 12px;
+    }
+
+    .container {
+      padding: 30px 24px;
+      border-radius: 12px;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 16px;
+    }
+
+    p {
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+
+    .register-btn {
+      padding: 14px 30px;
+      font-size: 16px;
+      min-height: 48px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    body {
+      padding: 12px 8px;
+    }
+
+    .container {
+      padding: 24px 20px;
+    }
+
+    h1 {
+      font-size: 24px;
+    }
+
+    p {
+      font-size: 15px;
+    }
+
+    .register-btn {
+      padding: 16px 24px;
+      font-size: 17px;
+    }
   }
 </style>
 </head>

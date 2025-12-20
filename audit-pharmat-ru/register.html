@@ -1,9 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-  <title>Registration Step 1</title>
+  <title>Регистрация | Audit PharmaT RU</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -80,16 +79,6 @@
       transform: translateY(0);
     }
     
-    #loginBtnBottom:hover {
-      background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-    }
-    
-    #loginBtnBottom:active {
-      transform: translateY(0);
-    }
-    
     .error {
       color: #f44336;
       background: #ffebee;
@@ -105,106 +94,24 @@
     .form-group {
       margin-bottom: 20px;
     }
-
-    @media (max-width: 768px) {
-      body {
-        padding: 16px 12px;
-      }
-
-      .container {
-        padding: 28px 24px;
-        border-radius: 12px;
-      }
-
-      h2 {
-        font-size: 24px;
-        margin-bottom: 24px;
-      }
-
-      label {
-        margin-bottom: 12px;
-        font-size: 15px;
-      }
-
-      select, input {
-        padding: 14px 16px;
-        font-size: 16px;
-        min-height: 48px;
-      }
-
-      button {
-        padding: 16px 24px;
-        font-size: 17px;
-        min-height: 48px;
-      }
-
-      #loginModal > div {
-        margin: 16px;
-        padding: 28px 24px;
-        max-width: calc(100% - 32px);
-      }
-
-      #closeLoginModal {
-        top: 8px;
-        right: 12px;
-        font-size: 28px;
-        padding: 4px 8px;
-        min-width: 44px;
-        min-height: 44px;
-      }
-
-      #togglePassword, #toggleLoginPassword {
-        min-width: 44px;
-        min-height: 44px;
-        font-size: 20px;
-      }
-
-      .error {
-        padding: 12px 16px;
-        font-size: 14px;
-      }
-    }
-
-    @media (max-width: 480px) {
-      body {
-        padding: 12px 8px;
-      }
-
-      .container {
-        padding: 24px 20px;
-      }
-
-      h2 {
-        font-size: 22px;
-      }
-
-      select, input {
-        padding: 16px;
-        font-size: 16px;
-      }
-
-      button {
-        padding: 18px 20px;
-        font-size: 18px;
-      }
-
-      #loginModal > div {
-        padding: 24px 20px;
-      }
-    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2 style="margin: 0; margin-bottom: 20px;">Registration</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h2 style="margin: 0;">Регистрация</h2>
+      <button id="loginBtnTop" style="background: none; color: #666; border: none; padding: 4px 8px; cursor: pointer; font-size: 14px; text-decoration: underline;">
+        Войти
+      </button>
+    </div>
     <form id="step1Form">
       <div class="form-group">
         <label>
-          Select your role:
+          Выберите роль:
           <select id="roleSelect" required>
-            <option value="" disabled selected>Select role</option>
-            <option value="employee">Employee</option>
-            <option value="rga">RGA</option>
+            <option value="" disabled selected>Выберите роль</option>
+            <option value="employee">Сотрудник</option>
+            <option value="rga">РГА</option>
           </select>
         </label>
       </div>
@@ -212,23 +119,23 @@
       <div class="form-group">
         <label>
           Email:
-          <input type="email" id="emailInput" required />
+          <input type="email" id="emailInput" required placeholder="example@company.ru" />
         </label>
-        <button type="button" id="sendCodeBtn" style="margin-top:10px; width:100%">Send verification code</button>
+        <button type="button" id="sendCodeBtn" style="margin-top:10px; width:100%">Отправить код подтверждения</button>
       </div>
 
       <div class="form-group hidden" id="codeGroup">
         <label>
-          Enter code from email:
-          <input type="text" id="codeInput" placeholder="6-digit code" maxlength="6" pattern="[0-9]{6}" />
+          Введите код из письма:
+          <input type="text" id="codeInput" placeholder="6-значный код" maxlength="6" pattern="[0-9]{6}" />
         </label>
-        <button type="button" id="verifyCodeBtn" style="margin-top:10px; width:100%">Verify code</button>
+        <button type="button" id="verifyCodeBtn" style="margin-top:10px; width:100%">Подтвердить код</button>
         <div id="verifyMsg" class="error" style="display:none"></div>
       </div>
       
       <div class="form-group">
         <label>
-          Password:
+          Пароль:
           <div style="position: relative;">
             <input type="password" id="passportInput" required style="padding-right: 40px; width: 100%;" />
             <button type="button" id="togglePassword" style="position: absolute; right: 10px; top: 50%; transform: translateY(-80%); background: none; border: none; cursor: pointer; padding: 4px; color: #666; font-size: 18px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
@@ -239,14 +146,7 @@
       </div>
       
       <div id="errorMsg" class="error" style="display: none;"></div>
-      <button type="submit">Next</button>
-      
-      <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-        <p style="color: #666; margin-bottom: 12px; font-size: 14px;">Already a user?</p>
-        <button type="button" id="loginBtnBottom" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
-          Log In
-        </button>
-      </div>
+      <button type="submit">Далее</button>
     </form>
   </div>
 
@@ -255,20 +155,20 @@
     <div style="background: white; padding: 40px; border-radius: 15px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1); width: 100%; max-width: 400px; margin: 20px; position: relative;">
       <button id="closeLoginModal" style="position: absolute; top: 5px; right: 5px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666; z-index: 10;">&times;</button>
       <div style="margin-bottom: 30px; text-align: center;">
-        <h2 style="margin: 0; color: #2d5a27;">Log In</h2>
+        <h2 style="margin: 0; color: #2d5a27;">Вход</h2>
       </div>
       
       <form id="loginForm">
         <div class="form-group">
           <label>
             Email:
-            <input type="email" id="loginEmail" required />
+            <input type="email" id="loginEmail" required placeholder="example@company.ru" />
           </label>
         </div>
         
         <div class="form-group">
           <label>
-            Password:
+            Пароль:
             <div style="position: relative;">
               <input type="password" id="loginPassword" required style="padding-right: 40px; width: 100%;" />
               <button type="button" id="toggleLoginPassword" style="position: absolute; right: 10px; top: 50%; transform: translateY(-80%); background: none; border: none; cursor: pointer; padding: 4px; color: #666; font-size: 18px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
@@ -279,7 +179,7 @@
         </div>
         
         <div id="loginErrorMsg" class="error" style="display: none;"></div>
-        <button type="submit" style="width: 100%;">Log In</button>
+        <button type="submit" style="width: 100%;">Войти</button>
       </form>
     </div>
   </div>
@@ -298,7 +198,7 @@
     const passportInput = document.getElementById('passportInput');
     const togglePassword = document.getElementById('togglePassword');
     const loginModal = document.getElementById('loginModal');
-    const loginBtnBottom = document.getElementById('loginBtnBottom');
+    const loginBtnTop = document.getElementById('loginBtnTop');
     const closeLoginModal = document.getElementById('closeLoginModal');
     const loginForm = document.getElementById('loginForm');
     const loginErrorMsg = document.getElementById('loginErrorMsg');
@@ -340,17 +240,11 @@
     });
 
     // Login modal functionality
-    function openLoginModal() {
-      console.log('openLoginModal called');
-      if (!loginModal) {
-        console.error('loginModal element not found!');
-        return;
-      }
-      console.log('Opening login modal');
+    loginBtnTop.addEventListener('click', function() {
       loginModal.style.display = 'flex';
       loginModal.style.alignItems = 'center';
       loginModal.style.justifyContent = 'center';
-    }
+    });
 
     closeLoginModal.addEventListener('click', function() {
       loginModal.style.display = 'none';
@@ -379,12 +273,12 @@
     });
     
     // Force deployment trigger
-    console.log('Password toggle initialized');
+    console.log('Переключатель отображения пароля инициализирован');
 
     step1Form.addEventListener('submit', function(event) {
       event.preventDefault(); // Prevent form submission to server
       
-      errorMsg.textContent = ''; // Clear previous errors
+      errorMsg.textContent = ''; // сбрасываем ошибки
 
       const role = document.getElementById('roleSelect').value;
       const email = document.getElementById('emailInput').value.trim();
@@ -392,65 +286,58 @@
 
       // Validate role selected
       if (!role) {
-        errorMsg.textContent = 'Please select a role.';
+        errorMsg.textContent = 'Выберите роль.';
         return;
       }
 
       // Validate email format (HTML5 email type input handles basic check)
       if (!email) {
-        errorMsg.textContent = 'Please enter your email.';
+        errorMsg.textContent = 'Введите адрес электронной почты.';
         return;
       }
 
       // Validate passport matches the required password for the role
       if (!passport || passport.trim() === '') {
-        errorMsg.textContent = 'Please enter a password.';
+        errorMsg.textContent = 'Введите пароль.';
         return;
       }
 
       const requiredPassword = correctPasswords[role];
       if (passport !== requiredPassword) {
-        errorMsg.textContent = 'Incorrect password for this role.';
-        errorMsg.style.display = 'block';
-        errorMsg.style.background = '#fee2e2';
-        errorMsg.style.color = '#b91c1c';
-        errorMsg.style.borderLeft = '4px solid #fca5a5';
+        errorMsg.textContent = 'Неверный пароль для выбранной роли.';
         return;
       }
 
       // Ensure email verified before proceeding
       const isVerified = codeGroup.dataset.verified === 'true';
       if (!isVerified) {
-        verifyMsg.style.display = 'block';
-        verifyMsg.style.background = '#fff3cd';
-        verifyMsg.style.color = '#856404';
-        verifyMsg.style.borderLeft = '4px solid #ffc107';
-        verifyMsg.textContent = 'Please verify your email with the code before continuing.';
+        errorMsg.textContent = 'Подтвердите почту с помощью кода.';
+        errorMsg.style.display = 'block';
         return;
       }
 
       // If all validations pass, save to database
-      console.log('All validations passed, saving to database...');
+      console.log('Валидация пройдена, сохраняем пользователя...');
       saveUserToDatabase(role, email);
     });
 
     // Send verification code
     sendCodeBtn.addEventListener('click', async () => {
-      console.log('Send code button clicked!');
+      console.log('Отправка кода подтверждения...');
       const email = document.getElementById('emailInput').value.trim();
       errorMsg.style.display = 'none';
       verifyMsg.style.display = 'none';
       codeGroup.dataset.verified = 'false';
       
       if (!email) {
-        errorMsg.textContent = 'Please enter your email first.';
+        errorMsg.textContent = 'Сначала введите email.';
         errorMsg.style.display = 'block';
         return;
       }
       
-      console.log('Sending request for email:', email);
+      console.log('Запрос отправки кода на email:', email);
       sendCodeBtn.disabled = true;
-      sendCodeBtn.textContent = 'Sending...';
+      sendCodeBtn.textContent = 'Отправляем...';
       
       // Check if email is already registered
       try {
@@ -464,19 +351,19 @@
         if (emailCheckResult.exists) {
           errorMsg.innerHTML = `
             <div style="text-align: center;">
-              <p style="margin: 0 0 15px 0; font-weight: 600; color: #f44336;">User is already registered</p>
+              <p style="margin: 0 0 15px 0; font-weight: 600; color: #f44336;">Пользователь уже зарегистрирован</p>
               <button type="button" id="loginBtnFromError" style="background: #4caf50; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px;">
-                Log In Instead
+                Войти
               </button>
             </div>
           `;
           errorMsg.style.display = 'block';
           sendCodeBtn.disabled = false;
-          sendCodeBtn.textContent = 'Send verification code';
+          sendCodeBtn.textContent = 'Отправить код подтверждения';
           return;
         }
       } catch (emailCheckError) {
-        console.log('Email check failed, proceeding with code sending:', emailCheckError);
+        console.log('Проверка email не удалась, продолжаем:', emailCheckError);
       }
       
       try {
@@ -489,7 +376,7 @@
         const result = await resp.json();
         
         if (!resp.ok) {
-          throw new Error(result?.error || 'Failed to send code');
+          throw new Error(result?.error || 'Не удалось отправить код');
         }
         
         // Show the code input section
@@ -497,7 +384,7 @@
         verifyMsg.style.display = 'block';
         
         // Handle different response scenarios
-        console.log('API Response:', result);
+        console.log('Ответ API при отправке кода:', result);
         
         if (result?.devCode) {
           // Development mode - show the code
@@ -505,13 +392,13 @@
           verifyMsg.style.color = '#856404';
           verifyMsg.style.borderLeft = '4px solid #ffc107';
           verifyMsg.innerHTML = `
-            <strong>Development Mode:</strong><br>
-            Email not configured. Your verification code is: <strong>${result.devCode}</strong><br>
+            <strong>Режим разработки:</strong><br>
+            Отправка email не настроена. Ваш код: <strong>${result.devCode}</strong><br>
             <small>${result.note || ''}</small>
           `;
           
           if (result.setupInstructions) {
-            verifyMsg.innerHTML += '<br><br><strong>To enable email sending:</strong><br>' + 
+            verifyMsg.innerHTML += '<br><br><strong>Как включить отправку писем:</strong><br>' + 
               result.setupInstructions.map(instruction => `<small>• ${instruction}</small>`).join('<br>');
           }
         } else if (result?.ok === true) {
@@ -519,15 +406,15 @@
           verifyMsg.style.background = '#d4edda';
           verifyMsg.style.color = '#155724';
           verifyMsg.style.borderLeft = '4px solid #28a745';
-          verifyMsg.textContent = 'Verification code sent to your email!';
+          verifyMsg.textContent = 'Код отправлен на вашу почту.';
         } else if (result?.emailError) {
           // Email sending failed but we have a fallback code
           verifyMsg.style.background = '#fff3cd';
           verifyMsg.style.color = '#856404';
           verifyMsg.style.borderLeft = '4px solid #ffc107';
           verifyMsg.innerHTML = `
-            <strong>Email sending failed:</strong><br>
-            Your verification code is: <strong>${result.devCode}</strong><br>
+            <strong>Не удалось отправить email:</strong><br>
+            Ваш код подтверждения: <strong>${result.devCode}</strong><br>
             <small>${result.note || ''}</small>
           `;
         } else {
@@ -535,7 +422,7 @@
           verifyMsg.style.background = '#d4edda';
           verifyMsg.style.color = '#155724';
           verifyMsg.style.borderLeft = '4px solid #28a745';
-          verifyMsg.textContent = result.message || 'Verification code sent to your email!';
+          verifyMsg.textContent = result.message || 'Код отправлен на вашу почту.';
         }
         
       } catch (e) {
@@ -543,7 +430,7 @@
         errorMsg.style.display = 'block';
       } finally {
         sendCodeBtn.disabled = false;
-        sendCodeBtn.textContent = 'Send verification code';
+        sendCodeBtn.textContent = 'Отправить код подтверждения';
       }
     });
 
@@ -553,22 +440,19 @@
       const code = document.getElementById('codeInput').value.trim();
       verifyMsg.style.display = 'none';
       if (!email || !code) {
-        verifyMsg.textContent = 'Enter the code sent to your email.';
+        verifyMsg.textContent = 'Введите код, отправленный на почту.';
         verifyMsg.style.display = 'block';
         return;
       }
       
       // Validate code is exactly 6 digits
       if (!/^[0-9]{6}$/.test(code)) {
-        verifyMsg.style.background = '#fee2e2';
-        verifyMsg.style.color = '#b91c1c';
-        verifyMsg.style.borderLeft = '4px solid #fca5a5';
-        verifyMsg.textContent = 'Please enter a valid 6-digit code.';
+        verifyMsg.textContent = 'Введите корректный 6-значный код.';
         verifyMsg.style.display = 'block';
         return;
       }
       verifyCodeBtn.disabled = true;
-      verifyCodeBtn.textContent = 'Verifying...';
+      verifyCodeBtn.textContent = 'Проверяем...';
       try {
         const resp = await fetch('/api/verify-code', {
           method: 'POST',
@@ -576,22 +460,19 @@
           body: JSON.stringify({ email, code })
         });
         const result = await resp.json();
-        if (!resp.ok) throw new Error(result?.error || 'Verification failed');
+        if (!resp.ok) throw new Error(result?.error || 'Не удалось подтвердить код');
         codeGroup.dataset.verified = 'true';
         verifyMsg.style.display = 'block';
         verifyMsg.style.background = '#e8f5e8';
         verifyMsg.style.color = '#2d5a27';
-        verifyMsg.textContent = 'Email verified successfully!';
+        verifyMsg.textContent = 'Email успешно подтверждён.';
       } catch (e) {
         verifyMsg.style.display = 'block';
-        verifyMsg.style.background = '#fee2e2';
-        verifyMsg.style.color = '#b91c1c';
-        verifyMsg.style.borderLeft = '4px solid #fca5a5';
         verifyMsg.textContent = e.message;
         codeGroup.dataset.verified = 'false';
       } finally {
         verifyCodeBtn.disabled = false;
-        verifyCodeBtn.textContent = 'Verify code';
+        verifyCodeBtn.textContent = 'Подтвердить код';
       }
     });
 
@@ -601,10 +482,10 @@
         // Show loading state
         const submitBtn = document.querySelector('button[type="submit"]');
         const originalText = submitBtn.textContent;
-        submitBtn.textContent = 'Saving...';
+        submitBtn.textContent = 'Сохраняем...';
         submitBtn.disabled = true;
 
-        console.log('Attempting to save user:', { role, email });
+        console.log('Сохраняем пользователя:', { role, email });
 
         // Call serverless API to avoid CORS/network issues
         const apiResponse = await fetch('/api/register', {
@@ -616,16 +497,19 @@
         const result = await apiResponse.json();
         if (!apiResponse.ok) {
           console.error('API error:', result);
-          throw new Error(result?.error || 'Failed to save via API');
+          throw new Error(result?.error || 'Не удалось сохранить пользователя');
         }
 
-        console.log('User saved successfully via API:', result);
+        console.log('Пользователь успешно сохранён через API:', result);
         
         // Store user role for profile completion
         sessionStorage.setItem('userRole', role);
         sessionStorage.setItem('userEmail', email);
         
         // Success - proceed to profile completion
+        alert(`Регистрация прошла успешно!\nРоль: ${role === 'rga' ? 'РГА' : 'Сотрудник'}\nEmail: ${email}\nТеперь заполните профиль.`);
+        
+        // Redirect to profile completion page
         window.location.href = `profile.html?role=${role}&email=${email}`;
 
       } catch (err) {
@@ -637,49 +521,29 @@
             err.message.includes('duplicate')) {
           errorMsg.innerHTML = `
             <div style="text-align: center;">
-              <p style="margin: 0 0 15px 0; font-weight: 600;">User is already registered</p>
+              <p style="margin: 0 0 15px 0; font-weight: 600;">Пользователь уже зарегистрирован</p>
               <button type="button" id="loginBtn" style="background: #4caf50; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px;">
-                Log In
+                Войти
               </button>
             </div>
           `;
         } else {
-          errorMsg.textContent = `Registration failed: ${err.message}`;
+          errorMsg.textContent = `Ошибка регистрации: ${err.message}`;
         }
         errorMsg.style.display = 'block';
       } finally {
         // Reset button state
         const submitBtn = document.querySelector('button[type="submit"]');
-        submitBtn.textContent = 'Next';
+        submitBtn.textContent = 'Далее';
         submitBtn.disabled = false;
       }
     }
     
-    // Handle Log In button click (for all login buttons including dynamically created ones)
+    // Handle Log In button click
     document.addEventListener('click', function(e) {
-      let target = e.target;
-      console.log('Click detected on:', target, 'ID:', target.id);
-      
-      // Check if clicked element or its parent is a login button
-      while (target && target !== document.body) {
-        const buttonId = target.id;
-        console.log('Checking button ID:', buttonId);
-        if (buttonId === 'loginBtn' || buttonId === 'loginBtnFromError' || buttonId === 'loginBtnBottom') {
-          console.log('Login button clicked:', buttonId);
-          e.preventDefault();
-          e.stopPropagation();
-          openLoginModal();
-          return;
-        }
-        target = target.parentElement;
+      if (e.target.id === 'loginBtn' || e.target.id === 'loginBtnFromError') {
+        loginModal.style.display = 'flex';
       }
-    });
-    
-    // Verify elements exist on page load
-    window.addEventListener('DOMContentLoaded', function() {
-      console.log('DOM loaded, checking elements:');
-      console.log('loginBtnBottom:', document.getElementById('loginBtnBottom'));
-      console.log('loginModal:', document.getElementById('loginModal'));
     });
 
     // Login form submission
@@ -692,43 +556,26 @@
       const password = document.getElementById('loginPassword').value.trim();
       
       if (!email || !password) {
-        loginErrorMsg.textContent = 'Please fill in all fields.';
+        loginErrorMsg.textContent = 'Заполните все поля.';
         loginErrorMsg.style.display = 'block';
         return;
       }
       
       try {
-        console.log('Attempting login for:', email);
         const response = await fetch('/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
         });
         
-        console.log('Login response status:', response.status, response.statusText);
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Login API error:', errorText);
-          try {
-            const errorJson = JSON.parse(errorText);
-            loginErrorMsg.textContent = errorJson.error || 'Login failed';
-          } catch (e) {
-            loginErrorMsg.textContent = `Login failed: ${response.status} ${response.statusText}`;
-          }
-          loginErrorMsg.style.display = 'block';
-          return;
-        }
-        
         const result = await response.json();
-        console.log('Login result:', result);
         
         if (response.ok) {
           try {
             sessionStorage.setItem('userRole', result.role);
             sessionStorage.setItem('userEmail', email);
           } catch (storageErr) {
-            console.warn('Unable to persist session data', storageErr);
+            console.warn('Не удалось сохранить данные сессии', storageErr);
           }
 
           try {
@@ -739,7 +586,7 @@
                 try {
                   sessionStorage.setItem('profileFormData', JSON.stringify(profilePayload.profile));
                 } catch (cacheErr) {
-                  console.warn('Unable to cache profile data', cacheErr);
+                  console.warn('Не удалось сохранить профиль в кэше', cacheErr);
                 }
                 if ((result.role || '').toLowerCase() === 'rga') {
                   window.location.href = 'rga-dashboard.html';
@@ -750,22 +597,21 @@
               }
             }
           } catch (profileErr) {
-            console.warn('Unable to load profile data during login', profileErr);
+            console.warn('Не удалось загрузить профиль при входе', profileErr);
           }
 
           try {
             sessionStorage.removeItem('profileFormData');
           } catch (clearErr) {
-            console.warn('Unable to clear cached profile data', clearErr);
+            console.warn('Не удалось очистить кеш профиля', clearErr);
           }
           window.location.href = `profile.html?role=${encodeURIComponent(result.role)}&email=${encodeURIComponent(email)}`;
         } else {
-          loginErrorMsg.textContent = result.error || 'Login failed';
+          loginErrorMsg.textContent = result.error || 'Не удалось выполнить вход.';
           loginErrorMsg.style.display = 'block';
         }
       } catch (error) {
-        console.error('Login error:', error);
-        loginErrorMsg.textContent = `Login failed: ${error.message || 'Network error. Please check if the API is running.'}`;
+        loginErrorMsg.textContent = 'Ошибка входа. Попробуйте ещё раз.';
         loginErrorMsg.style.display = 'block';
       }
     });

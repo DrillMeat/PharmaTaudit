@@ -54,7 +54,7 @@ export default async function handler(req, res) {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            from: 'Audit PharmaT <code@pharmataudit.online>',
+            from: 'PharmaT Audit <onboarding@resend.dev>',
             to: [email],
             subject: 'Your PharmaT verification code',
             html: `

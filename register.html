@@ -57,8 +57,7 @@
   </div>
 
   <div id="loginModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-    <div class="modal-content" style="background: white; padding: 40px; border-radius: 15px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1); width: 100%; max-width: 400px; margin: 20px; position: relative; padding-top: 52px;">
-      <button type="button" id="closeLoginModal" style="position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666; z-index: 10; line-height: 1;">&times;</button>
+    <div class="modal-content" style="background: white; padding: 40px; border-radius: 15px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1); width: 100%; max-width: 400px; margin: 20px; position: relative;">
       <div style="margin-bottom: 30px; text-align: center;">
         <h2 style="margin: 0; color: #2d5a27;">Log In</h2>
       </div>
@@ -275,7 +274,6 @@
   document.getElementById('loginModal').addEventListener('click', function(e) {
     if (e.target === this) { closeLoginModal(); }
   });
-  document.getElementById('closeLoginModal').addEventListener('click', closeLoginModal);
 
   document.addEventListener('click', function(e) {
     var target = e.target;

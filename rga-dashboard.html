@@ -5,14 +5,67 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
   <title>RGA Dashboard | PharmaT Audit</title>
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #5c6ac4 0%, #9aa5ff 100%);
-      margin: 0;
-      padding: 36px 24px 48px;
-      min-height: 100vh;
-      color: #1f2933;
-    }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #5c6ac4 0%, #9aa5ff 100%);
+    margin: 0;
+    padding: 36px 24px 48px;
+    min-height: 100vh;
+    color: #1f2933;
+  }
+
+  .page-shell {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .top-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 12px 18px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+    margin: 0 auto 24px;
+    max-width: 1200px;
+  }
+
+  .nav-brand {
+    font-weight: 700;
+    color: #2d5a27;
+    font-size: 18px;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .nav-link {
+    text-decoration: none;
+    color: #475569;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: #f8fafc;
+    transition: all 0.2s ease;
+  }
+
+  .nav-link:hover {
+    color: #1d4ed8;
+    border-color: #cbd5e1;
+    background: #eef2ff;
+  }
+
+  .nav-link.active {
+    color: #ffffff;
+    background: #2d5a27;
+    border-color: #2d5a27;
+  }
 
     .dashboard {
       max-width: 1200px;
@@ -42,6 +95,133 @@
       margin: 6px 0 0;
       color: #5f6c7b;
       font-size: 15px;
+    }
+
+    .task-admin {
+      margin-bottom: 28px;
+      padding: 22px 24px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+    }
+
+    .task-admin h2 {
+      margin: 0 0 8px;
+      font-size: 22px;
+      color: #1f2933;
+    }
+
+    .task-admin p {
+      margin: 0 0 18px;
+      color: #5f6c7b;
+      font-size: 14px;
+    }
+
+    .task-admin form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .task-admin label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: #52606d;
+      flex: 1 1 220px;
+    }
+
+    .task-admin input,
+    .task-admin select,
+    .task-admin textarea {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #d1d9e6;
+      font-size: 14px;
+      background: #ffffff;
+      font-family: inherit;
+    }
+
+    .task-admin textarea {
+      min-height: 70px;
+      resize: vertical;
+    }
+
+    .task-deadline-fields {
+      display: flex;
+      gap: 8px;
+    }
+
+    .task-deadline-fields input {
+      flex: 1;
+    }
+
+
+
+    .task-admin-actions {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+    }
+
+    .task-admin button {
+      background: #2d5a27;
+      color: #ffffff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .task-admin button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 16px rgba(45, 90, 39, 0.18);
+    }
+
+    .task-admin-list {
+      margin-top: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .task-admin-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      background: #ffffff;
+    }
+
+    .task-admin-item h3 {
+      margin: 0 0 6px;
+      font-size: 16px;
+      color: #1f2933;
+    }
+
+    .task-admin-meta {
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .task-admin-delete {
+      background: #dc2626;
+      color: #ffffff;
+      border: 1px solid #b91c1c;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      height: fit-content;
     }
 
     .profile-chip {
@@ -76,25 +256,6 @@
       font-weight: 700;
     }
 
-    .map-section {
-      margin-bottom: 32px;
-    }
-
-    .map-section h2 {
-      margin: 0 0 12px;
-      font-size: 24px;
-      color: #1f2933;
-    }
-
-    #pharmaciesMap {
-      width: 100%;
-      height: 420px;
-      border-radius: 16px;
-      overflow: hidden;
-      margin-bottom: 40px;
-      border: 1px solid #dbe3f1;
-      box-shadow: inset 0 0 0 1px rgba(209, 217, 230, 0.4);
-    }
 
     .pharmacies-grid {
       display: grid;
@@ -304,6 +465,11 @@
         padding: 16px 12px 24px;
       }
 
+    .top-nav {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
       .dashboard {
         padding: 20px 16px 28px;
         border-radius: 12px;
@@ -385,10 +551,6 @@
         min-height: 44px;
       }
 
-      #pharmaciesMap {
-        height: 300px;
-        margin-bottom: 24px;
-      }
 
       .modal-content {
         max-width: calc(100% - 32px);
@@ -427,9 +589,6 @@
         padding: 12px;
       }
 
-      #pharmaciesMap {
-        height: 250px;
-      }
 
       .modal-content {
         padding: 20px 16px;
@@ -439,11 +598,19 @@
   </style>
 </head>
 <body>
-  <div class="dashboard">
+  <div class="page-shell">
+    <nav class="top-nav" aria-label="Primary">
+      <div class="nav-brand">PharmaT Audit</div>
+      <div class="nav-links">
+        <a href="rga-dashboard.html" class="nav-link active">Dashboard</a>
+        <a href="calendar.html" class="nav-link">Calendar</a>
+      </div>
+    </nav>
+    <div class="dashboard">
     <div class="header">
       <div>
         <h1 id="dashboardTitle">RGA Dashboard</h1>
-        <p id="dashboardSubtitle">Review submission status for each pharmacy under your supervision.</p>
+        <p id="dashboardSubtitle"></p>
       </div>
       <a href="profile.html" class="profile-chip" id="profileLink">
         <span id="profileInitials">R</span>
@@ -454,14 +621,48 @@
       </a>
     </div>
 
+    <section class="task-admin" id="taskAdminSection">
+      <h2>Task management</h2>
+      <p></p>
+      <form id="taskAdminForm">
+        <label>
+          Title
+          <input type="text" id="taskTitle" placeholder="e.g. Send photo of shelf" required>
+        </label>
+        <label>
+          Description
+          <textarea id="taskDescription" placeholder="Short instruction for employees"></textarea>
+        </label>
+        <label>
+          Frequency
+          <select id="taskFrequency">
+            <option value="daily">Daily</option>
+            <option value="one_time">One day</option>
+          </select>
+        </label>
+        <label id="taskDateField">
+          Date
+          <input type="date" id="taskDate">
+        </label>
+        <label class="task-deadline">
+          Deadline
+          <div class="task-deadline-fields">
+            <input type="date" id="taskDeadlineDate">
+            <input type="time" id="taskDeadline">
+          </div>
+        </label>
+        <div class="task-admin-actions">
+          <button type="submit">Add task</button>
+        </div>
+      </form>
+      <div class="task-admin-list" id="taskAdminList"></div>
+    </section>
+
     <section>
       <h2 style="margin:0 0 18px; font-size:24px; color:#1f2933;">My pharmacies</h2>
-      <div id="mapWrapper" class="map-section" style="display:none;">
-        <h2>Map</h2>
-        <div id="pharmaciesMap"></div>
-      </div>
       <div id="pharmaciesGrid" class="pharmacies-grid"></div>
     </section>
+    </div>
   </div>
 
   <div id="pharmacyModal" class="modal-backdrop">
@@ -480,10 +681,9 @@
     </div>
   </div>
 
-  <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU"></script>
   <script>
     (async function() {
-      const TASK_DEFINITIONS = [
+      const DEFAULT_TASK_DEFINITIONS = [
         {
           key: 'window',
           title: 'Send photo of a window',
@@ -500,6 +700,7 @@
           description: 'Confirm staff uniform compliance.'
         }
       ];
+      let taskDefinitions = DEFAULT_TASK_DEFINITIONS;
 
       const STATUS_LABELS = {
         not_submitted: 'Not submitted',
@@ -515,15 +716,96 @@
         rejected: 'status-rejected'
       };
 
-      const profileDataRaw = sessionStorage.getItem('profileFormData');
+      const NETWORK_DIAGNOSTICS_LIMIT = 5;
+
+      function ensureNetworkDiagnosticsPanel() {
+        let panel = document.getElementById('networkDiagnostics');
+        if (panel) return panel;
+        panel = document.createElement('div');
+        panel.id = 'networkDiagnostics';
+        panel.style.position = 'fixed';
+        panel.style.bottom = '16px';
+        panel.style.right = '16px';
+        panel.style.maxWidth = '360px';
+        panel.style.background = '#ffffff';
+        panel.style.border = '1px solid #e5e7eb';
+        panel.style.borderRadius = '10px';
+        panel.style.boxShadow = '0 10px 25px rgba(15, 23, 42, 0.15)';
+        panel.style.padding = '12px 14px';
+        panel.style.fontSize = '12px';
+        panel.style.color = '#1f2937';
+        panel.style.zIndex = '9999';
+        panel.style.display = 'none';
+        panel.innerHTML = '<strong style="display:block;margin-bottom:6px;">Network diagnostics</strong><div id="networkDiagnosticsList" style="display:flex;flex-direction:column;gap:6px;"></div>';
+        document.body.appendChild(panel);
+        return panel;
+      }
+
+      function resolveServiceLabel(url, errorText = '') {
+        const text = `${errorText || ''}`.toLowerCase();
+        if (url.includes('supabase.co') || text.includes('supabase') || text.includes('database')) {
+          return 'Supabase';
+        }
+        if (url.includes('resend.com')) {
+          return 'Resend';
+        }
+        if (url.startsWith('/api/')) {
+          return 'App server (Vercel)';
+        }
+        if (url.includes('vercel')) {
+          return 'Vercel';
+        }
+        return 'Network';
+      }
+
+      function reportNetworkError(url, status, errorText) {
+        const panel = ensureNetworkDiagnosticsPanel();
+        const list = panel.querySelector('#networkDiagnosticsList');
+        if (!list) return;
+        const item = document.createElement('div');
+        const service = resolveServiceLabel(url, errorText);
+        const statusText = status ? `Status ${status}` : 'No response';
+        item.textContent = `${service}: ${statusText} • ${url}${errorText ? ` • ${errorText}` : ''}`;
+        list.prepend(item);
+        while (list.children.length > NETWORK_DIAGNOSTICS_LIMIT) {
+          list.removeChild(list.lastChild);
+        }
+        panel.style.display = 'block';
+      }
+
+      function wrapFetchWithDiagnostics() {
+        if (window.__networkDiagnosticsInstalled) return;
+        window.__networkDiagnosticsInstalled = true;
+        const originalFetch = window.fetch.bind(window);
+        window.fetch = async (input, init) => {
+          const url = typeof input === 'string' ? input : input?.url || 'unknown';
+          try {
+            const response = await originalFetch(input, init);
+            if (!response.ok) {
+              let errorText = '';
+              try {
+                errorText = await response.clone().text();
+              } catch (err) {
+                errorText = '';
+              }
+              reportNetworkError(url, response.status, errorText);
+            }
+            return response;
+          } catch (error) {
+            reportNetworkError(url, null, error?.message || 'Network error');
+            throw error;
+          }
+        };
+      }
+
+      wrapFetchWithDiagnostics();
+
       const grid = document.getElementById('pharmaciesGrid');
       const chipName = document.getElementById('chipName');
       const chipEmail = document.getElementById('chipEmail');
       const profileInitials = document.getElementById('profileInitials');
       const dashboardTitle = document.getElementById('dashboardTitle');
       const dashboardSubtitle = document.getElementById('dashboardSubtitle');
-      const mapWrapper = document.getElementById('mapWrapper');
-      const mapContainer = document.getElementById('pharmaciesMap');
       const profileLinkEl = document.getElementById('profileLink');
       const modalBackdrop = document.getElementById('pharmacyModal');
       const modalTitle = document.getElementById('modalTitle');
@@ -531,156 +813,64 @@
       const modalEmployees = document.getElementById('modalEmployees');
       const modalTasks = document.getElementById('modalTasks');
       const modalClose = document.querySelector('.modal-close');
+      const taskAdminForm = document.getElementById('taskAdminForm');
+      const taskAdminList = document.getElementById('taskAdminList');
+      const taskTitleInput = document.getElementById('taskTitle');
+      const taskDescriptionInput = document.getElementById('taskDescription');
+      const taskFrequencySelect = document.getElementById('taskFrequency');
+      const taskDateInput = document.getElementById('taskDate');
+      const taskDateField = document.getElementById('taskDateField');
+      const taskDeadlineDateInput = document.getElementById('taskDeadlineDate');
+      const taskDeadlineInput = document.getElementById('taskDeadline');
 
       let currentPharmacies = [];
       const submissionState = {};
-      const coordsCache = (() => {
+      let lastDateKey = new Date().toISOString().slice(0, 10);
+
+      async function fetchSession() {
         try {
-          return JSON.parse(localStorage.getItem('pharmacyCoordsCache') || '{}');
-        } catch (err) {
-          console.warn('Unable to parse coords cache', err);
-          return {};
-        }
-      })();
-      let mapInstance = null;
-      let placemarkCollection = null;
-      let isMapReady = false;
-      let pendingPharmaciesForMap = [];
-
-      function cacheCoords(key, coords) {
-        coordsCache[key] = coords;
-        try {
-          localStorage.setItem('pharmacyCoordsCache', JSON.stringify(coordsCache));
-        } catch (err) {
-          console.warn('Unable to persist coords cache', err);
-        }
-      }
-
-      function getCoordsFromCache(key) {
-        const entry = coordsCache[key];
-        if (Array.isArray(entry) && entry.length === 2) {
-          return entry;
-        }
-        return null;
-      }
-
-      function getCacheKey(pharmacy) {
-        return `${pharmacy.region || ''}|${pharmacy.address || ''}`;
-      }
-
-      function ensureMap(center) {
-        if (!mapInstance) {
-          const defaultCenter = Array.isArray(center) ? center : [55.751244, 37.618423];
-          mapInstance = new ymaps.Map('pharmaciesMap', {
-            center: defaultCenter,
-            zoom: 11,
-            controls: ['zoomControl', 'geolocationControl']
-          });
-          placemarkCollection = new ymaps.GeoObjectCollection();
-          mapInstance.geoObjects.add(placemarkCollection);
-        } else if (Array.isArray(center)) {
-          mapInstance.setCenter(center, Math.min(mapInstance.getZoom(), 13));
-        }
-      }
-
-      async function geocodePharmacy(pharmacy) {
-        const key = getCacheKey(pharmacy);
-        const cached = getCoordsFromCache(key);
-        if (cached) {
-          return cached;
-        }
-        if (!isMapReady) {
+          const response = await fetch('/api/session');
+          if (!response.ok) return null;
+          const data = await response.json();
+          return data?.session || null;
+        } catch (error) {
+          console.warn('Unable to load session', error);
           return null;
         }
+      }
+
+      async function resolveProfileData() {
         try {
-          const query = [pharmacy.region, pharmacy.address].filter(Boolean).join(', ');
-          const response = await ymaps.geocode(query, { results: 1 });
-          const firstGeoObject = response.geoObjects.get(0);
-          if (firstGeoObject) {
-            const coords = firstGeoObject.geometry.getCoordinates();
-            if (Array.isArray(coords) && coords.length === 2) {
-              cacheCoords(key, coords);
-              return coords;
-            }
-          }
-        } catch (err) {
-          console.warn('Unable to geocode pharmacy', pharmacy, err);
-        }
-        return null;
-      }
-
-      async function updateMapWithPharmacies(pharmacies) {
-        if (!Array.isArray(pharmacies) || pharmacies.length === 0) {
-          if (mapWrapper) {
-            mapWrapper.style.display = 'none';
-          }
-          if (mapInstance && placemarkCollection) {
-            placemarkCollection.removeAll();
-          }
-          return;
-        }
-
-        if (!isMapReady || typeof ymaps === 'undefined' || !ymaps.Map) {
-          pendingPharmaciesForMap = pharmacies.slice();
-          return;
-        }
-
-        if (mapWrapper) {
-          mapWrapper.style.display = 'block';
-        }
-
-        const coordsList = [];
-        for (const pharmacy of pharmacies) {
-          const coords = await geocodePharmacy(pharmacy);
-          if (coords) {
-            coordsList.push({ coords, pharmacy });
-          }
-        }
-
-        if (!coordsList.length) {
-          return;
-        }
-
-        ensureMap(coordsList[0].coords);
-        placemarkCollection.removeAll();
-
-        coordsList.forEach(({ coords, pharmacy }) => {
-          const placemark = new ymaps.Placemark(coords, {
-            balloonContentHeader: pharmacy.address || 'Pharmacy',
-            balloonContentBody: [
-              pharmacy.region ? `<div><strong>Region:</strong> ${pharmacy.region}</div>` : '',
-              pharmacy.phone ? `<div><strong>Phone:</strong> ${pharmacy.phone}</div>` : '',
-              pharmacy.hours ? `<div><strong>Hours:</strong> ${pharmacy.hours}</div>` : ''
-            ].filter(Boolean).join('')
-          }, {
-            preset: 'islands#dotIcon',
-            iconColor: '#2d5a27'
-          });
-          placemarkCollection.add(placemark);
-        });
-
-        const bounds = placemarkCollection.getBounds();
-        if (bounds) {
-          mapInstance.setBounds(bounds, { checkZoomRange: true, zoomMargin: 40 });
+          const response = await fetch('/api/profile');
+          if (!response.ok) return null;
+          const data = await response.json();
+          return data?.profile || null;
+        } catch (error) {
+          console.warn('Unable to fetch profile', error);
+          return null;
         }
       }
 
-      if (typeof ymaps !== 'undefined' && ymaps.ready) {
-        ymaps.ready(() => {
-          isMapReady = true;
-          if (pendingPharmaciesForMap.length) {
-            updateMapWithPharmacies(pendingPharmaciesForMap);
-            pendingPharmaciesForMap = [];
-          }
-        });
+      function normalizeSpacing(value) {
+        return `${value || ''}`.replace(/\s+/g, ' ').trim();
       }
 
-      function buildProfileHref(role, email) {
-        const params = new URLSearchParams();
-        if (role) params.set('role', role);
-        if (email) params.set('email', email);
-        const suffix = params.toString();
-        return suffix ? `profile.html?${suffix}` : 'profile.html';
+      function transliterate(value) {
+        if (!value) return '';
+        const map = {
+          'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'e','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m',
+          'н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'shch',
+          'ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya',
+          'А':'A','Б':'B','В':'V','Г':'G','Д':'D','Е':'E','Ё':'E','Ж':'Zh','З':'Z','И':'I','Й':'Y','К':'K','Л':'L','М':'M',
+          'Н':'N','О':'O','П':'P','Р':'R','С':'S','Т':'T','У':'U','Ф':'F','Х':'Kh','Ц':'Ts','Ч':'Ch','Ш':'Sh','Щ':'Shch',
+          'Ъ':'','Ы':'Y','Ь':'','Э':'E','Ю':'Yu','Я':'Ya'
+        };
+        return normalizeSpacing(`${value}`.split('').map(char => (map[char] !== undefined ? map[char] : char)).join(''));
+      }
+
+
+      function buildProfileHref() {
+        return 'profile.html';
       }
 
       function openFileUrl(fileUrl, fileName = 'submission') {
@@ -688,7 +878,7 @@
         try {
           const link = document.createElement('a');
           link.href = fileUrl;
-          link.target = '_blank';
+          link.target = '_self';
           link.rel = 'noopener';
           link.download = fileName;
           link.style.display = 'none';
@@ -697,7 +887,7 @@
           document.body.removeChild(link);
         } catch (err) {
           console.warn('Unable to open file via anchor, falling back to window.open', err);
-          window.open(fileUrl, '_blank', 'noopener');
+          window.location.href = fileUrl;
         }
       }
 
@@ -709,17 +899,102 @@
           fileUrl: '',
           employeeEmail: '',
           reviewerEmail: '',
+          reviewNote: '',
           updatedAt: null,
           reviewedAt: null
         }, overrides);
       }
 
-      function createEmptyTaskMap() {
-        return TASK_DEFINITIONS.reduce((acc, task) => {
+      function createEmptyTaskMap(definitions = getActiveTaskDefinitions()) {
+        return definitions.reduce((acc, task) => {
           acc[task.key] = createEmptyTaskEntry();
           return acc;
         }, {});
       }
+
+      function getTodayKey() {
+        return new Date().toISOString().slice(0, 10);
+      }
+
+      function isSameDay(dateValue) {
+        if (!dateValue) return false;
+        const date = new Date(dateValue);
+        if (Number.isNaN(date.getTime())) return false;
+        return date.toISOString().slice(0, 10) === getTodayKey();
+      }
+
+      function getActiveTaskDefinitions(pharmacyIndex = null) {
+        const today = getTodayKey();
+        return (taskDefinitions || []).filter(task => {
+          if (!task) return false;
+          if (task.frequency === 'one_time') {
+            return task.active_date === today;
+          }
+          if (pharmacyIndex !== null && Array.isArray(task.pharmacy_indexes) && task.pharmacy_indexes.length) {
+            return task.pharmacy_indexes.map(String).includes(String(pharmacyIndex));
+          }
+          return true;
+        });
+      }
+
+      function renderTaskAdminList(definitions) {
+        if (!taskAdminList) return;
+        if (!definitions.length) {
+          taskAdminList.innerHTML = '<p style="color:#64748b; margin:0;">No tasks created yet.</p>';
+          return;
+        }
+        taskAdminList.innerHTML = definitions.map(task => {
+          const canDelete = task.id !== undefined && task.id !== null;
+          const frequencyLabel = task.frequency === 'one_time'
+            ? `One day • ${task.active_date || 'date not set'}`
+            : 'Daily';
+          const deadlineLabel = task.due_time
+            ? `Deadline: ${task.due_date || 'today'} ${task.due_time}`
+            : 'No deadline';
+          const scopeLabel = Array.isArray(task.pharmacy_indexes) && task.pharmacy_indexes.length
+            ? `Pharmacies: ${task.pharmacy_indexes.join(', ')}`
+            : 'All pharmacies';
+          return `
+            <div class="task-admin-item" data-task-id="${task.id || ''}">
+              <div>
+                <h3>${task.title}</h3>
+                <div class="task-admin-meta">${frequencyLabel}</div>
+                <div class="task-admin-meta">${deadlineLabel}</div>
+                <div class="task-admin-meta">${scopeLabel}</div>
+                <div class="task-admin-meta">${task.description || ''}</div>
+              </div>
+              ${canDelete ? `<button type="button" class="task-admin-delete" data-task-id="${task.id}">Delete</button>` : ''}
+            </div>
+          `;
+        }).join('');
+      }
+
+      function syncTaskDateField() {
+        if (!taskFrequencySelect || !taskDateField) return;
+        const isOneTime = taskFrequencySelect.value === 'one_time';
+        taskDateField.style.display = isOneTime ? 'flex' : 'none';
+        if (!isOneTime && taskDateInput) {
+          taskDateInput.value = '';
+        }
+      }
+
+      function getTaskDueDate(task) {
+        if (!task?.due_time) return null;
+        const baseDate = task.due_date
+          || (task.frequency === 'one_time' && task.active_date ? task.active_date : getTodayKey());
+        return new Date(`${baseDate}T${task.due_time}`);
+      }
+
+      function isLateSubmission(entry, task) {
+        if (!entry?.updatedAt || !task?.due_time) return false;
+        const dueDate = getTaskDueDate(task);
+        if (!dueDate || Number.isNaN(dueDate.getTime())) return false;
+        const submittedAt = new Date(entry.updatedAt);
+        if (Number.isNaN(submittedAt.getTime())) return false;
+        return submittedAt.getTime() > dueDate.getTime();
+      }
+
+
 
       function normalizeEntry(entry) {
         if (!entry) return createEmptyTaskEntry();
@@ -739,9 +1014,13 @@
           fileUrl: entry.fileUrl || '',
           employeeEmail: entry.employeeEmail || entry.employee_email || '',
           reviewerEmail: entry.reviewerEmail || entry.reviewer_email || '',
+          reviewNote: entry.reviewNote || entry.review_note || '',
           updatedAt: entry.updatedAt || entry.updated_at || null,
           reviewedAt: entry.reviewedAt || entry.reviewed_at || null
         });
+        if (normalized.updatedAt && !isSameDay(normalized.updatedAt)) {
+          return createEmptyTaskEntry();
+        }
         if (normalized.state === 'submitted') {
           normalized.state = 'waiting';
         }
@@ -787,6 +1066,7 @@
               fileUrl: item.file_url || '',
               employeeEmail: item.employee_email || '',
               reviewerEmail: item.reviewer_email || '',
+              reviewNote: item.review_note || '',
               updatedAt: item.updated_at || null,
               reviewedAt: item.reviewed_at || null
             });
@@ -794,20 +1074,28 @@
         });
         
         // Reset tasks that no longer exist in the database (were deleted by employee)
-        // Only reset tasks for pharmacies we're currently updating
-        updatedPharmacies.forEach(indexKey => {
-          const store = targetState[indexKey];
-          if (!store) return;
+        // Check ALL pharmacies that have submissions (even if only some tasks exist)
+        const allPharmaciesWithSubmissions = new Set();
+        submissions.forEach(item => {
+          if (item && item.pharmacy_index !== undefined) {
+            allPharmaciesWithSubmissions.add(String(item.pharmacy_index));
+          }
+        });
+        
+        // For each pharmacy that has ANY submissions, check ALL tasks
+        // If a task is not in the submissions array, it was deleted - reset it
+        allPharmaciesWithSubmissions.forEach(indexKey => {
+          const store = ensurePharmacyState(indexKey);
           
-          // Check all tasks - if a task was in state but is not in submissions, reset it
-          TASK_DEFINITIONS.forEach(task => {
+        getActiveTaskDefinitions().forEach(task => {
             const taskId = `${indexKey}:${task.key}`;
-            // If this task is not in the submissions, reset it to not_submitted
+            const currentEntry = store[task.key];
+            
+            // If this task is NOT in the submissions array, it was deleted - reset it
             if (!existingTasks.has(taskId)) {
-              const currentEntry = store[task.key];
-              // Only reset if it was previously submitted (has a state other than not_submitted)
+              // Reset if it has any submitted state (waiting, approved, rejected)
+              // This ensures deleted submissions show as "NOT SUBMITTED" instead of their old status
               if (currentEntry && currentEntry.state && currentEntry.state !== 'not_submitted') {
-                console.log(`Resetting deleted task ${task.key} for pharmacy ${indexKey} to not_submitted`);
                 store[task.key] = createEmptyTaskEntry();
               }
             }
@@ -831,6 +1119,54 @@
         return data.submissions || [];
       }
 
+      async function fetchTaskDefinitions() {
+        try {
+          const response = await fetch('/api/task-definitions');
+          if (!response.ok) return DEFAULT_TASK_DEFINITIONS;
+          const data = await response.json();
+          return Array.isArray(data?.tasks) ? data.tasks : DEFAULT_TASK_DEFINITIONS;
+        } catch (error) {
+          console.warn('Unable to fetch task definitions', error);
+          return DEFAULT_TASK_DEFINITIONS;
+        }
+      }
+
+      async function addTaskDefinition(payload) {
+        const response = await fetch('/api/task-definitions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        if (!response.ok || !data?.ok) {
+          throw new Error(data?.error || 'Unable to add task');
+        }
+        return data.task;
+      }
+
+      async function deleteTaskDefinition(taskId) {
+        const response = await fetch('/api/task-definitions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'delete', id: taskId })
+        });
+        const data = await response.json();
+        if (!response.ok || !data?.ok) {
+          throw new Error(data?.error || 'Unable to delete task');
+        }
+        return data.task;
+      }
+
+      async function refreshForNewDay() {
+        const todayKey = getTodayKey();
+        if (todayKey === lastDateKey) return false;
+        lastDateKey = todayKey;
+        taskDefinitions = await fetchTaskDefinitions();
+        renderTaskAdminList(taskDefinitions);
+        renderPharmacies();
+        return true;
+      }
+
       function formatStatusNote(status, entry) {
         switch (status) {
           case 'waiting':
@@ -838,10 +1174,16 @@
               ? `Submitted by ${entry.employeeEmail} • Awaiting your review.`
               : 'Submitted by employee • Awaiting your review.';
           case 'approved':
+            if (entry.reviewNote) {
+              return `Approved • ${entry.reviewNote}`;
+            }
             return entry.reviewerEmail
               ? `Approved by ${entry.reviewerEmail}.`
               : 'Approved.';
           case 'rejected':
+            if (entry.reviewNote) {
+              return `Rejected • ${entry.reviewNote}`;
+            }
             return entry.reviewerEmail
               ? `Rejected by ${entry.reviewerEmail}.`
               : 'Marked for resubmission.';
@@ -867,17 +1209,26 @@
         const indexKey = String(pharmacy.index);
         const taskStatuses = getTaskStatusFor(indexKey);
         const meta = [
-          pharmacy.region,
-          pharmacy.address,
-          pharmacy.phone ? `Тел.: ${pharmacy.phone}` : null
+          pharmacy.region ? transliterate(pharmacy.region) : null,
+          pharmacy.address ? transliterate(pharmacy.address) : null,
+          pharmacy.phone ? `Tel.: ${pharmacy.phone}` : null
         ].filter(Boolean).join(' • ');
 
-        const taskItems = TASK_DEFINITIONS.map(task => {
+          const taskItems = getActiveTaskDefinitions(indexKey).map(task => {
           const entry = normalizeEntry(taskStatuses[task.key]);
-          const status = entry.state || 'not_submitted';
+          // If entry has no fileUrl, it means the submission was deleted - force not_submitted
+          let status = entry.state || 'not_submitted';
+          if (!entry.fileUrl && status !== 'not_submitted') {
+            // Submission was deleted - reset to not_submitted
+            status = 'not_submitted';
+            // Also clear the entry in state to prevent stale data
+            const store = ensurePharmacyState(indexKey);
+            store[task.key] = createEmptyTaskEntry();
+          }
           const statusClass = STATUS_CLASSES[status] || STATUS_CLASSES.waiting;
           const statusLabel = STATUS_LABELS[status] || STATUS_LABELS.waiting;
           const note = formatStatusNote(status, entry);
+          const isLate = isLateSubmission(entry, task);
           const actionButtons = [];
 
           if (entry.fileUrl) {
@@ -904,7 +1255,9 @@
               <div class="task-status" style="align-items:flex-end;">
                 <div>
                   <div class="status-chip ${statusClass}" data-status-label data-task="${task.key}" data-pharmacy-index="${indexKey}" data-state="${status}" data-filename="${entry.fileName || ''}" data-fileurl="${entry.fileUrl || ''}">${statusLabel}</div>
-                  <p style="margin:6px 0 0; font-size:12px; color:${status === 'waiting' ? '#b45309' : '#64748b'}; font-weight:${status === 'waiting' ? '600' : '400'};">${note}</p>
+                  <p style="margin:6px 0 0; font-size:12px; color:${isLate ? '#b91c1c' : (status === 'waiting' ? '#b45309' : '#64748b')}; font-weight:${isLate || status === 'waiting' ? '600' : '400'};">
+                    ${note}${isLate ? ' • Late' : ''}
+                  </p>
                 </div>
                 ${actionsHtml}
               </div>
@@ -914,7 +1267,7 @@
 
         return `
           <article class="pharmacy-card" data-index="${indexKey}">
-            <h2>${pharmacy.address}</h2>
+            <h2>${transliterate(pharmacy.address || '')}</h2>
             <small>${meta}</small>
             <div class="task-list">
               ${taskItems}
@@ -928,64 +1281,111 @@
         grid.innerHTML = currentPharmacies.map(renderPharmacyCard).join('');
       }
 
-      if (!profileDataRaw) {
-        grid.innerHTML = '<p style="color:#64748b;">No profile data found. Please complete your profile first.</p>';
-        if (profileLinkEl) {
-          profileLinkEl.href = 'profile.html';
-        }
-        if (mapWrapper) {
-          mapWrapper.style.display = 'none';
-        }
+      const session = await fetchSession();
+      if (!session) {
+        window.location.href = 'register.html';
         return;
       }
 
-      let profileData = null;
-      try {
-        profileData = JSON.parse(profileDataRaw);
-      } catch (err) {
-        console.error('Failed to parse profile data', err);
+      if ((session.role || '').toLowerCase() !== 'rga') {
+        window.location.href = 'welcome.html';
+        return;
       }
 
+      const profileData = await resolveProfileData();
       if (!profileData) {
         grid.innerHTML = '<p style="color:#64748b;">No profile data found. Please complete your profile first.</p>';
-        if (mapWrapper) {
-          mapWrapper.style.display = 'none';
+        if (profileLinkEl) {
+          profileLinkEl.href = 'profile.html';
         }
         return;
       }
 
       const firstName = profileData.first_name || '';
       const lastName = profileData.last_name || '';
-      const email = profileData.email || sessionStorage.getItem('userEmail') || '—';
+      const email = profileData.email || session.email || '—';
       const pharmacies = Array.isArray(profileData.pharmacies) ? profileData.pharmacies : [];
+
+      taskDefinitions = await fetchTaskDefinitions();
+      renderTaskAdminList(taskDefinitions);
+      syncTaskDateField();
+      taskFrequencySelect?.addEventListener('change', syncTaskDateField);
+      taskAdminForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!taskTitleInput) return;
+        const title = taskTitleInput.value.trim();
+        const description = taskDescriptionInput?.value.trim() || '';
+        const frequency = taskFrequencySelect?.value || 'daily';
+        const activeDate = frequency === 'one_time' ? (taskDateInput?.value || '') : '';
+        const dueTime = taskDeadlineInput?.value || '';
+        const dueDate = taskDeadlineDateInput?.value || '';
+        if (!title) {
+          alert('Please enter a task title.');
+          return;
+        }
+        if (frequency === 'one_time' && !activeDate) {
+          alert('Please select a date for the one-time task.');
+          return;
+        }
+        try {
+          const newTask = await addTaskDefinition({
+            title,
+            description,
+            frequency,
+            activeDate,
+            dueTime,
+            dueDate
+          });
+          taskDefinitions = [...taskDefinitions, newTask].filter(Boolean);
+          renderTaskAdminList(taskDefinitions);
+          taskTitleInput.value = '';
+          if (taskDescriptionInput) taskDescriptionInput.value = '';
+          if (taskDateInput) taskDateInput.value = '';
+          if (taskDeadlineInput) taskDeadlineInput.value = '';
+          if (taskDeadlineDateInput) taskDeadlineDateInput.value = '';
+          if (taskFrequencySelect) taskFrequencySelect.value = 'daily';
+          syncTaskDateField();
+          renderPharmacies();
+        } catch (error) {
+          alert(error.message || 'Unable to add task.');
+        }
+      });
+      taskAdminList?.addEventListener('click', async (event) => {
+        const deleteBtn = event.target.closest('.task-admin-delete');
+        if (!deleteBtn) return;
+        const taskId = deleteBtn.dataset.taskId;
+        if (!taskId) return;
+        if (!confirm('Delete this task?')) return;
+        try {
+          await deleteTaskDefinition(taskId);
+          taskDefinitions = taskDefinitions.filter(task => String(task.id) !== String(taskId));
+          renderTaskAdminList(taskDefinitions);
+          renderPharmacies();
+        } catch (error) {
+          alert(error.message || 'Unable to delete task.');
+        }
+      });
 
       chipName.textContent = `${firstName} ${lastName}`.trim() || '—';
       chipEmail.textContent = email;
       profileInitials.textContent = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || 'R';
       if (profileLinkEl) {
-        profileLinkEl.href = buildProfileHref(profileData.role, profileData.email);
+        profileLinkEl.href = buildProfileHref();
       }
 
       if (!pharmacies.length) {
         grid.innerHTML = '<p style="color:#64748b;">No pharmacies assigned yet.</p>';
-        if (mapWrapper) {
-          mapWrapper.style.display = 'none';
-        }
         return;
       }
 
       dashboardTitle.textContent = `${firstName || lastName ? `${firstName} ${lastName}`.trim() + '\'s' : 'RGA'} Dashboard`;
-      dashboardSubtitle.textContent = 'Review submission status for each pharmacy under your supervision.';
+      dashboardSubtitle.textContent = '';
 
       currentPharmacies = pharmacies;
       renderPharmacies();
       await hydrateRgaState(currentPharmacies);
       renderPharmacies();
 
-      if (!mapInstance && mapContainer) {
-        mapContainer.innerHTML = '';
-      }
-      await updateMapWithPharmacies(currentPharmacies);
 
       grid.addEventListener('click', async (event) => {
         if (event.target.closest('.status-chip')) {
@@ -1016,6 +1416,7 @@
               return;
             }
             const nextState = action === 'approve' ? 'approved' : 'rejected';
+            const reviewNote = prompt('Add a note for the employee (optional):', '') || '';
             try {
               const response = await fetch('/api/update-submission-status', {
                 method: 'POST',
@@ -1025,7 +1426,8 @@
                   pharmacyIndex: Number(pharmacyIndex),
                   taskKey,
                   status: nextState,
-                  reviewerEmail: email || ''
+                  reviewerEmail: email || '',
+                  reviewNote
                 })
               });
               const data = await response.json();
@@ -1075,19 +1477,30 @@
       function openPharmacyModal(pharmacy) {
         if (!modalBackdrop) return;
         modalBackdrop.classList.add('active');
-        modalTitle.textContent = pharmacy.address || 'Pharmacy';
-        modalAddress.textContent = [pharmacy.region || '', pharmacy.phone || '', pharmacy.hours || ''].filter(Boolean).join(' • ');
-
-        const employeesStore = JSON.parse(localStorage.getItem('pharmacyEmployees') || '{}');
-        const employees = employeesStore[String(pharmacy.index)] || [];
-        if (!employees.length) {
-          modalEmployees.innerHTML = '<li>No employees assigned yet.</li>';
-        } else {
-          modalEmployees.innerHTML = employees.map(employee => `<li>${employee.name} <span style="color:#94a3b8">(${employee.email})</span></li>`).join('');
-        }
+        modalTitle.textContent = transliterate(pharmacy.address || 'Pharmacy');
+        modalAddress.textContent = [
+          pharmacy.region ? transliterate(pharmacy.region) : '',
+          pharmacy.phone || '',
+          pharmacy.hours || ''
+        ].filter(Boolean).join(' • ');
 
         const taskStatuses = getTaskStatusFor(String(pharmacy.index));
-        modalTasks.innerHTML = TASK_DEFINITIONS.map(task => {
+        const employeeEmails = new Set();
+        Object.values(taskStatuses).forEach(entry => {
+          const normalized = normalizeEntry(entry);
+          if (normalized.employeeEmail) {
+            employeeEmails.add(normalized.employeeEmail);
+          }
+        });
+
+        if (!employeeEmails.size) {
+          modalEmployees.innerHTML = '<li>No employees assigned yet.</li>';
+        } else {
+          modalEmployees.innerHTML = Array.from(employeeEmails)
+            .map(email => `<li>${email}</li>`)
+            .join('');
+        }
+        modalTasks.innerHTML = getActiveTaskDefinitions(String(pharmacy.index)).map(task => {
           const entry = normalizeEntry(taskStatuses[task.key]);
           const status = entry.state || 'not_submitted';
           const label = STATUS_LABELS[status] || STATUS_LABELS.waiting;
@@ -1109,10 +1522,10 @@
 
       setInterval(() => {
         if (!currentPharmacies.length) return;
-        hydrateRgaState(currentPharmacies)
+        refreshForNewDay()
+          .then(() => hydrateRgaState(currentPharmacies))
           .then(() => {
             renderPharmacies();
-            return updateMapWithPharmacies(currentPharmacies);
           })
           .catch(err => console.warn('Periodic refresh failed', err));
       }, 30000);
@@ -1138,6 +1551,7 @@
       });
     })();
   </script>
+  <script src="cookie-consent.js"></script>
 </body>
 </html>
 

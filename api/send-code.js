@@ -1,25 +1,31 @@
+import { ok, fail, methodNotAllowed } from './_lib/respond.js';
+import { CODE_EXPIRY_MINUTES, CODE_LENGTH } from './_lib/constants.js';
+
 export default async function handler(req, res) {
-  console.log('=== SEND CODE API CALLED ===');
-  console.log('Method:', req.method);
-  console.log('Body:', req.body);
   
   if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed' });
+    methodNotAllowed(res, ['POST']);
     return;
   }
 
   try {
     const { email } = req.body || {};
     if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      res.status(400).json({ error: 'Valid email is required' });
+      fail(res, 400, 'Valid email is required');
       return;
     }
 
-    const SUPABASE_URL = 'https://xsrppkeysfjkxkbpfbog.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzcnBwa2V5c2Zqa3hrYnBmYm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzNDI2NjcsImV4cCI6MjA3NDkxODY2N30.sLZtdQ80_Q-OlX7wD4bDoaLEVOBBMF7Qfga_Ju299t8';
+    const SUPABASE_URL = process.env.SUPABASE_URL;
+    const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      fail(res, 500, 'Server misconfigured: missing Supabase credentials');
+      return;
+    }
 
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+    const maxValue = 10 ** CODE_LENGTH;
+    const minValue = 10 ** (CODE_LENGTH - 1);
+    const code = Math.floor(minValue + Math.random() * (maxValue - minValue)).toString();
+    const expires = new Date(Date.now() + CODE_EXPIRY_MINUTES * 60 * 1000).toISOString();
 
     // Upsert code for this email
     const upsertResp = await fetch(`${SUPABASE_URL}/rest/v1/email_codes`, {
@@ -35,14 +41,13 @@ export default async function handler(req, res) {
 
     if (!upsertResp.ok) {
       const err = await upsertResp.json().catch(() => ({}));
-      res.status(500).json({ error: 'Failed to save code', details: err });
+      console.error('Supabase save-code error:', err);
+      fail(res, 500, 'Failed to save code');
       return;
     }
 
     const RESEND_API_KEY = process.env.RESEND_API_KEY;
     
-    console.log('RESEND_API_KEY exists:', !!RESEND_API_KEY);
-    console.log('RESEND_API_KEY length:', RESEND_API_KEY ? RESEND_API_KEY.length : 0);
     
     // Always try to send email first, with better error handling
     if (RESEND_API_KEY) {
@@ -75,9 +80,7 @@ export default async function handler(req, res) {
         const emailJson = await emailResp.json().catch(() => ({}));
         
         if (emailResp.ok) {
-          console.log('Email sent successfully:', emailJson);
-          res.status(200).json({ 
-            ok: true, 
+          ok(res, { 
             id: emailJson?.id,
             message: 'Verification code sent to your email',
             emailSent: true
@@ -86,8 +89,7 @@ export default async function handler(req, res) {
         } else {
           console.error('Email sending failed:', emailJson);
           // Don't fail completely, show dev code as fallback
-          res.status(200).json({ 
-            ok: true, 
+          ok(res, { 
             devCode: code, 
             emailError: emailJson,
             note: 'Email sending failed, showing code for testing. Check email configuration.'
@@ -97,8 +99,7 @@ export default async function handler(req, res) {
       } catch (emailError) {
         console.error('Email service error:', emailError);
         // Don't fail completely, show dev code as fallback
-        res.status(200).json({ 
-          ok: true, 
+        ok(res, { 
           devCode: code, 
           emailError: emailError.message,
           note: 'Email service unavailable, showing code for testing.'
@@ -108,10 +109,7 @@ export default async function handler(req, res) {
     }
 
     // Dev fallback when email provider not configured
-    console.log('Using dev fallback - no RESEND_API_KEY or email failed');
-    console.log('Generated code:', code);
-    res.status(200).json({ 
-      ok: true, 
+    ok(res, { 
       devCode: code, 
       message: 'Development mode - code shown below',
       note: 'Email provider not configured. Set RESEND_API_KEY environment variable to enable email sending.',
@@ -123,7 +121,8 @@ export default async function handler(req, res) {
       ]
     });
   } catch (error) {
-    res.status(500).json({ error: error.message || 'Unexpected server error' });
+    console.error('Send code error:', error);
+    fail(res, 500, 'Internal server error');
   }
 }
 

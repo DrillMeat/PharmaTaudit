@@ -15,12 +15,63 @@
       margin: 0;
       min-height: 100vh;
       padding: 40px 20px;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
       color: #1f2933;
       overflow-x: hidden;
     }
+
+    .page-shell {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+  .top-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 12px 18px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+    margin: 0 auto 24px;
+    max-width: 900px;
+    width: 100%;
+  }
+
+  .nav-brand {
+    font-weight: 700;
+    color: #2d5a27;
+    font-size: 18px;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .nav-link {
+    text-decoration: none;
+    color: #475569;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: #f8fafc;
+    transition: all 0.2s ease;
+  }
+
+  .nav-link:hover {
+    color: #1d4ed8;
+    border-color: #cbd5e1;
+    background: #eef2ff;
+  }
+
+  .nav-link.active {
+    color: #ffffff;
+    background: #2d5a27;
+    border-color: #2d5a27;
+  }
 
     .dashboard {
       width: 100%;
@@ -275,6 +326,11 @@
         overflow-x: hidden;
       }
 
+    .top-nav {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
       .dashboard {
         padding: 20px 16px 24px;
         border-radius: 12px;
@@ -454,11 +510,19 @@
   </style>
 </head>
 <body>
-  <div class="dashboard" id="dashboardContainer">
+  <div class="page-shell">
+    <nav class="top-nav" aria-label="Primary">
+      <div class="nav-brand">PharmaT Audit</div>
+      <div class="nav-links">
+        <a href="welcome.html" class="nav-link active">Dashboard</a>
+        <a href="calendar.html" class="nav-link">Calendar</a>
+      </div>
+    </nav>
+    <div class="dashboard" id="dashboardContainer">
     <div class="header">
       <div>
         <h1>Daily Visual Tasks</h1>
-        <p>Please upload today’s photos so the management team can review them.</p>
+        <p></p>
       </div>
       <a href="profile.html" class="profile-chip" title="Go to profile" id="profileLink">
         <span id="profileInitials">P</span>
@@ -471,52 +535,9 @@
 
     <div class="tasks-section" id="tasksSection">
       <h2>Required submissions</h2>
-      <p>Make sure images are clear, recent, and taken in landscape orientation when possible.</p>
-
-      <div class="task-card" data-task-key="window">
-        <div class="task-info">
-          <h3>Send photo of a window</h3>
-          <p>Capture the main storefront window from street level. Ensure branding and promotional materials are visible.</p>
-          <label class="upload-btn">
-            Upload photo
-            <input type="file" accept="image/*" capture="environment">
-          </label>
-        </div>
-        <div class="task-status">
-          <div class="status-chip status-waiting" data-status-label>Waiting for approval</div>
-          <p class="status-note" data-status-note>No submission yet.</p>
-        </div>
-      </div>
-
-      <div class="task-card" data-task-key="trash">
-        <div class="task-info">
-          <h3>Send photo of trash cans</h3>
-          <p>Take a picture of the waste disposal area, confirming bins are clean, labeled, and positioned correctly.</p>
-          <label class="upload-btn">
-            Upload photo
-            <input type="file" accept="image/*" capture="environment">
-          </label>
-        </div>
-        <div class="task-status">
-          <div class="status-chip status-waiting" data-status-label>Waiting for approval</div>
-          <p class="status-note" data-status-note>No submission yet.</p>
-        </div>
-      </div>
-
-      <div class="task-card" data-task-key="outfit">
-        <div class="task-info">
-          <h3>Send photo of an outfit</h3>
-          <p>Photograph the staff uniform from head to toe. Make sure the name badge and company logo are visible.</p>
-          <label class="upload-btn">
-            Upload photo
-            <input type="file" accept="image/*" capture="environment">
-          </label>
-        </div>
-        <div class="task-status">
-          <div class="status-chip status-waiting" data-status-label>Waiting for approval</div>
-          <p class="status-note" data-status-note>No submission yet.</p>
-        </div>
-      </div>
+      <p></p>
+      <div id="taskCards"></div>
+    </div>
     </div>
   </div>
 
@@ -525,13 +546,15 @@
       const link = document.getElementById('profileLink');
       const tasksSection = document.getElementById('tasksSection');
       const dashboardContainer = document.getElementById('dashboardContainer');
+      const taskCards = document.getElementById('taskCards');
       if (!link || !dashboardContainer) return;
 
-      const TASK_DEFINITIONS = [
+      const DEFAULT_TASK_DEFINITIONS = [
         { key: 'window', title: 'Send photo of a window', description: 'Capture the main storefront window from street level. Ensure branding and promotional materials are visible.' },
         { key: 'trash', title: 'Send photo of trash cans', description: 'Take a picture of the waste disposal area, confirming bins are clean, labeled, and positioned correctly.' },
         { key: 'outfit', title: 'Send photo of an outfit', description: 'Photograph the staff uniform from head to toe. Make sure the name badge and company logo are visible.' }
       ];
+      let taskDefinitions = DEFAULT_TASK_DEFINITIONS;
 
       const STATUS_LABELS = {
         not_submitted: 'Not submitted',
@@ -547,18 +570,108 @@
         rejected: 'status-rejected'
       };
 
+      const MAX_FILE_MB = 10;
+      const WARN_FILE_MB = 5;
+      const COMPRESS_THRESHOLD_KB = 500;
+      const COMPRESS_MAX_MOBILE = 1024;
+      const COMPRESS_MAX_DESKTOP = 1280;
+      const COMPRESS_QUALITY = 0.75;
+
+      const NETWORK_DIAGNOSTICS_LIMIT = 5;
+
+      function ensureNetworkDiagnosticsPanel() {
+        let panel = document.getElementById('networkDiagnostics');
+        if (panel) return panel;
+        panel = document.createElement('div');
+        panel.id = 'networkDiagnostics';
+        panel.style.position = 'fixed';
+        panel.style.bottom = '16px';
+        panel.style.right = '16px';
+        panel.style.maxWidth = '360px';
+        panel.style.background = '#ffffff';
+        panel.style.border = '1px solid #e5e7eb';
+        panel.style.borderRadius = '10px';
+        panel.style.boxShadow = '0 10px 25px rgba(15, 23, 42, 0.15)';
+        panel.style.padding = '12px 14px';
+        panel.style.fontSize = '12px';
+        panel.style.color = '#1f2937';
+        panel.style.zIndex = '9999';
+        panel.style.display = 'none';
+        panel.innerHTML = '<strong style="display:block;margin-bottom:6px;">Network diagnostics</strong><div id="networkDiagnosticsList" style="display:flex;flex-direction:column;gap:6px;"></div>';
+        document.body.appendChild(panel);
+        return panel;
+      }
+
+      function resolveServiceLabel(url, errorText = '') {
+        const text = `${errorText || ''}`.toLowerCase();
+        if (url.includes('supabase.co') || text.includes('supabase') || text.includes('database')) {
+          return 'Supabase';
+        }
+        if (url.includes('resend.com')) {
+          return 'Resend';
+        }
+        if (url.startsWith('/api/')) {
+          return 'App server (Vercel)';
+        }
+        if (url.includes('vercel')) {
+          return 'Vercel';
+        }
+        return 'Network';
+      }
+
+      function reportNetworkError(url, status, errorText) {
+        const panel = ensureNetworkDiagnosticsPanel();
+        const list = panel.querySelector('#networkDiagnosticsList');
+        if (!list) return;
+        const item = document.createElement('div');
+        const service = resolveServiceLabel(url, errorText);
+        const statusText = status ? `Status ${status}` : 'No response';
+        item.textContent = `${service}: ${statusText} • ${url}${errorText ? ` • ${errorText}` : ''}`;
+        list.prepend(item);
+        while (list.children.length > NETWORK_DIAGNOSTICS_LIMIT) {
+          list.removeChild(list.lastChild);
+        }
+        panel.style.display = 'block';
+      }
+
+      function wrapFetchWithDiagnostics() {
+        if (window.__networkDiagnosticsInstalled) return;
+        window.__networkDiagnosticsInstalled = true;
+        const originalFetch = window.fetch.bind(window);
+        window.fetch = async (input, init) => {
+          const url = typeof input === 'string' ? input : input?.url || 'unknown';
+          try {
+            const response = await originalFetch(input, init);
+            if (!response.ok) {
+              let errorText = '';
+              try {
+                errorText = await response.clone().text();
+              } catch (err) {
+                errorText = '';
+              }
+              reportNetworkError(url, response.status, errorText);
+            }
+            return response;
+          } catch (error) {
+            reportNetworkError(url, null, error?.message || 'Network error');
+            throw error;
+          }
+        };
+      }
+
+      wrapFetchWithDiagnostics();
+
+      const ENABLE_PERF_LOGS = false;
+      const uploadInFlight = new Set();
       let userEmail = '';
       let userRole = '';
       let activePharmacyIndex = null;
       let employeeSubmissionState = {};
       let employeeRefreshTimer = null;
+      let lastDateKey = getTodayKey();
 
-      function buildProfileHref(role, email) {
-        const params = new URLSearchParams();
-        if (role) params.set('role', role);
-        if (email) params.set('email', email);
-        const suffix = params.toString();
-        return suffix ? `profile.html?${suffix}` : 'profile.html';
+      function buildProfileHref() {
+        return 'profile.html';
       }
 
       function setTaskStatusMessage(taskKey, message, options = {}) {
@@ -617,6 +730,48 @@
         });
       }
 
+      function nowMs() {
+        return typeof performance !== 'undefined' && typeof performance.now === 'function'
+          ? performance.now()
+          : Date.now();
+      }
+
+      function logPerf(label, durationMs) {
+        if (!ENABLE_PERF_LOGS) return;
+        console.info(`[perf] ${label}: ${Math.round(durationMs)}ms`);
+      }
+
+      async function fetchWithTimeout(url, options, timeoutMs) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+          return await fetch(url, { ...options, signal: controller.signal });
+        } finally {
+          clearTimeout(timeoutId);
+        }
+      }
+
+      async function postJsonWithRetry(url, payload, { timeoutMs = 8000, retryDelayMs = 500, maxRetries = 1 } = {}) {
+        let attempt = 0;
+        while (attempt <= maxRetries) {
+          try {
+            return await fetchWithTimeout(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            }, timeoutMs);
+          } catch (error) {
+            const isTimeout = error?.name === 'AbortError';
+            if (!isTimeout || attempt >= maxRetries) {
+              throw error;
+            }
+            await new Promise(resolve => setTimeout(resolve, retryDelayMs * (attempt + 1)));
+          }
+          attempt += 1;
+        }
+        throw new Error('Request failed after retry');
+      }
+
       function showUploadProgress(taskKey, isLoading) {
         const card = document.querySelector(`.task-card[data-task-key="${taskKey}"]`);
         if (!card) return;
@@ -653,7 +808,7 @@
         try {
           const link = document.createElement('a');
           link.href = fileUrl;
-          link.target = '_blank';
+          link.target = '_self';
           link.rel = 'noopener';
           link.download = fileName;
           link.style.display = 'none';
@@ -662,7 +817,7 @@
           document.body.removeChild(link);
         } catch (err) {
           console.warn('Unable to open file via anchor, falling back to window.open', err);
-          window.open(fileUrl, '_blank', 'noopener');
+          window.location.href = fileUrl;
         }
       }
 
@@ -674,16 +829,91 @@
           fileUrl: '',
           employeeEmail: '',
           reviewerEmail: '',
+          reviewNote: '',
           updatedAt: null,
           reviewedAt: null
         }, overrides);
       }
 
-      function createEmptyTaskMap() {
-        return TASK_DEFINITIONS.reduce((acc, task) => {
+      function createEmptyTaskMap(definitions = getActiveTaskDefinitions()) {
+        return definitions.reduce((acc, task) => {
           acc[task.key] = createEmptyTaskEntry();
           return acc;
         }, {});
+      }
+
+      function getTodayKey() {
+        return new Date().toISOString().slice(0, 10);
+      }
+
+      function isSameDay(dateValue) {
+        if (!dateValue) return false;
+        const date = new Date(dateValue);
+        if (Number.isNaN(date.getTime())) return false;
+        return date.toISOString().slice(0, 10) === getTodayKey();
+      }
+
+      function normalizeEntryForToday(entry) {
+        if (!entry) return createEmptyTaskEntry();
+        if (entry.updatedAt && !isSameDay(entry.updatedAt)) {
+          return createEmptyTaskEntry();
+        }
+        return entry;
+      }
+
+      function getActiveTaskDefinitions(pharmacyIndex = null) {
+        const today = getTodayKey();
+        return (taskDefinitions || []).filter(task => {
+          if (!task) return false;
+          if (task.frequency === 'one_time') {
+            return task.active_date === today;
+          }
+          if (pharmacyIndex !== null && Array.isArray(task.pharmacy_indexes) && task.pharmacy_indexes.length) {
+            return task.pharmacy_indexes.map(String).includes(String(pharmacyIndex));
+          }
+          return true;
+        });
+      }
+
+      function getTaskDueDate(task) {
+        if (!task?.due_time) return null;
+        const baseDate = task.frequency === 'one_time' && task.active_date
+          ? task.active_date
+          : getTodayKey();
+        return new Date(`${baseDate}T${task.due_time}`);
+      }
+
+      function isLateSubmission(entry, task) {
+        if (!entry?.updatedAt || !task?.due_time) return false;
+        const dueDate = getTaskDueDate(task);
+        if (!dueDate || Number.isNaN(dueDate.getTime())) return false;
+        const submittedAt = new Date(entry.updatedAt);
+        if (Number.isNaN(submittedAt.getTime())) return false;
+        return submittedAt.getTime() > dueDate.getTime();
+      }
+
+      function renderTaskCards(definitions) {
+        if (!taskCards) return;
+        if (!definitions.length) {
+          taskCards.innerHTML = '<p style="color:#64748b;">No tasks assigned for today.</p>';
+          return;
+        }
+        taskCards.innerHTML = definitions.map(task => `
+          <div class="task-card" data-task-key="${task.key}">
+            <div class="task-info">
+              <h3>${task.title}</h3>
+              <p>${task.description || ''}</p>
+              <label class="upload-btn">
+                Upload photo
+                <input type="file" accept="image/*" capture="environment">
+              </label>
+            </div>
+            <div class="task-status">
+              <div class="status-chip status-waiting" data-status-label>Waiting for approval</div>
+              <p class="status-note" data-status-note>No submission yet.</p>
+            </div>
+          </div>
+        `).join('');
       }
 
       function formatStatusNote(status, entry) {
@@ -691,8 +921,14 @@
           case 'waiting':
             return `Submitted by ${entry.employeeEmail || 'employee'} • Awaiting review by RGA.`;
           case 'approved':
+            if (entry.reviewNote) {
+              return `Approved • ${entry.reviewNote}`;
+            }
             return entry.reviewerEmail ? `Approved by ${entry.reviewerEmail}.` : 'Approved by RGA.';
           case 'rejected':
+            if (entry.reviewNote) {
+              return `Rejected • ${entry.reviewNote}`;
+            }
             return 'RGA requested a new submission.';
           default:
             return 'No submission yet.';
@@ -710,6 +946,30 @@
         const data = await response.json();
         if (!data?.ok) throw new Error('Unexpected response');
         return data.submissions || [];
+      }
+
+      async function fetchTaskDefinitions() {
+        try {
+          const response = await fetch('/api/task-definitions');
+          if (!response.ok) return DEFAULT_TASK_DEFINITIONS;
+          const data = await response.json();
+          return Array.isArray(data?.tasks) ? data.tasks : DEFAULT_TASK_DEFINITIONS;
+        } catch (error) {
+          console.warn('Unable to fetch task definitions', error);
+          return DEFAULT_TASK_DEFINITIONS;
+        }
+      }
+
+      async function refreshForNewDay(indexKey) {
+        const todayKey = getTodayKey();
+        if (todayKey === lastDateKey) return false;
+        lastDateKey = todayKey;
+        taskDefinitions = await fetchTaskDefinitions();
+        const activeDefs = getActiveTaskDefinitions(indexKey);
+        renderTaskCards(activeDefs);
+        employeeSubmissionState[indexKey] = createEmptyTaskMap(activeDefs);
+        renderEmployeeTasks(indexKey);
+        return true;
       }
 
       function mergeSubmissionsIntoState(targetState, submissions) {
@@ -730,6 +990,7 @@
               fileUrl: item.file_url || '',
               employeeEmail: item.employee_email || '',
               reviewerEmail: item.reviewer_email || '',
+              reviewNote: item.review_note || '',
               updatedAt: item.updated_at || null,
               reviewedAt: item.reviewed_at || null
             });
@@ -746,8 +1007,13 @@
           const statusChip = card.querySelector('[data-status-label]');
           const statusNote = card.querySelector('[data-status-note]');
           const taskStatus = card.querySelector('.task-status');
-          const entry = taskState[key] || createEmptyTaskEntry();
+          const uploadLabel = card.querySelector('.upload-btn');
+          const uploadInput = card.querySelector('input[type="file"]');
+          const entry = normalizeEntryForToday(taskState[key]);
+          const task = getActiveTaskDefinitions(indexKey).find(item => item.key === key);
           const status = entry.state || 'not_submitted';
+          const isLate = isLateSubmission(entry, task);
+          const canUpload = status === 'not_submitted';
 
           // Only update if changed
           if (statusChip && statusChip.textContent !== (STATUS_LABELS[status] || STATUS_LABELS.waiting)) {
@@ -760,11 +1026,22 @@
 
           if (statusNote) {
             const newNote = formatStatusNote(status, entry);
-            if (statusNote.textContent !== newNote) {
-              statusNote.textContent = newNote;
-              statusNote.style.color = status === 'waiting' ? '#b45309' : '#8492a6';
-              statusNote.style.fontWeight = status === 'waiting' ? '600' : '400';
+            const lateSuffix = isLate ? ' • Late' : '';
+            const nextText = `${newNote}${lateSuffix}`;
+            if (statusNote.textContent !== nextText) {
+              statusNote.textContent = nextText;
+              statusNote.style.color = isLate ? '#b91c1c' : (status === 'waiting' ? '#b45309' : '#8492a6');
+              statusNote.style.fontWeight = isLate || status === 'waiting' ? '600' : '400';
             }
+          }
+
+          if (uploadInput) {
+            uploadInput.disabled = !canUpload;
+          }
+          if (uploadLabel) {
+            uploadLabel.style.opacity = canUpload ? '1' : '0.5';
+            uploadLabel.style.cursor = canUpload ? 'pointer' : 'not-allowed';
+            uploadLabel.title = canUpload ? '' : 'Upload locked after submission';
           }
 
           let actions = card.querySelector('.task-actions');
@@ -794,7 +1071,7 @@
         if (!userEmail || indexKey === null || isHydrating) return;
         isHydrating = true;
         try {
-          const submissions = await fetchSubmissions({ email: userEmail, pharmacies: indexKey, role: 'employee' });
+          const submissions = await fetchSubmissions({ pharmacies: indexKey });
           if (!employeeSubmissionState[indexKey]) {
             employeeSubmissionState[indexKey] = createEmptyTaskMap();
           }
@@ -817,6 +1094,12 @@
 
       async function handleUpload(file, taskKey, indexKey, input) {
         if (!file) return;
+        const inflightKey = `${indexKey}:${taskKey}`;
+        if (uploadInFlight.has(inflightKey)) {
+          return;
+        }
+        uploadInFlight.add(inflightKey);
+        const totalStart = nowMs();
         
         // Show loading state immediately
         showUploadProgress(taskKey, true);
@@ -836,16 +1119,18 @@
           });
           renderEmployeeTasks(indexKey);
           
-          // Compress image if it's an image file (only if larger than 500KB)
+          // Compress image if it's an image file (only if larger than COMPRESS_THRESHOLD_KB)
           let processedFile = file;
           let fileName = file.name;
           
-          if (file.type.startsWith('image/') && file.size > 500 * 1024) {
+          if (file.type.startsWith('image/') && file.size > COMPRESS_THRESHOLD_KB * 1024) {
             try {
+              const compressStart = nowMs();
               // Use smaller dimensions on mobile for faster processing
               const isMobile = window.innerWidth <= 768;
-              const maxSize = isMobile ? 1024 : 1280;
-              processedFile = await compressImage(file, maxSize, maxSize, 0.75);
+              const maxSize = isMobile ? COMPRESS_MAX_MOBILE : COMPRESS_MAX_DESKTOP;
+              processedFile = await compressImage(file, maxSize, maxSize, COMPRESS_QUALITY);
+              logPerf('compress', nowMs() - compressStart);
               // Update filename to .jpg if compressed
               if (fileName && !fileName.toLowerCase().endsWith('.jpg') && !fileName.toLowerCase().endsWith('.jpeg')) {
                 fileName = fileName.replace(/\.[^/.]+$/, '') + '.jpg';
@@ -864,22 +1149,28 @@
             reader.readAsDataURL(processedFile);
           });
           
-          // Send to server
-          const response = await fetch('/api/save-submission', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: userEmail,
-              pharmacyIndex: Number(indexKey),
-              taskKey,
-              fileName: fileName,
-              fileUrl
-            })
+          // Send to server with timeout + retry
+          const requestStart = nowMs();
+          const response = await postJsonWithRetry('/api/save-submission', {
+            pharmacyIndex: Number(indexKey),
+            taskKey,
+            fileName: fileName,
+            fileUrl
           });
+          logPerf('upload_request', nowMs() - requestStart);
           
           const data = await response.json();
           
           if (!response.ok || !data?.ok) {
+            if (response.status === 401) {
+              throw new Error('Session expired. Please log in again.');
+            }
+            if (response.status === 403) {
+              throw new Error('Only employee accounts can upload photos.');
+            }
+            if (response.status === 413) {
+              throw new Error('File too large to upload. Please use a smaller image.');
+            }
             throw new Error(data?.error || 'Failed to save submission');
           }
           
@@ -917,6 +1208,8 @@
             fontWeight: '600'
           });
           
+          logPerf('upload_total', nowMs() - totalStart);
+          
           // Refresh state from server after a short delay to ensure consistency
           setTimeout(() => {
             hydrateEmployeeState(indexKey, true).then(() => {
@@ -940,10 +1233,15 @@
           
           renderEmployeeTasks(indexKey);
           
-          setTaskStatusMessage(taskKey, `Upload failed: ${error.message}. Please try again.`, {
+          const message = error?.name === 'AbortError'
+            ? 'Upload timed out. Please try again.'
+            : `Upload failed: ${error.message}. Please try again.`;
+          setTaskStatusMessage(taskKey, message, {
             color: '#b91c1c',
             fontWeight: '600'
           });
+        } finally {
+          uploadInFlight.delete(inflightKey);
         }
       }
 
@@ -953,13 +1251,18 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              email: userEmail,
               pharmacyIndex: Number(indexKey),
               taskKey
             })
           });
           const data = await response.json();
           if (!response.ok || !data?.ok) {
+            if (response.status === 401) {
+              throw new Error('Session expired. Please log in again.');
+            }
+            if (response.status === 403) {
+              throw new Error('Only employee accounts can delete submissions.');
+            }
             throw new Error(data?.error || 'Failed to delete submission');
           }
           if (!employeeSubmissionState[indexKey]) {
@@ -992,8 +1295,8 @@
             if (!file) return;
             
             // Validate file size (max 10MB, but warn if > 5MB)
-            const maxSize = 10 * 1024 * 1024;
-            const warnSize = 5 * 1024 * 1024;
+            const maxSize = MAX_FILE_MB * 1024 * 1024;
+            const warnSize = WARN_FILE_MB * 1024 * 1024;
             if (file.size > maxSize) {
               setTaskStatusMessage(taskKey, 'File too large. Please use an image smaller than 10MB.', {
                 color: '#b91c1c',
@@ -1020,7 +1323,7 @@
             const taskKey = btn.dataset.task;
             const idx = btn.dataset.pharmacyIndex;
             if (action === 'open') {
-              const entry = employeeSubmissionState[idx]?.[taskKey];
+              const entry = normalizeEntryForToday(employeeSubmissionState[idx]?.[taskKey]);
               if (entry?.fileUrl) {
                 openFileUrl(entry.fileUrl, entry.fileName || 'submission');
               } else {
@@ -1048,7 +1351,7 @@
           }
           const taskKey = chip.dataset.task;
           const idx = chip.dataset.pharmacyIndex;
-          const entry = employeeSubmissionState[idx]?.[taskKey];
+          const entry = normalizeEntryForToday(employeeSubmissionState[idx]?.[taskKey]);
           if (entry?.fileUrl) {
             openFileUrl(entry.fileUrl, entry.fileName || 'submission');
           } else {
@@ -1062,22 +1365,11 @@
       }
 
       async function resolveProfileData(email) {
-        const stored = sessionStorage.getItem('profileFormData');
-        if (stored) {
-          try {
-            return JSON.parse(stored);
-          } catch (err) {
-            console.warn('Failed to parse stored profile data', err);
-          }
-        }
         if (!email) return null;
         try {
-          const response = await fetch(`/api/get-profile?email=${encodeURIComponent(email)}`);
+          const response = await fetch('/api/profile');
           if (!response.ok) return null;
           const data = await response.json();
-          if (data?.profile) {
-            sessionStorage.setItem('profileFormData', JSON.stringify(data.profile));
-          }
           return data?.profile || null;
         } catch (error) {
           console.warn('Unable to fetch profile', error);
@@ -1085,11 +1377,29 @@
         }
       }
 
+      async function fetchSession() {
+        try {
+          const response = await fetch('/api/session');
+          if (!response.ok) return null;
+          const data = await response.json();
+          return data?.session || null;
+        } catch (error) {
+          console.warn('Unable to load session', error);
+          return null;
+        }
+      }
+
       async function init() {
         try {
-          userRole = sessionStorage.getItem('userRole') || '';
-          userEmail = sessionStorage.getItem('userEmail') || '';
-          link.href = buildProfileHref(userRole, userEmail);
+          const session = await fetchSession();
+          if (!session) {
+            window.location.href = 'register.html';
+            return;
+          }
+
+          userRole = session.role || '';
+          userEmail = session.email || '';
+          link.href = buildProfileHref();
 
           const nameEl = document.getElementById('chipName');
           const emailEl = document.getElementById('chipEmail');
@@ -1109,11 +1419,7 @@
           }
 
           if (userRole && userRole.toLowerCase() === 'rga') {
-            const cta = document.createElement('p');
-            cta.style.marginTop = '24px';
-            cta.style.textAlign = 'center';
-            cta.innerHTML = '<a href="rga-dashboard.html" style="display:inline-flex; align-items:center; gap:8px; padding:12px 20px; border-radius:12px; background:#e3f2fd; color:#1d4ed8; text-decoration:none; font-weight:600;">Go to RGA dashboard</a>';
-            dashboardContainer.insertBefore(cta, tasksSection);
+            window.location.href = 'rga-dashboard.html';
             return;
           }
 
@@ -1130,7 +1436,10 @@
           }
 
           activePharmacyIndex = indexKey;
-          employeeSubmissionState[indexKey] = createEmptyTaskMap();
+          taskDefinitions = await fetchTaskDefinitions();
+          const activeDefs = getActiveTaskDefinitions(indexKey);
+          renderTaskCards(activeDefs);
+          employeeSubmissionState[indexKey] = createEmptyTaskMap(activeDefs);
           renderEmployeeTasks(indexKey);
           await hydrateEmployeeState(indexKey);
           
@@ -1151,9 +1460,10 @@
             if (isPageVisible && !employeeRefreshTimer) {
               employeeRefreshTimer = setInterval(() => {
                 if (isPageVisible) {
-                  hydrateEmployeeState(indexKey, true).then(() => {
-                    renderEmployeeTasks(indexKey);
-                  }).catch(err => console.warn('Employee refresh failed', err));
+                  refreshForNewDay(indexKey)
+                    .then(() => hydrateEmployeeState(indexKey, true))
+                    .then(() => renderEmployeeTasks(indexKey))
+                    .catch(err => console.warn('Employee refresh failed', err));
                 }
               }, pollInterval);
             } else if (!isPageVisible && employeeRefreshTimer) {
@@ -1166,9 +1476,10 @@
           if (isPageVisible) {
             employeeRefreshTimer = setInterval(() => {
               if (isPageVisible) {
-                hydrateEmployeeState(indexKey, true).then(() => {
-                  renderEmployeeTasks(indexKey);
-                }).catch(err => console.warn('Employee refresh failed', err));
+                refreshForNewDay(indexKey)
+                  .then(() => hydrateEmployeeState(indexKey, true))
+                  .then(() => renderEmployeeTasks(indexKey))
+                  .catch(err => console.warn('Employee refresh failed', err));
               }
             }, pollInterval);
           }
@@ -1182,5 +1493,6 @@
       init();
     })();
   </script>
+  <script src="cookie-consent.js"></script>
 </body>
 </html>

@@ -622,15 +622,92 @@
     const summaryPharmacy = document.getElementById('summaryPharmacy');
     const editProfileBtn = document.getElementById('editProfileBtn');
     const logoutButton = document.getElementById('logoutButton');
+
+    const NETWORK_DIAGNOSTICS_LIMIT = 5;
+
+    function ensureNetworkDiagnosticsPanel() {
+      let panel = document.getElementById('networkDiagnostics');
+      if (panel) return panel;
+      panel = document.createElement('div');
+      panel.id = 'networkDiagnostics';
+      panel.style.position = 'fixed';
+      panel.style.bottom = '16px';
+      panel.style.right = '16px';
+      panel.style.maxWidth = '360px';
+      panel.style.background = '#ffffff';
+      panel.style.border = '1px solid #e5e7eb';
+      panel.style.borderRadius = '10px';
+      panel.style.boxShadow = '0 10px 25px rgba(15, 23, 42, 0.15)';
+      panel.style.padding = '12px 14px';
+      panel.style.fontSize = '12px';
+      panel.style.color = '#1f2937';
+      panel.style.zIndex = '9999';
+      panel.style.display = 'none';
+      panel.innerHTML = '<strong style="display:block;margin-bottom:6px;">Network diagnostics</strong><div id="networkDiagnosticsList" style="display:flex;flex-direction:column;gap:6px;"></div>';
+      document.body.appendChild(panel);
+      return panel;
+    }
+
+    function resolveServiceLabel(url, errorText = '') {
+      const text = `${errorText || ''}`.toLowerCase();
+      if (url.includes('supabase.co') || text.includes('supabase') || text.includes('database')) {
+        return 'Supabase';
+      }
+      if (url.includes('resend.com')) {
+        return 'Resend';
+      }
+      if (url.startsWith('/api/')) {
+        return 'App server (Vercel)';
+      }
+      if (url.includes('vercel')) {
+        return 'Vercel';
+      }
+      return 'Network';
+    }
+
+    function reportNetworkError(url, status, errorText) {
+      const panel = ensureNetworkDiagnosticsPanel();
+      const list = panel.querySelector('#networkDiagnosticsList');
+      if (!list) return;
+      const item = document.createElement('div');
+      const service = resolveServiceLabel(url, errorText);
+      const statusText = status ? `Status ${status}` : 'No response';
+      item.textContent = `${service}: ${statusText} • ${url}${errorText ? ` • ${errorText}` : ''}`;
+      list.prepend(item);
+      while (list.children.length > NETWORK_DIAGNOSTICS_LIMIT) {
+        list.removeChild(list.lastChild);
+      }
+      panel.style.display = 'block';
+    }
+
+    function wrapFetchWithDiagnostics() {
+      if (window.__networkDiagnosticsInstalled) return;
+      window.__networkDiagnosticsInstalled = true;
+      const originalFetch = window.fetch.bind(window);
+      window.fetch = async (input, init) => {
+        const url = typeof input === 'string' ? input : input?.url || 'unknown';
+        try {
+          const response = await originalFetch(input, init);
+          if (!response.ok) {
+            let errorText = '';
+            try {
+              errorText = await response.clone().text();
+            } catch (err) {
+              errorText = '';
+            }
+            reportNetworkError(url, response.status, errorText);
+          }
+          return response;
+        } catch (error) {
+          reportNetworkError(url, null, error?.message || 'Network error');
+          throw error;
+        }
+      };
+    }
+
+    wrapFetchWithDiagnostics();
     let savedProfileData = null;
     function performLogout() {
-      try {
-        sessionStorage.removeItem('userRole');
-        sessionStorage.removeItem('userEmail');
-        sessionStorage.removeItem('profileFormData');
-      } catch (storageError) {
-        console.warn('Unable to clear session storage during logout', storageError);
-      }
       window.location.href = 'register.html';
     }
 
@@ -639,41 +716,32 @@
     // Track selected pharmacies
     let selectedPharmacyData = [];
     
-    // Get user role and email from session storage or URL parameters
-    let userRole = 'employee'; // default
+    // Get user role and email from server session
+    let userRole = 'employee';
     let userEmail = '';
-    
-    const urlParams = new URLSearchParams(window.location.search);
-    const roleParam = urlParams.get('role');
-    const emailParam = urlParams.get('email');
-    
-    if (roleParam) {
-      userRole = roleParam;
-    } else {
-      const storedRole = sessionStorage.getItem('userRole');
-      if (storedRole) {
-        userRole = storedRole;
-      }
-    }
-    
-    if (emailParam) {
-      userEmail = emailParam;
-    } else {
-      const storedEmail = sessionStorage.getItem('userEmail');
-      if (storedEmail) {
-        userEmail = storedEmail;
+
+    async function fetchSession() {
+      try {
+        const response = await fetch('/api/session');
+        if (!response.ok) return null;
+        const data = await response.json();
+        return data?.session || null;
+      } catch (error) {
+        console.warn('Unable to load session', error);
+        return null;
       }
     }
 
-    // Attempt to load previously saved profile form data from session storage
-    try {
-      const storedProfile = sessionStorage.getItem('profileFormData');
-      if (storedProfile) {
-        savedProfileData = JSON.parse(storedProfile);
+    async function fetchProfile() {
+      try {
+        const response = await fetch('/api/profile');
+        if (!response.ok) return null;
+        const data = await response.json();
+        return data?.profile || null;
+      } catch (error) {
+        console.warn('Unable to load profile', error);
+        return null;
       }
-    } catch (profileStorageError) {
-      console.warn('Unable to restore profile form data from session storage', profileStorageError);
-      savedProfileData = null;
     }
 
     function hideSummary() {
@@ -830,9 +898,13 @@
       'rga': 5
     };
     
-    const maxPharmacies = pharmacyLimits[userRole] || 1;
-    pharmacyLimitSpan.textContent = maxPharmacies;
-    pharmacyLimitInfo.style.display = 'block';
+    let maxPharmacies = pharmacyLimits[userRole] || 1;
+    function updateRoleLimits() {
+      maxPharmacies = pharmacyLimits[userRole] || 1;
+      pharmacyLimitSpan.textContent = maxPharmacies;
+      pharmacyLimitInfo.style.display = 'block';
+    }
+    updateRoleLimits();
     
     // Populate pharmacy dropdown
     function populatePharmacyDropdown(selectElement) {
@@ -845,9 +917,6 @@
         console.error('Pharmacies variable:', pharmacies);
         return;
       }
-      console.log('Populating pharmacy dropdown...');
-      console.log('Pharmacies array length:', pharmacies.length);
-      console.log('First pharmacy:', pharmacies[0]);
       
       // Clear and populate
       selectElement.innerHTML = '<option value="">Select your pharmacy</option>';
@@ -863,15 +932,10 @@
         selectElement.appendChild(option);
       });
       
-      console.log('Pharmacy dropdown populated with', selectElement.children.length, 'options');
-      console.log('Select element:', selectElement);
-      console.log('Select options:', Array.from(selectElement.options).map(opt => opt.textContent));
     }
     
     // Create pharmacy selection item
     function createPharmacyItem() {
-      console.log('Creating pharmacy item...');
-      console.log('Pharmacies available:', pharmacies ? pharmacies.length : 'NOT DEFINED');
       
       const pharmacyItem = document.createElement('div');
       pharmacyItem.className = 'pharmacy-item';
@@ -888,9 +952,6 @@
       // Populate BEFORE appending to ensure it works
       populatePharmacyDropdown(select);
       
-      console.log('Select element created:', select);
-      console.log('Select options count:', select.children.length);
-      console.log('Select HTML:', select.innerHTML.substring(0, 200));
       
       pharmacyItem.appendChild(select);
       
@@ -1009,16 +1070,11 @@
         const profileData = {
           first_name: firstName,
           last_name: lastName,
-          pharmacies: selectedPharmacyData,
-          role: userRole,
-          email: userEmail,
-          created_at: new Date().toISOString()
+          pharmacies: selectedPharmacyData
         };
         
-        console.log('Saving profile:', profileData);
-        
         // Call serverless API to save profile
-        const apiResponse = await fetch('/api/save-profile', {
+        const apiResponse = await fetch('/api/profile', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(profileData)
@@ -1031,57 +1087,10 @@
           throw new Error(result?.error || 'Failed to save profile');
         }
         
-        console.log('Profile saved successfully:', result);
-        
         // Success - show success message and redirect
         successMsg.textContent = `Profile completed successfully! Welcome ${firstName} ${lastName}!`;
         successMsg.style.display = 'block';
-        try {
-          const serializedProfile = JSON.stringify(profileData);
-          sessionStorage.setItem('profileFormData', serializedProfile);
-          savedProfileData = JSON.parse(serializedProfile);
-        } catch (cacheError) {
-          console.warn('Unable to cache profile form data', cacheError);
-        }
-        try {
-          sessionStorage.setItem('userRole', userRole);
-          sessionStorage.setItem('userEmail', userEmail);
-        } catch (persistError) {
-          console.warn('Unable to update user role/email in session storage', persistError);
-        }
-        try {
-          if (userRole && userRole.toLowerCase() === 'rga') {
-            const rgaMap = JSON.parse(localStorage.getItem('pharmacyRga') || '{}');
-            selectedPharmacyData.forEach(pharmacy => {
-              const idx = String(pharmacy.index);
-              rgaMap[idx] = {
-                email: userEmail,
-                name: `${firstName} ${lastName}`,
-                region: pharmacy.region,
-                address: pharmacy.address
-              };
-            });
-            localStorage.setItem('pharmacyRga', JSON.stringify(rgaMap));
-          } else if (userRole && userRole.toLowerCase() === 'employee') {
-            const employeesStore = JSON.parse(localStorage.getItem('pharmacyEmployees') || '{}');
-            selectedPharmacyData.forEach(pharmacy => {
-              const idx = String(pharmacy.index);
-              employeesStore[idx] = employeesStore[idx] || [];
-              const existing = employeesStore[idx].find(entry => entry.email === userEmail);
-              if (existing) {
-                existing.name = `${firstName} ${lastName}`;
-              } else {
-                employeesStore[idx].push({
-                  name: `${firstName} ${lastName}`,
-                  email: userEmail
-                });
-              }
-            });
-            localStorage.setItem('pharmacyEmployees', JSON.stringify(employeesStore));
-          }
-        } catch (localErr) {
-          console.warn('Unable to update local assignment data', localErr);
-        }
+        savedProfileData = profileData;
         savedProfileData = profileData;
         
         // Redirect to appropriate dashboard after a short delay
@@ -1106,16 +1115,10 @@
     
     // Initialize pharmacy selection
     function initializePharmacySelection() {
-      console.log('Initializing pharmacy selection...');
-      console.log('User role:', userRole);
-      console.log('Max pharmacies:', maxPharmacies);
-      console.log('Pharmacies array available:', typeof pharmacies !== 'undefined', pharmacies ? pharmacies.length : 'N/A');
       
       // First, try to populate any existing select elements before clearing
       const existingSelects = pharmacyContainer.querySelectorAll('.pharmacy-select');
-      console.log('Found', existingSelects.length, 'existing select element(s)');
       existingSelects.forEach(function(select, idx) {
-        console.log(`Populating existing select ${idx}...`);
         populatePharmacyDropdown(select);
       });
       
@@ -1133,7 +1136,6 @@
       // Immediately verify the dropdown was populated
       const createdSelect = firstPharmacy.querySelector('.pharmacy-select');
       if (createdSelect) {
-        console.log('Created select element found. Options count:', createdSelect.options.length);
         if (createdSelect.options.length <= 1) {
           console.error('Select element is empty! Attempting to repopulate...');
           populatePharmacyDropdown(createdSelect);
@@ -1255,7 +1257,6 @@
           ? e.target 
           : e.target.closest('.pharmacy-select');
         if (select && (select.children.length <= 1 || select.options.length <= 1)) {
-          console.log('Dropdown clicked but empty. Repopulating...');
           populatePharmacyDropdown(select);
         }
       }
@@ -1268,7 +1269,6 @@
           ? e.target 
           : e.target.closest('.pharmacy-select');
         if (select && (select.children.length <= 1 || select.options.length <= 1)) {
-          console.log('Dropdown about to open but empty. Repopulating...');
           populatePharmacyDropdown(select);
         }
       }
@@ -1276,64 +1276,75 @@
     
     
     // Initialize
-    console.log('=== INITIALIZING PHARMACY SELECTION ===');
-    console.log('Pharmacies array defined:', typeof pharmacies !== 'undefined');
-    console.log('Pharmacies count:', pharmacies ? pharmacies.length : 'N/A');
     
-    initializePharmacySelection();
-    
-    // Ensure all pharmacy dropdowns are populated (safety check with multiple attempts)
-    function ensureDropdownsPopulated(attempt = 1) {
+    function setupPharmacyUI() {
+      initializePharmacySelection();
+
+      // Ensure all pharmacy dropdowns are populated (safety check with multiple attempts)
+      function ensureDropdownsPopulated(attempt = 1) {
       const allDropdowns = document.querySelectorAll('.pharmacy-select');
-      console.log(`Attempt ${attempt}: Found ${allDropdowns.length} pharmacy dropdown(s)`);
       
       let allPopulated = true;
       allDropdowns.forEach(function(dropdown, index) {
         const optionCount = dropdown.children.length;
-        console.log(`Dropdown ${index}: ${optionCount} options`);
         if (optionCount <= 1) {
-          console.log(`Dropdown ${index} is empty or only has placeholder. Repopulating...`);
           populatePharmacyDropdown(dropdown);
           allPopulated = false;
-        } else {
-          console.log(`Dropdown ${index} has ${optionCount} options - OK`);
         }
       });
       
       // Retry up to 3 times if not all populated
       if (!allPopulated && attempt < 3) {
         setTimeout(() => ensureDropdownsPopulated(attempt + 1), 200);
-      } else if (allPopulated) {
-        console.log('All dropdowns successfully populated!');
       }
     }
     
-    // Check immediately and after a short delay
-    setTimeout(() => ensureDropdownsPopulated(1), 50);
-    setTimeout(() => ensureDropdownsPopulated(2), 300);
-    setTimeout(() => ensureDropdownsPopulated(3), 1000);
-    
-    // Also ensure on window load
-    window.addEventListener('load', function() {
-      console.log('Window loaded - checking dropdowns again');
-      ensureDropdownsPopulated('window-load');
-    });
-    
-    // Force populate on DOMContentLoaded as well
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOMContentLoaded - checking dropdowns');
-        setTimeout(() => ensureDropdownsPopulated('dom-ready'), 100);
+      // Check immediately and after a short delay
+      setTimeout(() => ensureDropdownsPopulated(1), 50);
+      setTimeout(() => ensureDropdownsPopulated(2), 300);
+      setTimeout(() => ensureDropdownsPopulated(3), 1000);
+      
+      // Also ensure on window load
+      window.addEventListener('load', function() {
+        ensureDropdownsPopulated('window-load');
       });
-    } else {
-      // DOM already loaded
-      setTimeout(() => ensureDropdownsPopulated('immediate'), 100);
+      
+      // Force populate on DOMContentLoaded as well
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+          setTimeout(() => ensureDropdownsPopulated('dom-ready'), 100);
+        });
+      } else {
+        // DOM already loaded
+        setTimeout(() => ensureDropdownsPopulated('immediate'), 100);
+      }
+    }
+    async function initSessionAndProfile() {
+      const session = await fetchSession();
+      if (!session) {
+        window.location.href = 'register.html';
+        return;
+      }
+
+      userRole = session.role || 'employee';
+      userEmail = session.email || '';
+      updateRoleLimits();
+      setupPharmacyUI();
+
+      const profile = await fetchProfile();
+      if (profile) {
+        savedProfileData = profile;
+        restoreFormValuesIfAvailable();
+      } else {
+        hideSummary();
+      }
+
+      if (selectedPharmacyData.length === 0) {
+        renderSelectedPharmacies();
+      }
     }
 
-    restoreFormValuesIfAvailable();
-    if (selectedPharmacyData.length === 0) {
-      renderSelectedPharmacies();
-    }
+    initSessionAndProfile();
     
     function renderSelectedPharmacies() {
       if (!selectedPharmaciesPanel || !selectedPharmaciesList) return;
@@ -1435,5 +1446,6 @@
       firstNameField?.focus();
     }
   </script>
+  <script src="cookie-consent.js"></script>
 </body>
 </html>

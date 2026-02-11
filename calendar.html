@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <title>Calendar | PharmaT Audit</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      margin: 0;
+      min-height: 100vh;
+      padding: 32px 20px 40px;
+      color: #1f2933;
+    }
+
+    .top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 12px 18px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+      margin: 0 auto 24px;
+      max-width: 1200px;
+    }
+
+    .nav-brand {
+      font-weight: 700;
+      color: #2d5a27;
+      font-size: 18px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .nav-link {
+      text-decoration: none;
+      color: #475569;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: #f8fafc;
+      transition: all 0.2s ease;
+    }
+
+    .nav-link:hover {
+      color: #1d4ed8;
+      border-color: #cbd5e1;
+      background: #eef2ff;
+    }
+
+    .nav-link.active {
+      color: #ffffff;
+      background: #2d5a27;
+      border-color: #2d5a27;
+    }
+
+    .calendar-page {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.18);
+      padding: 32px 36px 40px;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+
+    .page-header h1 {
+      margin: 0;
+      font-size: 28px;
+      color: #2d5a27;
+    }
+
+    .page-header p {
+      margin: 6px 0 0;
+      color: #5f6c7b;
+      font-size: 15px;
+    }
+
+    .filters {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .filters label {
+      font-size: 13px;
+      color: #52606d;
+      font-weight: 600;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .filters select {
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid #d1d9e6;
+      font-size: 14px;
+      min-width: 220px;
+      background: #f8fafc;
+    }
+
+    .calendar-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+      gap: 24px;
+    }
+
+    .calendar-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 20px;
+      background: #f8fafc;
+    }
+
+    .calendar-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .month-label {
+      font-weight: 700;
+      font-size: 18px;
+      color: #1f2933;
+    }
+
+    .calendar-nav-btn {
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #1f2933;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .calendar-nav-btn:hover {
+      background: #e2efff;
+      transform: translateY(-1px);
+    }
+
+    .calendar-weekdays,
+    .calendar-days {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .weekday {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #52606d;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .day-cell {
+      min-height: 84px;
+      border-radius: 12px;
+      padding: 8px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .day-cell:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+    }
+
+    .day-cell.is-empty {
+      background: transparent;
+      border-color: transparent;
+      cursor: default;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .day-cell.is-selected {
+      border-color: #2d5a27;
+      box-shadow: inset 0 0 0 2px rgba(45, 90, 39, 0.2);
+    }
+
+    .day-number {
+      font-weight: 700;
+      font-size: 14px;
+      color: #1f2933;
+    }
+
+    .day-events {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .event-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #94a3b8;
+    }
+
+    .event-dot.waiting {
+      background: #f59e0b;
+    }
+
+    .event-dot.approved {
+      background: #10b981;
+    }
+
+    .event-dot.rejected {
+      background: #ef4444;
+    }
+
+    .event-count {
+      font-size: 11px;
+      color: #64748b;
+    }
+
+    .history-panel {
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 20px;
+      background: #ffffff;
+    }
+
+    .history-panel h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      color: #1f2933;
+    }
+
+    .history-item {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      background: #f8fafc;
+    }
+
+    .history-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .history-item h3 {
+      margin: 0 0 6px;
+      font-size: 15px;
+      color: #1f2933;
+    }
+
+    .history-item p {
+      margin: 0 0 6px;
+      font-size: 12px;
+      color: #52606d;
+    }
+
+    .history-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 12px;
+      color: #475569;
+    }
+
+    .history-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+    }
+
+    .history-chip.waiting {
+      background: #fff4ce;
+      color: #b45309;
+      border-color: #fcd34d;
+    }
+
+    .history-chip.approved {
+      background: #d1fae5;
+      color: #047857;
+      border-color: #6ee7b7;
+    }
+
+    .history-chip.rejected {
+      background: #fee2e2;
+      color: #b91c1c;
+      border-color: #fca5a5;
+    }
+
+    .history-actions {
+      margin-top: 8px;
+    }
+
+    .history-actions a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      color: #1d4ed8;
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    .history-actions button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: none;
+      background: transparent;
+      color: #1d4ed8;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .empty-state {
+      color: #64748b;
+      font-size: 14px;
+      padding: 12px 0;
+    }
+
+    @media (max-width: 960px) {
+      .calendar-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 16px 12px 24px;
+      }
+
+      .top-nav {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .calendar-page {
+        padding: 24px 20px 28px;
+      }
+
+      .calendar-weekdays,
+      .calendar-days {
+        gap: 6px;
+      }
+
+      .day-cell {
+        min-height: 70px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .calendar-page {
+        padding: 20px 16px 24px;
+      }
+
+      .filters select {
+        min-width: 180px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="top-nav" aria-label="Primary">
+    <div class="nav-brand">PharmaT Audit</div>
+    <div class="nav-links">
+      <a href="welcome.html" class="nav-link" id="dashboardLink">Dashboard</a>
+      <a href="calendar.html" class="nav-link active">Calendar</a>
+    </div>
+  </nav>
+
+  <main class="calendar-page">
+    <div class="page-header">
+      <div>
+        <h1>Submission Calendar</h1>
+        <p id="pageSubtitle"></p>
+      </div>
+      <div class="filters">
+        <label>
+          Pharmacy
+          <select id="pharmacyFilter"></select>
+        </label>
+      </div>
+    </div>
+
+    <section class="calendar-layout">
+      <div class="calendar-card">
+        <div class="calendar-toolbar">
+          <button class="calendar-nav-btn" type="button" id="prevMonth">&larr;</button>
+          <div class="month-label" id="monthLabel">Month</div>
+          <button class="calendar-nav-btn" type="button" id="nextMonth">&rarr;</button>
+        </div>
+        <div class="calendar-weekdays" id="weekdayRow"></div>
+        <div class="calendar-days" id="calendarDays"></div>
+      </div>
+
+      <aside class="history-panel">
+        <h2 id="historyTitle">Events</h2>
+        <div id="historyList" class="history-list"></div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    (function() {
+      const DEFAULT_TASK_DEFINITIONS = [
+        { key: 'window', title: 'Send photo of a window' },
+        { key: 'trash', title: 'Send photo of trash cans' },
+        { key: 'outfit', title: 'Send photo of an outfit' }
+      ];
+      let taskDefinitions = DEFAULT_TASK_DEFINITIONS;
+
+      const STATUS_LABELS = {
+        not_submitted: 'Not submitted',
+        waiting: 'Waiting for approval',
+        approved: 'Approved',
+        rejected: 'Not approved'
+      };
+
+      const NETWORK_DIAGNOSTICS_LIMIT = 5;
+
+      function ensureNetworkDiagnosticsPanel() {
+        let panel = document.getElementById('networkDiagnostics');
+        if (panel) return panel;
+        panel = document.createElement('div');
+        panel.id = 'networkDiagnostics';
+        panel.style.position = 'fixed';
+        panel.style.bottom = '16px';
+        panel.style.right = '16px';
+        panel.style.maxWidth = '360px';
+        panel.style.background = '#ffffff';
+        panel.style.border = '1px solid #e5e7eb';
+        panel.style.borderRadius = '10px';
+        panel.style.boxShadow = '0 10px 25px rgba(15, 23, 42, 0.15)';
+        panel.style.padding = '12px 14px';
+        panel.style.fontSize = '12px';
+        panel.style.color = '#1f2937';
+        panel.style.zIndex = '9999';
+        panel.style.display = 'none';
+        panel.innerHTML = '<strong style="display:block;margin-bottom:6px;">Network diagnostics</strong><div id="networkDiagnosticsList" style="display:flex;flex-direction:column;gap:6px;"></div>';
+        document.body.appendChild(panel);
+        return panel;
+      }
+
+      function resolveServiceLabel(url, errorText = '') {
+        const text = `${errorText || ''}`.toLowerCase();
+        if (url.includes('supabase.co') || text.includes('supabase') || text.includes('database')) {
+          return 'Supabase';
+        }
+        if (url.includes('resend.com')) {
+          return 'Resend';
+        }
+        if (url.startsWith('/api/')) {
+          return 'App server (Vercel)';
+        }
+        if (url.includes('vercel')) {
+          return 'Vercel';
+        }
+        return 'Network';
+      }
+
+      function reportNetworkError(url, status, errorText) {
+        const panel = ensureNetworkDiagnosticsPanel();
+        const list = panel.querySelector('#networkDiagnosticsList');
+        if (!list) return;
+        const item = document.createElement('div');
+        const service = resolveServiceLabel(url, errorText);
+        const statusText = status ? `Status ${status}` : 'No response';
+        item.textContent = `${service}: ${statusText} • ${url}${errorText ? ` • ${errorText}` : ''}`;
+        list.prepend(item);
+        while (list.children.length > NETWORK_DIAGNOSTICS_LIMIT) {
+          list.removeChild(list.lastChild);
+        }
+        panel.style.display = 'block';
+      }
+
+      function wrapFetchWithDiagnostics() {
+        if (window.__networkDiagnosticsInstalled) return;
+        window.__networkDiagnosticsInstalled = true;
+        const originalFetch = window.fetch.bind(window);
+        window.fetch = async (input, init) => {
+          const url = typeof input === 'string' ? input : input?.url || 'unknown';
+          try {
+            const response = await originalFetch(input, init);
+            if (!response.ok) {
+              let errorText = '';
+              try {
+                errorText = await response.clone().text();
+              } catch (err) {
+                errorText = '';
+              }
+              reportNetworkError(url, response.status, errorText);
+            }
+            return response;
+          } catch (error) {
+            reportNetworkError(url, null, error?.message || 'Network error');
+            throw error;
+          }
+        };
+      }
+
+      wrapFetchWithDiagnostics();
+
+      const MONTH_NAMES = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+
+      const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+      const dashboardLink = document.getElementById('dashboardLink');
+      const pharmacyFilter = document.getElementById('pharmacyFilter');
+      const monthLabel = document.getElementById('monthLabel');
+      const calendarDays = document.getElementById('calendarDays');
+      const weekdayRow = document.getElementById('weekdayRow');
+      const historyList = document.getElementById('historyList');
+      const historyTitle = document.getElementById('historyTitle');
+      const subtitleEl = document.getElementById('pageSubtitle');
+      const prevMonthBtn = document.getElementById('prevMonth');
+      const nextMonthBtn = document.getElementById('nextMonth');
+
+      let currentMonth = new Date();
+      currentMonth.setDate(1);
+      let selectedDateKey = null;
+      let submissions = [];
+      let pharmacies = [];
+      let role = '';
+      let pharmacyLookup = {};
+      let eventsByDate = new Map();
+      let filteredPharmacyIndex = 'all';
+      let taskTitles = {};
+
+      function getDateKey(date) {
+        const year = date.getFullYear();
+        const month = `${date.getMonth() + 1}`.padStart(2, '0');
+        const day = `${date.getDate()}`.padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      function parseDate(value) {
+        if (!value) return null;
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return null;
+        return date;
+      }
+
+      function formatTime(date) {
+        return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+      }
+
+      function openFileUrl(fileUrl, fileName = 'submission') {
+        if (!fileUrl) return;
+        try {
+          const link = document.createElement('a');
+          link.href = fileUrl;
+          link.download = fileName;
+          link.rel = 'noopener';
+          link.style.display = 'none';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } catch (err) {
+          console.warn('Unable to open file via anchor, falling back to location', err);
+          window.location.href = fileUrl;
+        }
+      }
+
+      function normalizeSpacing(value) {
+        return `${value || ''}`.replace(/\s+/g, ' ').trim();
+      }
+
+      function transliterate(value) {
+        if (!value) return '';
+        const map = {
+          'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'e','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m',
+          'н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'shch',
+          'ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya',
+          'А':'A','Б':'B','В':'V','Г':'G','Д':'D','Е':'E','Ё':'E','Ж':'Zh','З':'Z','И':'I','Й':'Y','К':'K','Л':'L','М':'M',
+          'Н':'N','О':'O','П':'P','Р':'R','С':'S','Т':'T','У':'U','Ф':'F','Х':'Kh','Ц':'Ts','Ч':'Ch','Ш':'Sh','Щ':'Shch',
+          'Ъ':'','Ы':'Y','Ь':'','Э':'E','Ю':'Yu','Я':'Ya'
+        };
+        return normalizeSpacing(`${value}`.split('').map(char => (map[char] !== undefined ? map[char] : char)).join(''));
+      }
+
+      function buildTaskTitles(definitions) {
+        return (definitions || []).reduce((acc, task) => {
+          if (task?.key) {
+            acc[task.key] = task.title || task.key;
+          }
+          return acc;
+        }, {});
+      }
+
+      function buildPharmacyLabel(pharmacy) {
+        const parts = [];
+        if (pharmacy?.region) parts.push(transliterate(pharmacy.region));
+        if (pharmacy?.address) parts.push(transliterate(pharmacy.address));
+        return parts.length ? parts.join(' - ') : 'Pharmacy';
+      }
+
+      function formatPharmacyOption(pharmacy) {
+        return buildPharmacyLabel(pharmacy);
+      }
+
+      function getWeekdayOffset(date) {
+        const day = date.getDay();
+        return (day + 6) % 7;
+      }
+
+      function buildEvents(filteredSubmissions) {
+        const events = [];
+        filteredSubmissions.forEach(item => {
+          if (!item || item.pharmacy_index === undefined || item.pharmacy_index === null) {
+            return;
+          }
+          const status = item.status || 'waiting';
+          if (status === 'not_submitted' && !item.file_url) {
+            return;
+          }
+          const pharmacyIndex = String(item.pharmacy_index);
+          const pharmacyLabel = pharmacyLookup[pharmacyIndex] || `Pharmacy #${pharmacyIndex}`;
+          const taskTitle = taskTitles[item.task_key] || item.task_key || 'Task';
+          const updatedAt = parseDate(item.updated_at);
+          const reviewedAt = parseDate(item.reviewed_at);
+
+          if (updatedAt) {
+            events.push({
+              type: 'submission',
+              status,
+              date: updatedAt,
+              pharmacyIndex,
+              pharmacyLabel,
+              taskTitle,
+              fileName: item.file_name || '',
+              fileUrl: item.file_url || '',
+              employeeEmail: item.employee_email || '',
+              reviewerEmail: item.reviewer_email || '',
+              reviewNote: item.review_note || ''
+            });
+          }
+
+          if (reviewedAt && (status === 'approved' || status === 'rejected')) {
+            events.push({
+              type: 'decision',
+              status,
+              date: reviewedAt,
+              pharmacyIndex,
+              pharmacyLabel,
+              taskTitle,
+              fileName: item.file_name || '',
+              fileUrl: item.file_url || '',
+              employeeEmail: item.employee_email || '',
+              reviewerEmail: item.reviewer_email || '',
+              reviewNote: item.review_note || ''
+            });
+          }
+        });
+
+        events.sort((a, b) => b.date.getTime() - a.date.getTime());
+        return events;
+      }
+
+      function refreshEvents() {
+        const filtered = filteredPharmacyIndex === 'all'
+          ? submissions
+          : submissions.filter(item => String(item.pharmacy_index) === filteredPharmacyIndex);
+
+        const allEvents = buildEvents(filtered);
+        eventsByDate = new Map();
+        allEvents.forEach(event => {
+          const key = getDateKey(event.date);
+          if (!eventsByDate.has(key)) {
+            eventsByDate.set(key, []);
+          }
+          eventsByDate.get(key).push(event);
+        });
+      }
+
+      function renderWeekdays() {
+        weekdayRow.innerHTML = WEEKDAYS.map(day => `<div class="weekday">${day}</div>`).join('');
+      }
+
+      function renderCalendar() {
+        if (!calendarDays || !monthLabel) return;
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth();
+        monthLabel.textContent = `${MONTH_NAMES[month]} ${year}`;
+
+        const firstDay = new Date(year, month, 1);
+        const startOffset = getWeekdayOffset(firstDay);
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        const cells = [];
+        for (let i = 0; i < startOffset; i++) {
+          cells.push('<div class="day-cell is-empty"></div>');
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+          const date = new Date(year, month, day);
+          const dateKey = getDateKey(date);
+          const events = eventsByDate.get(dateKey) || [];
+          const dots = events.slice(0, 6).map(event => {
+            const statusClass = event.status || 'waiting';
+            return `<span class="event-dot ${statusClass}"></span>`;
+          }).join('');
+          const countLabel = events.length ? `<span class="event-count">${events.length} event${events.length > 1 ? 's' : ''}</span>` : '';
+          const selectedClass = selectedDateKey === dateKey ? ' is-selected' : '';
+          cells.push(`
+            <div class="day-cell${selectedClass}" data-date="${dateKey}">
+              <div class="day-number">${day}</div>
+              <div class="day-events">${dots}</div>
+              ${countLabel}
+            </div>
+          `);
+        }
+
+        calendarDays.innerHTML = cells.join('');
+      }
+
+      function renderHistory(dateKey) {
+        const events = eventsByDate.get(dateKey) || [];
+        const formattedDate = dateKey ? dateKey.split('-').reverse().join('.') : '';
+        historyTitle.textContent = dateKey ? `Events on ${formattedDate}` : 'Events';
+
+        if (!events.length) {
+          historyList.innerHTML = '<div class="empty-state">No submissions or decisions on this date.</div>';
+          return;
+        }
+
+        historyList.innerHTML = events.map(event => {
+          const timeLabel = formatTime(event.date);
+          const chipClass = event.status || 'waiting';
+          const statusLabel = STATUS_LABELS[event.status] || STATUS_LABELS.waiting;
+          const eventTitle = event.type === 'decision'
+            ? `Decision: ${statusLabel}`
+            : 'Submission';
+          const emailLine = event.type === 'decision'
+            ? (event.reviewerEmail ? `Reviewed by ${event.reviewerEmail}` : 'Reviewed by RGA')
+            : (event.employeeEmail ? `Submitted by ${event.employeeEmail}` : 'Submitted by employee');
+          const noteLine = event.reviewNote
+            ? `<p>Note: ${event.reviewNote}</p>`
+            : '';
+          const fileLink = event.fileUrl
+            ? `<div class="history-actions"><button type="button" data-action="download" data-fileurl="${event.fileUrl}" data-filename="${event.fileName || 'submission'}">Download photo</button></div>`
+            : '';
+
+          return `
+            <div class="history-item">
+              <h3>${event.taskTitle}</h3>
+              <div class="history-meta">
+                <span class="history-chip ${chipClass}">${statusLabel}</span>
+                <span>${eventTitle}</span>
+                <span>${timeLabel}</span>
+              </div>
+              <p>${event.pharmacyLabel}</p>
+              <p>${emailLine}</p>
+              ${noteLine}
+              ${fileLink}
+            </div>
+          `;
+        }).join('');
+      }
+
+      function updateSelectedDate(dateKey) {
+        selectedDateKey = dateKey;
+        renderCalendar();
+        renderHistory(dateKey);
+      }
+
+      function setupCalendarInteractions() {
+        calendarDays.addEventListener('click', event => {
+          const cell = event.target.closest('.day-cell');
+          if (!cell || cell.classList.contains('is-empty')) return;
+          const dateKey = cell.dataset.date;
+          updateSelectedDate(dateKey);
+        });
+
+        historyList.addEventListener('click', event => {
+          const button = event.target.closest('button[data-action="download"]');
+          if (!button) return;
+          openFileUrl(button.dataset.fileurl, button.dataset.filename || 'submission');
+        });
+
+        prevMonthBtn.addEventListener('click', () => {
+          currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
+          renderCalendar();
+        });
+
+        nextMonthBtn.addEventListener('click', () => {
+          currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
+          renderCalendar();
+        });
+      }
+
+      function buildPharmacyFilter() {
+        if (!pharmacyFilter) return;
+        pharmacyFilter.innerHTML = '';
+        if (pharmacies.length > 1) {
+          const option = document.createElement('option');
+          option.value = 'all';
+          option.textContent = 'All pharmacies';
+          pharmacyFilter.appendChild(option);
+        }
+        pharmacies.forEach(pharmacy => {
+          const option = document.createElement('option');
+          option.value = String(pharmacy.index);
+          option.textContent = formatPharmacyOption(pharmacy);
+          pharmacyFilter.appendChild(option);
+        });
+        if (pharmacies.length <= 1) {
+          pharmacyFilter.disabled = true;
+          filteredPharmacyIndex = pharmacies[0] ? String(pharmacies[0].index) : 'all';
+          pharmacyFilter.value = filteredPharmacyIndex;
+        } else {
+          pharmacyFilter.disabled = false;
+          filteredPharmacyIndex = 'all';
+          pharmacyFilter.value = 'all';
+        }
+      }
+
+      async function fetchSession() {
+        try {
+          const response = await fetch('/api/session');
+          if (!response.ok) return null;
+          const data = await response.json();
+          return data?.session || null;
+        } catch (error) {
+          console.warn('Unable to load session', error);
+          return null;
+        }
+      }
+
+      async function fetchProfile() {
+        try {
+          const response = await fetch('/api/profile');
+          if (!response.ok) return null;
+          const data = await response.json();
+          return data?.profile || null;
+        } catch (error) {
+          console.warn('Unable to fetch profile', error);
+          return null;
+        }
+      }
+
+      async function fetchSubmissions(query) {
+        const params = new URLSearchParams();
+        Object.entries(query || {}).forEach(([key, value]) => {
+          if (value === undefined || value === null || value === '') return;
+          params.append(key, Array.isArray(value) ? value.join(',') : value);
+        });
+        const response = await fetch(`/api/get-submissions?${params.toString()}`);
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(text || 'Unable to fetch submissions');
+        }
+        const data = await response.json();
+        if (!data?.ok) throw new Error('Unexpected response');
+        return data.submissions || [];
+      }
+
+      async function fetchTaskDefinitions() {
+        try {
+          const response = await fetch('/api/task-definitions');
+          if (!response.ok) return DEFAULT_TASK_DEFINITIONS;
+          const data = await response.json();
+          return Array.isArray(data?.tasks) ? data.tasks : DEFAULT_TASK_DEFINITIONS;
+        } catch (error) {
+          console.warn('Unable to fetch task definitions', error);
+          return DEFAULT_TASK_DEFINITIONS;
+        }
+      }
+
+      function updateDashboardLink() {
+        if (!dashboardLink) return;
+        if ((role || '').toLowerCase() === 'rga') {
+          dashboardLink.href = 'rga-dashboard.html';
+        } else {
+          dashboardLink.href = 'welcome.html';
+        }
+      }
+
+      async function init() {
+        renderWeekdays();
+        setupCalendarInteractions();
+
+        const session = await fetchSession();
+        if (!session) {
+          window.location.href = 'register.html';
+          return;
+        }
+        role = session.role || '';
+        updateDashboardLink();
+
+        const profile = await fetchProfile();
+        if (!profile) {
+          window.location.href = 'profile.html';
+          return;
+        }
+
+        taskDefinitions = await fetchTaskDefinitions();
+        taskTitles = buildTaskTitles(taskDefinitions);
+
+        pharmacies = Array.isArray(profile.pharmacies) ? profile.pharmacies : [];
+        if (!pharmacies.length) {
+          subtitleEl.textContent = 'No pharmacies assigned yet. Please update your profile.';
+          historyList.innerHTML = '<div class="empty-state">No pharmacy data available.</div>';
+          calendarDays.innerHTML = '<div class="empty-state">No data to display.</div>';
+          return;
+        }
+
+        pharmacyLookup = pharmacies.reduce((acc, pharmacy) => {
+          if (pharmacy && pharmacy.index !== undefined && pharmacy.index !== null) {
+            acc[String(pharmacy.index)] = buildPharmacyLabel(pharmacy);
+          }
+          return acc;
+        }, {});
+
+        buildPharmacyFilter();
+
+        const pharmacyIndexes = pharmacies.map(pharmacy => pharmacy.index).filter(index => index !== undefined && index !== null);
+        try {
+          submissions = await fetchSubmissions({ pharmacies: pharmacyIndexes });
+        } catch (error) {
+          console.warn('Unable to load submissions', error);
+          subtitleEl.textContent = 'Unable to load history right now.';
+          historyList.innerHTML = '<div class="empty-state">Please try again later.</div>';
+        }
+
+        refreshEvents();
+        const todayKey = getDateKey(new Date());
+        selectedDateKey = eventsByDate.has(todayKey)
+          ? todayKey
+          : Array.from(eventsByDate.keys()).sort().pop() || todayKey;
+
+        renderCalendar();
+        renderHistory(selectedDateKey);
+
+        pharmacyFilter.addEventListener('change', () => {
+          filteredPharmacyIndex = pharmacyFilter.value;
+          refreshEvents();
+          const nextKey = eventsByDate.has(selectedDateKey)
+            ? selectedDateKey
+            : Array.from(eventsByDate.keys()).sort().pop() || getDateKey(new Date());
+          updateSelectedDate(nextKey);
+        });
+      }
+
+      init();
+    })();
+  </script>
+  <script src="cookie-consent.js"></script>
+</body>
+</html>
+

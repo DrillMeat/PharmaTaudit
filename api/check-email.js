@@ -1,6 +1,8 @@
+import { ok, fail, methodNotAllowed } from './_lib/respond.js';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed' });
+    methodNotAllowed(res, ['POST']);
     return;
   }
 
@@ -8,12 +10,16 @@ export default async function handler(req, res) {
     const { email } = req.body || {};
     
     if (!email) {
-      res.status(400).json({ error: 'Email is required' });
+      fail(res, 400, 'Email is required');
       return;
     }
     
-    const SUPABASE_URL = 'https://xsrppkeysfjkxkbpfbog.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzcnBwa2V5c2Zqa3hrYnBmYm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzNDI2NjcsImV4cCI6MjA3NDkxODY2N30.sLZtdQ80_Q-OlX7wD4bDoaLEVOBBMF7Qfga_Ju299t8';
+    const SUPABASE_URL = process.env.SUPABASE_URL;
+    const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      fail(res, 500, 'Server misconfigured: missing Supabase credentials');
+      return;
+    }
     
     // Check if email exists in users table
     const response = await fetch(`${SUPABASE_URL}/rest/v1/users?email=eq.${encodeURIComponent(email)}&select=email`, {
@@ -29,24 +35,21 @@ export default async function handler(req, res) {
       
       // Check if project might be paused
       if (response.status === 503 || response.status === 502) {
-        res.status(503).json({ 
-          error: 'Database service unavailable. Your Supabase project may be paused. Please check your Supabase dashboard and restart the project if needed.',
-          exists: false
-        });
+        fail(res, 503, 'Database service unavailable. Your Supabase project may be paused. Please check your Supabase dashboard and restart the project if needed.');
         return;
       }
       
-      res.status(500).json({ error: `Database error: ${errorText || 'Unknown error'}` });
+      fail(res, 500, `Database error: ${errorText || 'Unknown error'}`);
       return;
     }
     
     const users = await response.json();
     const exists = users && users.length > 0;
     
-    res.status(200).json({ exists });
+    ok(res, { exists });
     
   } catch (error) {
     console.error('Check email error:', error);
-    res.status(500).json({ error: error.message || 'Unexpected server error' });
+    fail(res, 500, 'Internal server error');
   }
 }

@@ -1,19 +1,51 @@
+import { getSession } from './_lib/session.js';
+import { ok, fail, methodNotAllowed } from './_lib/respond.js';
+import { ROLE_EMPLOYEE, requireAuth, requireRole } from './_lib/roles.js';
+import { MAX_SUBMISSION_PAYLOAD_BYTES } from './_lib/constants.js';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed' });
+    methodNotAllowed(res, ['POST']);
     return;
   }
 
   try {
-    const { email, pharmacyIndex, taskKey, fileName, fileUrl } = req.body || {};
-
-    if (!email || pharmacyIndex === undefined || !taskKey || !fileUrl) {
-      res.status(400).json({ error: 'Missing required fields' });
+    const session = getSession(req);
+    const authError = requireAuth(session);
+    if (authError) {
+      fail(res, authError.status, authError.message);
+      return;
+    }
+    const roleError = requireRole(session, ROLE_EMPLOYEE);
+    if (roleError) {
+      fail(res, roleError.status, roleError.message);
       return;
     }
 
-    const SUPABASE_URL = 'https://xsrppkeysfjkxkbpfbog.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzcnBwa2V5c2Zqa3hrYnBmYm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzNDI2NjcsImV4cCI6MjA3NDkxODY2N30.sLZtdQ80_Q-OlX7wD4bDoaLEVOBBMF7Qfga_Ju299t8';
+    const { pharmacyIndex, taskKey, fileName, fileUrl } = req.body || {};
+    const email = session.email;
+
+    if (!email || pharmacyIndex === undefined || !taskKey || !fileUrl) {
+      fail(res, 400, 'Missing required fields');
+      return;
+    }
+    if (typeof fileUrl !== 'string') {
+      fail(res, 400, 'Invalid file payload');
+      return;
+    }
+
+    const SUPABASE_URL = process.env.SUPABASE_URL;
+    const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      fail(res, 500, 'Server misconfigured: missing Supabase credentials');
+      return;
+    }
+
+    const payloadBytes = Buffer.byteLength(fileUrl, 'utf8');
+    if (payloadBytes > maxPayloadBytes) {
+      fail(res, 413, 'File payload too large. Please upload a smaller image.');
+      return;
+    }
 
     const payload = [{
       employee_email: email,
@@ -39,15 +71,15 @@ export default async function handler(req, res) {
     if (!response.ok) {
       const text = await response.text();
       console.error('Supabase save-submission error:', text);
-      res.status(500).json({ error: 'Failed to save submission' });
+      fail(res, 500, 'Failed to save submission');
       return;
     }
 
     const result = await response.json();
-    res.status(200).json({ ok: true, submission: result?.[0] });
+    ok(res, { submission: result?.[0] });
   } catch (error) {
     console.error('Save submission error:', error);
-    res.status(500).json({ error: error.message || 'Unexpected server error' });
+    fail(res, 500, 'Internal server error');
   }
 }
 

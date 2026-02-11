@@ -1,18 +1,28 @@
+import { setSessionCookie } from './_lib/session.js';
+import { ok, fail, methodNotAllowed } from './_lib/respond.js';
+import bcrypt from 'bcryptjs';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed' });
+    methodNotAllowed(res, ['POST']);
     return;
   }
 
   try {
-    const { role, email } = req.body || {};
-    if (!role || !email) {
-      res.status(400).json({ error: 'Missing role or email' });
+    const { role, email, password } = req.body || {};
+    if (!role || !email || !password) {
+      fail(res, 400, 'Missing role, email, or password');
       return;
     }
 
-    const SUPABASE_URL = 'https://xsrppkeysfjkxkbpfbog.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzcnBwa2V5c2Zqa3hrYnBmYm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzNDI2NjcsImV4cCI6MjA3NDkxODY2N30.sLZtdQ80_Q-OlX7wD4bDoaLEVOBBMF7Qfga_Ju299t8';
+    const SUPABASE_URL = process.env.SUPABASE_URL;
+    const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      fail(res, 500, 'Server misconfigured: missing Supabase credentials');
+      return;
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
 
     const response = await fetch(`${SUPABASE_URL}/rest/v1/users`, {
       method: 'POST',
@@ -22,19 +32,20 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
         'Prefer': 'return=representation'
       },
-      body: JSON.stringify([{ email, role }])
+      body: JSON.stringify([{ email, role, password_hash: passwordHash }])
     });
 
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      res.status(response.status).json({ error: data?.message || 'Insert failed', details: data });
+      fail(res, response.status, data?.message || 'Insert failed');
       return;
     }
 
-    res.status(200).json({ data });
+    setSessionCookie(res, { email, role });
+    ok(res, { data });
   } catch (error) {
-    res.status(500).json({ error: error.message || 'Unexpected server error' });
+    fail(res, 500, 'Internal server error');
   }
 }
 

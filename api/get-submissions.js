@@ -7,6 +7,8 @@ function buildInFilter(values = []) {
   return `(${sanitized.join(',')})`;
 }
 
+import { getSession } from './_lib/session.js';
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     res.status(405).json({ error: 'Method not allowed' });
@@ -14,14 +16,26 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { email, pharmacies, role } = req.query || {};
+    const session = getSession(req);
+    if (!session) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
 
-    const SUPABASE_URL = 'https://xsrppkeysfjkxkbpfbog.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzcnBwa2V5c2Zqa3hrYnBmYm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzNDI2NjcsImV4cCI6MjA3NDkxODY2N30.sLZtdQ80_Q-OlX7wD4bDoaLEVOBBMF7Qfga_Ju299t8';
+    const { pharmacies } = req.query || {};
+    const role = session.role;
+    const email = session.email;
+
+    const SUPABASE_URL = process.env.SUPABASE_URL;
+    const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      res.status(500).json({ error: 'Server misconfigured: missing Supabase credentials' });
+      return;
+    }
 
     let url = `${SUPABASE_URL}/rest/v1/task_submissions?select=*`;
 
-    if (email && (!role || role === 'employee')) {
+    if (role !== 'rga') {
       url += `&employee_email=eq.${encodeURIComponent(email)}`;
     }
 

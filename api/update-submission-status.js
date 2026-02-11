@@ -1,26 +1,48 @@
+import { getSession } from './_lib/session.js';
+import { ok, fail, methodNotAllowed } from './_lib/respond.js';
+import { ROLE_RGA, requireAuth, requireRole } from './_lib/roles.js';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed' });
+    methodNotAllowed(res, ['POST']);
     return;
   }
 
   try {
-    const { employeeEmail, pharmacyIndex, taskKey, status, reviewerEmail } = req.body || {};
-
-    if (!employeeEmail || pharmacyIndex === undefined || !taskKey || !status) {
-      res.status(400).json({ error: 'Missing required fields' });
+    const session = getSession(req);
+    const authError = requireAuth(session);
+    if (authError) {
+      fail(res, authError.status, authError.message);
+      return;
+    }
+    const roleError = requireRole(session, ROLE_RGA);
+    if (roleError) {
+      fail(res, roleError.status, roleError.message);
       return;
     }
 
-    const SUPABASE_URL = 'https://xsrppkeysfjkxkbpfbog.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzcnBwa2V5c2Zqa3hrYnBmYm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzNDI2NjcsImV4cCI6MjA3NDkxODY2N30.sLZtdQ80_Q-OlX7wD4bDoaLEVOBBMF7Qfga_Ju299t8';
+    const { employeeEmail, pharmacyIndex, taskKey, status, reviewNote } = req.body || {};
+    const reviewerEmail = session.email;
+
+    if (!employeeEmail || pharmacyIndex === undefined || !taskKey || !status) {
+      fail(res, 400, 'Missing required fields');
+      return;
+    }
+
+    const SUPABASE_URL = process.env.SUPABASE_URL;
+    const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      fail(res, 500, 'Server misconfigured: missing Supabase credentials');
+      return;
+    }
 
     const url = `${SUPABASE_URL}/rest/v1/task_submissions?employee_email=eq.${encodeURIComponent(employeeEmail)}&pharmacy_index=eq.${encodeURIComponent(pharmacyIndex)}&task_key=eq.${encodeURIComponent(taskKey)}`;
 
     const payload = {
       status,
       reviewer_email: reviewerEmail || null,
-      reviewed_at: new Date().toISOString()
+      reviewed_at: new Date().toISOString(),
+      review_note: reviewNote || null
     };
 
     const response = await fetch(url, {
@@ -37,15 +59,15 @@ export default async function handler(req, res) {
     if (!response.ok) {
       const text = await response.text();
       console.error('Supabase update-submission-status error:', text);
-      res.status(500).json({ error: 'Failed to update submission status' });
+      fail(res, 500, 'Failed to update submission status');
       return;
     }
 
     const result = await response.json();
-    res.status(200).json({ ok: true, submission: result?.[0] });
+    ok(res, { submission: result?.[0] });
   } catch (error) {
     console.error('Update submission status error:', error);
-    res.status(500).json({ error: error.message || 'Unexpected server error' });
+    fail(res, 500, 'Internal server error');
   }
 }
 

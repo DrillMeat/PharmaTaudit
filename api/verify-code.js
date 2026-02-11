@@ -1,23 +1,33 @@
+import { ok, fail, methodNotAllowed } from './_lib/respond.js';
+import { CODE_LENGTH } from './_lib/constants.js';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed' });
+    methodNotAllowed(res, ['POST']);
     return;
   }
 
   try {
     const { email, code } = req.body || {};
     if (!email || !code) {
-      res.status(400).json({ error: 'Email and code are required' });
+      fail(res, 400, 'Email and code are required');
+      return;
+    }
+    if (!/^[0-9]+$/.test(`${code}`) || `${code}`.length !== CODE_LENGTH) {
+      fail(res, 400, 'Invalid or expired code');
       return;
     }
 
-    const SUPABASE_URL = 'https://xsrppkeysfjkxkbpfbog.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzcnBwa2V5c2Zqa3hrYnBmYm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzNDI2NjcsImV4cCI6MjA3NDkxODY2N30.sLZtdQ80_Q-OlX7wD4bDoaLEVOBBMF7Qfga_Ju299t8';
+    const SUPABASE_URL = process.env.SUPABASE_URL;
+    const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      fail(res, 500, 'Server misconfigured: missing Supabase credentials');
+      return;
+    }
 
     // Lookup code with better error handling
     const lookupUrl = `${SUPABASE_URL}/rest/v1/email_codes?email=eq.${encodeURIComponent(email)}&code=eq.${encodeURIComponent(code)}&used=eq.false&select=*`;
     
-    console.log('Looking up code for email:', email);
     
     const resp = await fetch(lookupUrl, {
       headers: {
@@ -30,21 +40,13 @@ export default async function handler(req, res) {
     
     if (!resp.ok) {
       console.error('Supabase lookup failed:', rows);
-      res.status(resp.status).json({ 
-        error: rows?.message || 'Database lookup failed', 
-        details: rows 
-      });
+      fail(res, resp.status, rows?.message || 'Database lookup failed');
       return;
     }
 
-    console.log('Found rows:', rows.length);
 
     if (!Array.isArray(rows) || rows.length === 0) {
-      console.log('No matching code found for email:', email);
-      res.status(400).json({ 
-        error: 'Invalid or expired code',
-        hint: 'Make sure you entered the correct 6-digit code'
-      });
+      fail(res, 400, 'Invalid or expired code');
       return;
     }
 
@@ -52,15 +54,9 @@ export default async function handler(req, res) {
     const now = new Date();
     const expiresAt = new Date(row.expires_at);
     
-    console.log('Code expires at:', expiresAt);
-    console.log('Current time:', now);
     
     if (expiresAt < now) {
-      console.log('Code has expired');
-      res.status(400).json({ 
-        error: 'Code expired',
-        hint: 'Please request a new verification code'
-      });
+      fail(res, 400, 'Code expired');
       return;
     }
 
@@ -75,9 +71,10 @@ export default async function handler(req, res) {
       body: JSON.stringify({ used: true })
     });
 
-    res.status(200).json({ ok: true });
+    ok(res);
   } catch (error) {
-    res.status(500).json({ error: error.message || 'Unexpected server error' });
+    console.error('Verify code error:', error);
+    fail(res, 500, 'Internal server error');
   }
 }
 

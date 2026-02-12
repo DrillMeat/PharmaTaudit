@@ -160,8 +160,6 @@
       flex: 1;
     }
 
-
-
     .task-admin-actions {
       display: flex;
       align-items: flex-end;
@@ -255,7 +253,6 @@
       color: #ffffff;
       font-weight: 700;
     }
-
 
     .pharmacies-grid {
       display: grid;
@@ -379,29 +376,6 @@
     .task-action-btn.delete {
       color: #b91c1c;
       border-color: #fca5a5;
-    }
-
-    .task-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .task-action-btn {
-      background: #f8fafc;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      padding: 6px 12px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      color: #1d4ed8;
-      transition: background 0.2s ease, transform 0.2s ease;
-    }
-
-    .task-action-btn:hover {
-      background: #e0ecff;
-      transform: translateY(-1px);
     }
 
     .modal-backdrop {
@@ -551,7 +525,6 @@
         min-height: 44px;
       }
 
-
       .modal-content {
         max-width: calc(100% - 32px);
         padding: 24px 20px;
@@ -589,7 +562,6 @@
         padding: 12px;
       }
 
-
       .modal-content {
         padding: 20px 16px;
         margin: 12px;
@@ -598,7 +570,7 @@
   </style>
 </head>
 <body>
-  <div class="page-shell">
+  <div class="page-shell" style="display:none;">
     <nav class="top-nav" aria-label="Primary">
       <div class="nav-brand">PharmaT Audit</div>
       <div class="nav-links">
@@ -682,26 +654,15 @@
   </div>
 
   <script>
-    (async function() {
-      const DEFAULT_TASK_DEFINITIONS = [
-        {
-          key: 'window',
-          title: 'Send photo of a window',
-          description: 'Confirm storefront visibility and merchandising.'
-        },
-        {
-          key: 'trash',
-          title: 'Send photo of trash cans',
-          description: 'Ensure the waste disposal area is clean and labelled.'
-        },
-        {
-          key: 'outfit',
-          title: 'Send photo of an outfit',
-          description: 'Confirm staff uniform compliance.'
-        }
+    async function init() {
+      // Default tasks that employees need to complete
+      const DEFAULT_TASKS = [
+        { key: 'window', title: 'Send photo of a window', description: 'Confirm storefront visibility and merchandising.' },
+        { key: 'trash', title: 'Send photo of trash cans', description: 'Ensure the waste disposal area is clean and labelled.' },
+        { key: 'outfit', title: 'Send photo of an outfit', description: 'Confirm staff uniform compliance.' }
       ];
-      let taskDefinitions = DEFAULT_TASK_DEFINITIONS;
 
+      // Labels and CSS classes for each submission status
       const STATUS_LABELS = {
         not_submitted: 'Not submitted',
         waiting: 'Waiting for approval',
@@ -716,90 +677,7 @@
         rejected: 'status-rejected'
       };
 
-      const NETWORK_DIAGNOSTICS_LIMIT = 5;
-
-      function ensureNetworkDiagnosticsPanel() {
-        let panel = document.getElementById('networkDiagnostics');
-        if (panel) return panel;
-        panel = document.createElement('div');
-        panel.id = 'networkDiagnostics';
-        panel.style.position = 'fixed';
-        panel.style.bottom = '16px';
-        panel.style.right = '16px';
-        panel.style.maxWidth = '360px';
-        panel.style.background = '#ffffff';
-        panel.style.border = '1px solid #e5e7eb';
-        panel.style.borderRadius = '10px';
-        panel.style.boxShadow = '0 10px 25px rgba(15, 23, 42, 0.15)';
-        panel.style.padding = '12px 14px';
-        panel.style.fontSize = '12px';
-        panel.style.color = '#1f2937';
-        panel.style.zIndex = '9999';
-        panel.style.display = 'none';
-        panel.innerHTML = '<strong style="display:block;margin-bottom:6px;">Network diagnostics</strong><div id="networkDiagnosticsList" style="display:flex;flex-direction:column;gap:6px;"></div>';
-        document.body.appendChild(panel);
-        return panel;
-      }
-
-      function resolveServiceLabel(url, errorText = '') {
-        const text = `${errorText || ''}`.toLowerCase();
-        if (url.includes('supabase.co') || text.includes('supabase') || text.includes('database')) {
-          return 'Supabase';
-        }
-        if (url.includes('resend.com')) {
-          return 'Resend';
-        }
-        if (url.startsWith('/api/')) {
-          return 'App server (Vercel)';
-        }
-        if (url.includes('vercel')) {
-          return 'Vercel';
-        }
-        return 'Network';
-      }
-
-      function reportNetworkError(url, status, errorText) {
-        const panel = ensureNetworkDiagnosticsPanel();
-        const list = panel.querySelector('#networkDiagnosticsList');
-        if (!list) return;
-        const item = document.createElement('div');
-        const service = resolveServiceLabel(url, errorText);
-        const statusText = status ? `Status ${status}` : 'No response';
-        item.textContent = `${service}: ${statusText} • ${url}${errorText ? ` • ${errorText}` : ''}`;
-        list.prepend(item);
-        while (list.children.length > NETWORK_DIAGNOSTICS_LIMIT) {
-          list.removeChild(list.lastChild);
-        }
-        panel.style.display = 'block';
-      }
-
-      function wrapFetchWithDiagnostics() {
-        if (window.__networkDiagnosticsInstalled) return;
-        window.__networkDiagnosticsInstalled = true;
-        const originalFetch = window.fetch.bind(window);
-        window.fetch = async (input, init) => {
-          const url = typeof input === 'string' ? input : input?.url || 'unknown';
-          try {
-            const response = await originalFetch(input, init);
-            if (!response.ok) {
-              let errorText = '';
-              try {
-                errorText = await response.clone().text();
-              } catch (err) {
-                errorText = '';
-              }
-              reportNetworkError(url, response.status, errorText);
-            }
-            return response;
-          } catch (error) {
-            reportNetworkError(url, null, error?.message || 'Network error');
-            throw error;
-          }
-        };
-      }
-
-      wrapFetchWithDiagnostics();
-
+      // Get all elements from the page
       const grid = document.getElementById('pharmaciesGrid');
       const chipName = document.getElementById('chipName');
       const chipEmail = document.getElementById('chipEmail');
@@ -823,38 +701,28 @@
       const taskDeadlineDateInput = document.getElementById('taskDeadlineDate');
       const taskDeadlineInput = document.getElementById('taskDeadline');
 
+      // State variables
+      let taskDefinitions = DEFAULT_TASKS;
       let currentPharmacies = [];
       const submissionState = {};
       let lastDateKey = new Date().toISOString().slice(0, 10);
 
-      async function fetchSession() {
-        try {
-          const response = await fetch('/api/session');
-          if (!response.ok) return null;
-          const data = await response.json();
-          return data?.session || null;
-        } catch (error) {
-          console.warn('Unable to load session', error);
-          return null;
-        }
+      // ===== HELPER FUNCTIONS =====
+
+      // Get today's date as YYYY-MM-DD
+      function getTodayKey() {
+        return new Date().toISOString().slice(0, 10);
       }
 
-      async function resolveProfileData() {
-        try {
-          const response = await fetch('/api/profile');
-          if (!response.ok) return null;
-          const data = await response.json();
-          return data?.profile || null;
-        } catch (error) {
-          console.warn('Unable to fetch profile', error);
-          return null;
-        }
+      // Check if a date string is today
+      function isSameDay(dateValue) {
+        if (!dateValue) return false;
+        const date = new Date(dateValue);
+        if (isNaN(date.getTime())) return false;
+        return date.toISOString().slice(0, 10) === getTodayKey();
       }
 
-      function normalizeSpacing(value) {
-        return `${value || ''}`.replace(/\s+/g, ' ').trim();
-      }
-
+      // Convert Russian characters to Latin letters
       function transliterate(value) {
         if (!value) return '';
         const map = {
@@ -865,34 +733,17 @@
           'Н':'N','О':'O','П':'P','Р':'R','С':'S','Т':'T','У':'U','Ф':'F','Х':'Kh','Ц':'Ts','Ч':'Ch','Ш':'Sh','Щ':'Shch',
           'Ъ':'','Ы':'Y','Ь':'','Э':'E','Ю':'Yu','Я':'Ya'
         };
-        return normalizeSpacing(`${value}`.split('').map(char => (map[char] !== undefined ? map[char] : char)).join(''));
-      }
-
-
-      function buildProfileHref() {
-        return 'profile.html';
-      }
-
-      function openFileUrl(fileUrl, fileName = 'submission') {
-        if (!fileUrl) return;
-        try {
-          const link = document.createElement('a');
-          link.href = fileUrl;
-          link.target = '_self';
-          link.rel = 'noopener';
-          link.download = fileName;
-          link.style.display = 'none';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        } catch (err) {
-          console.warn('Unable to open file via anchor, falling back to window.open', err);
-          window.location.href = fileUrl;
+        let result = '';
+        for (let i = 0; i < value.length; i++) {
+          const char = value[i];
+          result += (map[char] !== undefined) ? map[char] : char;
         }
+        return result.replace(/\s+/g, ' ').trim();
       }
 
-      function createEmptyTaskEntry(overrides = {}) {
-        return Object.assign({
+      // Create an empty task entry with default values
+      function createEmptyEntry() {
+        return {
           state: 'not_submitted',
           submitted: false,
           fileName: '',
@@ -902,131 +753,76 @@
           reviewNote: '',
           updatedAt: null,
           reviewedAt: null
-        }, overrides);
+        };
       }
 
-      function createEmptyTaskMap(definitions = getActiveTaskDefinitions()) {
-        return definitions.reduce((acc, task) => {
-          acc[task.key] = createEmptyTaskEntry();
-          return acc;
-        }, {});
+      // Create an empty task map for a pharmacy (one entry per active task)
+      function createEmptyTaskMap() {
+        const map = {};
+        const tasks = getActiveTaskDefinitions();
+        for (let i = 0; i < tasks.length; i++) {
+          map[tasks[i].key] = createEmptyEntry();
+        }
+        return map;
       }
 
-      function getTodayKey() {
-        return new Date().toISOString().slice(0, 10);
-      }
-
-      function isSameDay(dateValue) {
-        if (!dateValue) return false;
-        const date = new Date(dateValue);
-        if (Number.isNaN(date.getTime())) return false;
-        return date.toISOString().slice(0, 10) === getTodayKey();
-      }
-
-      function getActiveTaskDefinitions(pharmacyIndex = null) {
+      // Get task definitions that are active today
+      function getActiveTaskDefinitions(pharmacyIndex) {
         const today = getTodayKey();
-        return (taskDefinitions || []).filter(task => {
-          if (!task) return false;
-          if (task.frequency === 'one_time') {
-            return task.active_date === today;
+        const result = [];
+        for (let i = 0; i < taskDefinitions.length; i++) {
+          const task = taskDefinitions[i];
+          if (!task) continue;
+          // Skip one-time tasks not scheduled for today
+          if (task.frequency === 'one_time' && task.active_date !== today) continue;
+          // Skip tasks limited to other pharmacies
+          if (pharmacyIndex !== undefined && pharmacyIndex !== null
+              && Array.isArray(task.pharmacy_indexes) && task.pharmacy_indexes.length > 0) {
+            if (!task.pharmacy_indexes.map(String).includes(String(pharmacyIndex))) continue;
           }
-          if (pharmacyIndex !== null && Array.isArray(task.pharmacy_indexes) && task.pharmacy_indexes.length) {
-            return task.pharmacy_indexes.map(String).includes(String(pharmacyIndex));
-          }
-          return true;
-        });
-      }
-
-      function renderTaskAdminList(definitions) {
-        if (!taskAdminList) return;
-        if (!definitions.length) {
-          taskAdminList.innerHTML = '<p style="color:#64748b; margin:0;">No tasks created yet.</p>';
-          return;
+          result.push(task);
         }
-        taskAdminList.innerHTML = definitions.map(task => {
-          const canDelete = task.id !== undefined && task.id !== null;
-          const frequencyLabel = task.frequency === 'one_time'
-            ? `One day • ${task.active_date || 'date not set'}`
-            : 'Daily';
-          const deadlineLabel = task.due_time
-            ? `Deadline: ${task.due_date || 'today'} ${task.due_time}`
-            : 'No deadline';
-          const scopeLabel = Array.isArray(task.pharmacy_indexes) && task.pharmacy_indexes.length
-            ? `Pharmacies: ${task.pharmacy_indexes.join(', ')}`
-            : 'All pharmacies';
-          return `
-            <div class="task-admin-item" data-task-id="${task.id || ''}">
-              <div>
-                <h3>${task.title}</h3>
-                <div class="task-admin-meta">${frequencyLabel}</div>
-                <div class="task-admin-meta">${deadlineLabel}</div>
-                <div class="task-admin-meta">${scopeLabel}</div>
-                <div class="task-admin-meta">${task.description || ''}</div>
-              </div>
-              ${canDelete ? `<button type="button" class="task-admin-delete" data-task-id="${task.id}">Delete</button>` : ''}
-            </div>
-          `;
-        }).join('');
+        return result;
       }
 
-      function syncTaskDateField() {
-        if (!taskFrequencySelect || !taskDateField) return;
-        const isOneTime = taskFrequencySelect.value === 'one_time';
-        taskDateField.style.display = isOneTime ? 'flex' : 'none';
-        if (!isOneTime && taskDateInput) {
-          taskDateInput.value = '';
-        }
-      }
-
-      function getTaskDueDate(task) {
-        if (!task?.due_time) return null;
-        const baseDate = task.due_date
-          || (task.frequency === 'one_time' && task.active_date ? task.active_date : getTodayKey());
-        return new Date(`${baseDate}T${task.due_time}`);
-      }
-
-      function isLateSubmission(entry, task) {
-        if (!entry?.updatedAt || !task?.due_time) return false;
-        const dueDate = getTaskDueDate(task);
-        if (!dueDate || Number.isNaN(dueDate.getTime())) return false;
-        const submittedAt = new Date(entry.updatedAt);
-        if (Number.isNaN(submittedAt.getTime())) return false;
-        return submittedAt.getTime() > dueDate.getTime();
-      }
-
-
-
+      // Normalize a submission entry from the database into a standard format
       function normalizeEntry(entry) {
-        if (!entry) return createEmptyTaskEntry();
+        if (!entry) return createEmptyEntry();
+
+        // Handle simple string state (legacy format)
         if (typeof entry !== 'object') {
-          if (entry === 'waiting') {
-            return createEmptyTaskEntry();
-          }
-          return createEmptyTaskEntry({
-            state: entry,
-            submitted: entry !== 'not_submitted'
-          });
+          const result = createEmptyEntry();
+          result.state = entry;
+          result.submitted = (entry !== 'not_submitted');
+          return result;
         }
-        const normalized = createEmptyTaskEntry({
-          state: entry.state || 'not_submitted',
-          submitted: entry.submitted ?? (entry.state && entry.state !== 'not_submitted'),
-          fileName: entry.fileName || entry.filename || '',
-          fileUrl: entry.fileUrl || '',
-          employeeEmail: entry.employeeEmail || entry.employee_email || '',
-          reviewerEmail: entry.reviewerEmail || entry.reviewer_email || '',
-          reviewNote: entry.reviewNote || entry.review_note || '',
-          updatedAt: entry.updatedAt || entry.updated_at || null,
-          reviewedAt: entry.reviewedAt || entry.reviewed_at || null
-        });
+
+        // Build normalized entry from database fields
+        const normalized = createEmptyEntry();
+        normalized.state = entry.state || 'not_submitted';
+        normalized.submitted = entry.submitted || (normalized.state !== 'not_submitted');
+        normalized.fileName = entry.fileName || entry.filename || '';
+        normalized.fileUrl = entry.fileUrl || '';
+        normalized.employeeEmail = entry.employeeEmail || entry.employee_email || '';
+        normalized.reviewerEmail = entry.reviewerEmail || entry.reviewer_email || '';
+        normalized.reviewNote = entry.reviewNote || entry.review_note || '';
+        normalized.updatedAt = entry.updatedAt || entry.updated_at || null;
+        normalized.reviewedAt = entry.reviewedAt || entry.reviewed_at || null;
+
+        // Reset if the submission is from a previous day
         if (normalized.updatedAt && !isSameDay(normalized.updatedAt)) {
-          return createEmptyTaskEntry();
+          return createEmptyEntry();
         }
+
+        // Normalize "submitted" state to "waiting"
         if (normalized.state === 'submitted') {
           normalized.state = 'waiting';
         }
+
         return normalized;
       }
 
+      // Make sure a pharmacy has a state object in submissionState
       function ensurePharmacyState(indexKey) {
         if (!submissionState[indexKey]) {
           submissionState[indexKey] = createEmptyTaskMap();
@@ -1034,103 +830,110 @@
         return submissionState[indexKey];
       }
 
+      // Get normalized task statuses for a pharmacy
       function getTaskStatusFor(indexKey) {
         const store = ensurePharmacyState(indexKey);
-        Object.keys(store).forEach(taskKey => {
-          store[taskKey] = normalizeEntry(store[taskKey]);
-        });
+        const keys = Object.keys(store);
+        for (let i = 0; i < keys.length; i++) {
+          store[keys[i]] = normalizeEntry(store[keys[i]]);
+        }
         return store;
       }
 
-      function mergeSubmissionsIntoState(targetState, submissions) {
-        // Track which tasks exist in the current submissions and which pharmacies we're updating
-        const existingTasks = new Set();
-        const updatedPharmacies = new Set();
-        
-        submissions.forEach(item => {
-          if (!item || !item.task_key) return;
-          const indexKey = String(item.pharmacy_index);
-          const taskId = `${indexKey}:${item.task_key}`;
-          existingTasks.add(taskId);
-          updatedPharmacies.add(indexKey);
-          
-          const store = ensurePharmacyState(indexKey);
-          const existing = store[item.task_key];
-          const existingUpdated = existing?.updatedAt ? new Date(existing.updatedAt).getTime() : 0;
-          const incomingUpdated = item.updated_at ? new Date(item.updated_at).getTime() : 0;
-          if (!existingUpdated || incomingUpdated >= existingUpdated) {
-            store[item.task_key] = createEmptyTaskEntry({
-              state: item.status || 'waiting',
-              submitted: item.status ? item.status !== 'not_submitted' : true,
-              fileName: item.file_name || '',
-              fileUrl: item.file_url || '',
-              employeeEmail: item.employee_email || '',
-              reviewerEmail: item.reviewer_email || '',
-              reviewNote: item.review_note || '',
-              updatedAt: item.updated_at || null,
-              reviewedAt: item.reviewed_at || null
-            });
-          }
-        });
-        
-        // Reset tasks that no longer exist in the database (were deleted by employee)
-        // Check ALL pharmacies that have submissions (even if only some tasks exist)
-        const allPharmaciesWithSubmissions = new Set();
-        submissions.forEach(item => {
-          if (item && item.pharmacy_index !== undefined) {
-            allPharmaciesWithSubmissions.add(String(item.pharmacy_index));
-          }
-        });
-        
-        // For each pharmacy that has ANY submissions, check ALL tasks
-        // If a task is not in the submissions array, it was deleted - reset it
-        allPharmaciesWithSubmissions.forEach(indexKey => {
-          const store = ensurePharmacyState(indexKey);
-          
-        getActiveTaskDefinitions().forEach(task => {
-            const taskId = `${indexKey}:${task.key}`;
-            const currentEntry = store[task.key];
-            
-            // If this task is NOT in the submissions array, it was deleted - reset it
-            if (!existingTasks.has(taskId)) {
-              // Reset if it has any submitted state (waiting, approved, rejected)
-              // This ensures deleted submissions show as "NOT SUBMITTED" instead of their old status
-              if (currentEntry && currentEntry.state && currentEntry.state !== 'not_submitted') {
-                store[task.key] = createEmptyTaskEntry();
-              }
-            }
-          });
-        });
+      // Get the due date/time for a task as a Date object
+      function getTaskDueDate(task) {
+        if (!task || !task.due_time) return null;
+        const baseDate = task.due_date
+          || (task.frequency === 'one_time' && task.active_date ? task.active_date : getTodayKey());
+        return new Date(baseDate + 'T' + task.due_time);
       }
 
-      async function fetchSubmissions(query) {
-        const params = new URLSearchParams();
-        Object.entries(query || {}).forEach(([key, value]) => {
-          if (value === undefined || value === null || value === '') return;
-          params.append(key, Array.isArray(value) ? value.join(',') : value);
-        });
-        const response = await fetch(`/api/get-submissions?${params.toString()}`);
-        if (!response.ok) {
-          const text = await response.text();
-          throw new Error(text || 'Unable to fetch submissions');
+      // Check if a submission was sent after the deadline
+      function isLateSubmission(entry, task) {
+        if (!entry || !entry.updatedAt || !task || !task.due_time) return false;
+        const dueDate = getTaskDueDate(task);
+        if (!dueDate || isNaN(dueDate.getTime())) return false;
+        const submittedAt = new Date(entry.updatedAt);
+        if (isNaN(submittedAt.getTime())) return false;
+        return submittedAt.getTime() > dueDate.getTime();
+      }
+
+      // Format a status note for display under each task
+      function formatStatusNote(status, entry) {
+        if (status === 'waiting') {
+          return entry.employeeEmail
+            ? 'Submitted by ' + entry.employeeEmail + ' • Awaiting your review.'
+            : 'Submitted by employee • Awaiting your review.';
         }
+        if (status === 'approved') {
+          if (entry.reviewNote) return 'Approved • ' + entry.reviewNote;
+          return entry.reviewerEmail ? 'Approved by ' + entry.reviewerEmail + '.' : 'Approved.';
+        }
+        if (status === 'rejected') {
+          if (entry.reviewNote) return 'Rejected • ' + entry.reviewNote;
+          return entry.reviewerEmail ? 'Rejected by ' + entry.reviewerEmail + '.' : 'Marked for resubmission.';
+        }
+        return 'No submission yet.';
+      }
+
+      // ===== API FUNCTIONS =====
+
+      // Fetch session data from the server
+      async function fetchSession() {
+        try {
+          const response = await fetch('/api/session');
+          if (!response.ok) return null;
+          const data = await response.json();
+          return (data && data.session) ? data.session : null;
+        } catch (error) {
+          return null;
+        }
+      }
+
+      // Fetch profile data from the server
+      async function fetchProfile() {
+        try {
+          const response = await fetch('/api/profile');
+          if (!response.ok) return null;
+          const data = await response.json();
+          return (data && data.profile) ? data.profile : null;
+        } catch (error) {
+          return null;
+        }
+      }
+
+      // Fetch submissions from the server
+      async function fetchSubmissions(query) {
+        let url = '/api/get-submissions';
+        const params = [];
+        if (query.pharmacies) {
+          params.push('pharmacies=' + (Array.isArray(query.pharmacies) ? query.pharmacies.join(',') : query.pharmacies));
+        }
+        if (query.role) {
+          params.push('role=' + query.role);
+        }
+        if (params.length) url += '?' + params.join('&');
+
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Unable to fetch submissions');
         const data = await response.json();
-        if (!data?.ok) throw new Error('Unexpected response');
+        if (!data || !data.ok) throw new Error('Unexpected response');
         return data.submissions || [];
       }
 
+      // Fetch task definitions from the server
       async function fetchTaskDefinitions() {
         try {
           const response = await fetch('/api/task-definitions');
-          if (!response.ok) return DEFAULT_TASK_DEFINITIONS;
+          if (!response.ok) return DEFAULT_TASKS;
           const data = await response.json();
-          return Array.isArray(data?.tasks) ? data.tasks : DEFAULT_TASK_DEFINITIONS;
+          return (data && Array.isArray(data.tasks)) ? data.tasks : DEFAULT_TASKS;
         } catch (error) {
-          console.warn('Unable to fetch task definitions', error);
-          return DEFAULT_TASK_DEFINITIONS;
+          return DEFAULT_TASKS;
         }
       }
 
+      // Add a new task definition to the server
       async function addTaskDefinition(payload) {
         const response = await fetch('/api/task-definitions', {
           method: 'POST',
@@ -1138,12 +941,13 @@
           body: JSON.stringify(payload)
         });
         const data = await response.json();
-        if (!response.ok || !data?.ok) {
-          throw new Error(data?.error || 'Unable to add task');
+        if (!response.ok || !data || !data.ok) {
+          throw new Error((data && data.error) || 'Unable to add task');
         }
         return data.task;
       }
 
+      // Delete a task definition from the server
       async function deleteTaskDefinition(taskId) {
         const response = await fetch('/api/task-definitions', {
           method: 'POST',
@@ -1151,12 +955,254 @@
           body: JSON.stringify({ action: 'delete', id: taskId })
         });
         const data = await response.json();
-        if (!response.ok || !data?.ok) {
-          throw new Error(data?.error || 'Unable to delete task');
+        if (!response.ok || !data || !data.ok) {
+          throw new Error((data && data.error) || 'Unable to delete task');
         }
         return data.task;
       }
 
+      // ===== STATE MANAGEMENT =====
+
+      // Merge submission data from the database into local state
+      function mergeSubmissions(submissions) {
+        const existingTasks = new Set();
+        const pharmaciesWithData = new Set();
+
+        // Update state with each submission from the database
+        for (let i = 0; i < submissions.length; i++) {
+          const item = submissions[i];
+          if (!item || !item.task_key) continue;
+
+          const indexKey = String(item.pharmacy_index);
+          existingTasks.add(indexKey + ':' + item.task_key);
+          pharmaciesWithData.add(indexKey);
+
+          const store = ensurePharmacyState(indexKey);
+          const existing = store[item.task_key];
+          const existingTime = (existing && existing.updatedAt) ? new Date(existing.updatedAt).getTime() : 0;
+          const incomingTime = item.updated_at ? new Date(item.updated_at).getTime() : 0;
+
+          // Only update if the incoming data is newer
+          if (!existingTime || incomingTime >= existingTime) {
+            const newEntry = createEmptyEntry();
+            newEntry.state = item.status || 'waiting';
+            newEntry.submitted = item.status ? (item.status !== 'not_submitted') : true;
+            newEntry.fileName = item.file_name || '';
+            newEntry.fileUrl = item.file_url || '';
+            newEntry.employeeEmail = item.employee_email || '';
+            newEntry.reviewerEmail = item.reviewer_email || '';
+            newEntry.reviewNote = item.review_note || '';
+            newEntry.updatedAt = item.updated_at || null;
+            newEntry.reviewedAt = item.reviewed_at || null;
+            store[item.task_key] = newEntry;
+          }
+        }
+
+        // Reset tasks that were deleted by the employee
+        pharmaciesWithData.forEach(function(indexKey) {
+          const store = ensurePharmacyState(indexKey);
+          const activeTasks = getActiveTaskDefinitions();
+          for (let i = 0; i < activeTasks.length; i++) {
+            const taskId = indexKey + ':' + activeTasks[i].key;
+            const currentEntry = store[activeTasks[i].key];
+            if (!existingTasks.has(taskId) && currentEntry && currentEntry.state !== 'not_submitted') {
+              store[activeTasks[i].key] = createEmptyEntry();
+            }
+          }
+        });
+      }
+
+      // Load submissions for all assigned pharmacies
+      async function loadSubmissions(pharmacies) {
+        const indexes = [];
+        for (let i = 0; i < pharmacies.length; i++) {
+          if (pharmacies[i] && pharmacies[i].index !== undefined) {
+            indexes.push(pharmacies[i].index);
+          }
+        }
+        if (!indexes.length) return;
+        try {
+          const submissions = await fetchSubmissions({ pharmacies: indexes, role: 'rga' });
+          mergeSubmissions(submissions);
+        } catch (error) {
+          console.warn('Unable to load submissions', error);
+        }
+      }
+
+      // ===== RENDERING FUNCTIONS =====
+
+      // Show or hide the date field depending on task frequency
+      function syncTaskDateField() {
+        if (!taskFrequencySelect || !taskDateField) return;
+        const isOneTime = (taskFrequencySelect.value === 'one_time');
+        taskDateField.style.display = isOneTime ? 'flex' : 'none';
+        if (!isOneTime && taskDateInput) taskDateInput.value = '';
+      }
+
+      // Render the list of task definitions in the admin panel
+      function renderTaskAdminList(definitions) {
+        if (!taskAdminList) return;
+        if (!definitions.length) {
+          taskAdminList.innerHTML = '<p style="color:#64748b; margin:0;">No tasks created yet.</p>';
+          return;
+        }
+        let html = '';
+        for (let i = 0; i < definitions.length; i++) {
+          const task = definitions[i];
+          const canDelete = (task.id !== undefined && task.id !== null);
+          const frequencyLabel = (task.frequency === 'one_time')
+            ? 'One day • ' + (task.active_date || 'date not set')
+            : 'Daily';
+          const deadlineLabel = task.due_time
+            ? 'Deadline: ' + (task.due_date || 'today') + ' ' + task.due_time
+            : 'No deadline';
+          const scopeLabel = (Array.isArray(task.pharmacy_indexes) && task.pharmacy_indexes.length)
+            ? 'Pharmacies: ' + task.pharmacy_indexes.join(', ')
+            : 'All pharmacies';
+
+          html += '<div class="task-admin-item" data-task-id="' + (task.id || '') + '">';
+          html += '<div>';
+          html += '<h3>' + task.title + '</h3>';
+          html += '<div class="task-admin-meta">' + frequencyLabel + '</div>';
+          html += '<div class="task-admin-meta">' + deadlineLabel + '</div>';
+          html += '<div class="task-admin-meta">' + scopeLabel + '</div>';
+          html += '<div class="task-admin-meta">' + (task.description || '') + '</div>';
+          html += '</div>';
+          if (canDelete) {
+            html += '<button type="button" class="task-admin-delete" data-task-id="' + task.id + '">Delete</button>';
+          }
+          html += '</div>';
+        }
+        taskAdminList.innerHTML = html;
+      }
+
+      // Build the HTML for one pharmacy card
+      function renderPharmacyCard(pharmacy) {
+        const indexKey = String(pharmacy.index);
+        const taskStatuses = getTaskStatusFor(indexKey);
+
+        // Build the address/meta line
+        const metaParts = [];
+        if (pharmacy.region) metaParts.push(transliterate(pharmacy.region));
+        if (pharmacy.address) metaParts.push(transliterate(pharmacy.address));
+        if (pharmacy.phone) metaParts.push('Tel.: ' + pharmacy.phone);
+        const meta = metaParts.join(' • ');
+
+        // Build HTML for each task in this pharmacy
+        let taskItems = '';
+        const activeTasks = getActiveTaskDefinitions(indexKey);
+        for (let i = 0; i < activeTasks.length; i++) {
+          const task = activeTasks[i];
+          const entry = normalizeEntry(taskStatuses[task.key]);
+
+          // If there is no file, the submission was deleted
+          let status = entry.state || 'not_submitted';
+          if (!entry.fileUrl && status !== 'not_submitted') {
+            status = 'not_submitted';
+            const store = ensurePharmacyState(indexKey);
+            store[task.key] = createEmptyEntry();
+          }
+
+          const statusClass = STATUS_CLASSES[status] || STATUS_CLASSES.waiting;
+          const statusLabel = STATUS_LABELS[status] || STATUS_LABELS.waiting;
+          const note = formatStatusNote(status, entry);
+          const isLate = isLateSubmission(entry, task);
+
+          // Build action buttons (Open, Approve, Reject)
+          let actionsHtml = '';
+          const buttons = [];
+          if (entry.fileUrl) {
+            buttons.push('<button type="button" class="task-action-btn open" data-action="open" data-task="' + task.key + '" data-pharmacy-index="' + indexKey + '">Open</button>');
+          }
+          if (status === 'waiting') {
+            buttons.push('<button type="button" class="task-action-btn approve" data-action="approve" data-task="' + task.key + '" data-pharmacy-index="' + indexKey + '">Approve</button>');
+            buttons.push('<button type="button" class="task-action-btn delete" data-action="reject" data-task="' + task.key + '" data-pharmacy-index="' + indexKey + '">Reject</button>');
+          }
+          if (buttons.length) {
+            actionsHtml = '<div class="task-actions">' + buttons.join('') + '</div>';
+          }
+
+          // Pick color for the note text
+          let noteColor = '#64748b';
+          let noteWeight = '400';
+          if (isLate) { noteColor = '#b91c1c'; noteWeight = '600'; }
+          else if (status === 'waiting') { noteColor = '#b45309'; noteWeight = '600'; }
+
+          taskItems += '<div class="task-item" data-task="' + task.key + '">';
+          taskItems += '<div><h3>' + task.title + '</h3><p>' + task.description + '</p></div>';
+          taskItems += '<div class="task-status" style="align-items:flex-end;"><div>';
+          taskItems += '<div class="status-chip ' + statusClass + '" data-status-label data-task="' + task.key + '" data-pharmacy-index="' + indexKey + '" data-state="' + status + '" data-filename="' + (entry.fileName || '') + '" data-fileurl="' + (entry.fileUrl || '') + '">' + statusLabel + '</div>';
+          taskItems += '<p style="margin:6px 0 0; font-size:12px; color:' + noteColor + '; font-weight:' + noteWeight + ';">' + note + (isLate ? ' • Late' : '') + '</p>';
+          taskItems += '</div>' + actionsHtml + '</div></div>';
+        }
+
+        return '<article class="pharmacy-card" data-index="' + indexKey + '">'
+          + '<h2>' + transliterate(pharmacy.address || '') + '</h2>'
+          + '<small>' + meta + '</small>'
+          + '<div class="task-list">' + taskItems + '</div>'
+          + '</article>';
+      }
+
+      // Render all pharmacy cards into the grid
+      function renderPharmacies() {
+        if (!grid) return;
+        let html = '';
+        for (let i = 0; i < currentPharmacies.length; i++) {
+          html += renderPharmacyCard(currentPharmacies[i]);
+        }
+        grid.innerHTML = html;
+      }
+
+      // Open the pharmacy detail modal
+      function openPharmacyModal(pharmacy) {
+        if (!modalBackdrop) return;
+        modalBackdrop.classList.add('active');
+        modalTitle.textContent = transliterate(pharmacy.address || 'Pharmacy');
+
+        const parts = [];
+        if (pharmacy.region) parts.push(transliterate(pharmacy.region));
+        if (pharmacy.phone) parts.push(pharmacy.phone);
+        if (pharmacy.hours) parts.push(pharmacy.hours);
+        modalAddress.textContent = parts.join(' • ');
+
+        // Find all employee emails from submissions
+        const taskStatuses = getTaskStatusFor(String(pharmacy.index));
+        const employeeEmails = new Set();
+        const statusKeys = Object.keys(taskStatuses);
+        for (let i = 0; i < statusKeys.length; i++) {
+          const entry = normalizeEntry(taskStatuses[statusKeys[i]]);
+          if (entry.employeeEmail) employeeEmails.add(entry.employeeEmail);
+        }
+
+        if (employeeEmails.size === 0) {
+          modalEmployees.innerHTML = '<li>No employees assigned yet.</li>';
+        } else {
+          let employeeHtml = '';
+          employeeEmails.forEach(function(em) {
+            employeeHtml += '<li>' + em + '</li>';
+          });
+          modalEmployees.innerHTML = employeeHtml;
+        }
+
+        // Show task statuses in the modal
+        const activeTasks = getActiveTaskDefinitions(String(pharmacy.index));
+        let tasksHtml = '';
+        for (let i = 0; i < activeTasks.length; i++) {
+          const task = activeTasks[i];
+          const entry = normalizeEntry(taskStatuses[task.key]);
+          const status = entry.state || 'not_submitted';
+          const label = STATUS_LABELS[status] || STATUS_LABELS.waiting;
+          tasksHtml += '<li><strong>' + task.title + ':</strong> ' + label + '</li>';
+        }
+        modalTasks.innerHTML = tasksHtml;
+      }
+
+      // Close the pharmacy detail modal
+      function closeModal() {
+        if (modalBackdrop) modalBackdrop.classList.remove('active');
+      }
+
+      // Refresh data when the day changes
       async function refreshForNewDay() {
         const todayKey = getTodayKey();
         if (todayKey === lastDateKey) return false;
@@ -1167,231 +1213,159 @@
         return true;
       }
 
-      function formatStatusNote(status, entry) {
-        switch (status) {
-          case 'waiting':
-            return entry.employeeEmail
-              ? `Submitted by ${entry.employeeEmail} • Awaiting your review.`
-              : 'Submitted by employee • Awaiting your review.';
-          case 'approved':
-            if (entry.reviewNote) {
-              return `Approved • ${entry.reviewNote}`;
-            }
-            return entry.reviewerEmail
-              ? `Approved by ${entry.reviewerEmail}.`
-              : 'Approved.';
-          case 'rejected':
-            if (entry.reviewNote) {
-              return `Rejected • ${entry.reviewNote}`;
-            }
-            return entry.reviewerEmail
-              ? `Rejected by ${entry.reviewerEmail}.`
-              : 'Marked for resubmission.';
-          default:
-            return 'No submission yet.';
-        }
-      }
+      // ===== MAIN PAGE SETUP =====
 
-      async function hydrateRgaState(pharmacies) {
-        const indexes = (pharmacies || [])
-          .map(item => item?.index)
-          .filter(index => index !== undefined && index !== null);
-        if (!indexes.length) return;
-        try {
-          const submissions = await fetchSubmissions({ pharmacies: indexes, role: 'rga' });
-          mergeSubmissionsIntoState(submissionState, submissions);
-        } catch (error) {
-          console.warn('Unable to load submissions for RGA', error);
-        }
-      }
-
-      function renderPharmacyCard(pharmacy) {
-        const indexKey = String(pharmacy.index);
-        const taskStatuses = getTaskStatusFor(indexKey);
-        const meta = [
-          pharmacy.region ? transliterate(pharmacy.region) : null,
-          pharmacy.address ? transliterate(pharmacy.address) : null,
-          pharmacy.phone ? `Tel.: ${pharmacy.phone}` : null
-        ].filter(Boolean).join(' • ');
-
-          const taskItems = getActiveTaskDefinitions(indexKey).map(task => {
-          const entry = normalizeEntry(taskStatuses[task.key]);
-          // If entry has no fileUrl, it means the submission was deleted - force not_submitted
-          let status = entry.state || 'not_submitted';
-          if (!entry.fileUrl && status !== 'not_submitted') {
-            // Submission was deleted - reset to not_submitted
-            status = 'not_submitted';
-            // Also clear the entry in state to prevent stale data
-            const store = ensurePharmacyState(indexKey);
-            store[task.key] = createEmptyTaskEntry();
-          }
-          const statusClass = STATUS_CLASSES[status] || STATUS_CLASSES.waiting;
-          const statusLabel = STATUS_LABELS[status] || STATUS_LABELS.waiting;
-          const note = formatStatusNote(status, entry);
-          const isLate = isLateSubmission(entry, task);
-          const actionButtons = [];
-
-          if (entry.fileUrl) {
-            actionButtons.push(`<button type="button" class="task-action-btn open" data-action="open" data-task="${task.key}" data-pharmacy-index="${indexKey}">Open</button>`);
-          }
-
-          if (status === 'waiting') {
-            actionButtons.push(
-              `<button type="button" class="task-action-btn approve" data-action="approve" data-task="${task.key}" data-pharmacy-index="${indexKey}">Approve</button>`,
-              `<button type="button" class="task-action-btn delete" data-action="reject" data-task="${task.key}" data-pharmacy-index="${indexKey}">Reject</button>`
-            );
-          }
-
-          const actionsHtml = actionButtons.length
-            ? `<div class="task-actions">${actionButtons.join('')}</div>`
-            : '';
-
-          return `
-            <div class="task-item" data-task="${task.key}">
-              <div>
-                <h3>${task.title}</h3>
-                <p>${task.description}</p>
-              </div>
-              <div class="task-status" style="align-items:flex-end;">
-                <div>
-                  <div class="status-chip ${statusClass}" data-status-label data-task="${task.key}" data-pharmacy-index="${indexKey}" data-state="${status}" data-filename="${entry.fileName || ''}" data-fileurl="${entry.fileUrl || ''}">${statusLabel}</div>
-                  <p style="margin:6px 0 0; font-size:12px; color:${isLate ? '#b91c1c' : (status === 'waiting' ? '#b45309' : '#64748b')}; font-weight:${isLate || status === 'waiting' ? '600' : '400'};">
-                    ${note}${isLate ? ' • Late' : ''}
-                  </p>
-                </div>
-                ${actionsHtml}
-              </div>
-            </div>
-          `;
-        }).join('');
-
-        return `
-          <article class="pharmacy-card" data-index="${indexKey}">
-            <h2>${transliterate(pharmacy.address || '')}</h2>
-            <small>${meta}</small>
-            <div class="task-list">
-              ${taskItems}
-            </div>
-          </article>
-        `;
-      }
-
-      function renderPharmacies() {
-        if (!grid) return;
-        grid.innerHTML = currentPharmacies.map(renderPharmacyCard).join('');
-      }
-
+      // Check session - redirect if not logged in or not RGA
       const session = await fetchSession();
       if (!session) {
         window.location.href = 'register.html';
         return;
       }
-
       if ((session.role || '').toLowerCase() !== 'rga') {
         window.location.href = 'welcome.html';
         return;
       }
 
-      const profileData = await resolveProfileData();
+      // Show the page (hidden initially to prevent flash of content)
+      document.querySelector('.page-shell').style.display = '';
+
+      // Load profile data
+      const profileData = await fetchProfile();
       if (!profileData) {
         grid.innerHTML = '<p style="color:#64748b;">No profile data found. Please complete your profile first.</p>';
-        if (profileLinkEl) {
-          profileLinkEl.href = 'profile.html';
-        }
+        if (profileLinkEl) profileLinkEl.href = 'profile.html';
         return;
       }
 
       const firstName = profileData.first_name || '';
       const lastName = profileData.last_name || '';
-      const email = profileData.email || session.email || '—';
+      const email = profileData.email || session.email || '';
       const pharmacies = Array.isArray(profileData.pharmacies) ? profileData.pharmacies : [];
 
+      // Load task definitions and set up the admin panel
       taskDefinitions = await fetchTaskDefinitions();
       renderTaskAdminList(taskDefinitions);
       syncTaskDateField();
-      taskFrequencySelect?.addEventListener('change', syncTaskDateField);
-      taskAdminForm?.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        if (!taskTitleInput) return;
-        const title = taskTitleInput.value.trim();
-        const description = taskDescriptionInput?.value.trim() || '';
-        const frequency = taskFrequencySelect?.value || 'daily';
-        const activeDate = frequency === 'one_time' ? (taskDateInput?.value || '') : '';
-        const dueTime = taskDeadlineInput?.value || '';
-        const dueDate = taskDeadlineDateInput?.value || '';
-        if (!title) {
-          alert('Please enter a task title.');
-          return;
-        }
-        if (frequency === 'one_time' && !activeDate) {
-          alert('Please select a date for the one-time task.');
-          return;
-        }
-        try {
-          const newTask = await addTaskDefinition({
-            title,
-            description,
-            frequency,
-            activeDate,
-            dueTime,
-            dueDate
-          });
-          taskDefinitions = [...taskDefinitions, newTask].filter(Boolean);
-          renderTaskAdminList(taskDefinitions);
-          taskTitleInput.value = '';
-          if (taskDescriptionInput) taskDescriptionInput.value = '';
-          if (taskDateInput) taskDateInput.value = '';
-          if (taskDeadlineInput) taskDeadlineInput.value = '';
-          if (taskDeadlineDateInput) taskDeadlineDateInput.value = '';
-          if (taskFrequencySelect) taskFrequencySelect.value = 'daily';
-          syncTaskDateField();
-          renderPharmacies();
-        } catch (error) {
-          alert(error.message || 'Unable to add task.');
-        }
-      });
-      taskAdminList?.addEventListener('click', async (event) => {
-        const deleteBtn = event.target.closest('.task-admin-delete');
-        if (!deleteBtn) return;
-        const taskId = deleteBtn.dataset.taskId;
-        if (!taskId) return;
-        if (!confirm('Delete this task?')) return;
-        try {
-          await deleteTaskDefinition(taskId);
-          taskDefinitions = taskDefinitions.filter(task => String(task.id) !== String(taskId));
-          renderTaskAdminList(taskDefinitions);
-          renderPharmacies();
-        } catch (error) {
-          alert(error.message || 'Unable to delete task.');
-        }
-      });
 
-      chipName.textContent = `${firstName} ${lastName}`.trim() || '—';
-      chipEmail.textContent = email;
-      profileInitials.textContent = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || 'R';
-      if (profileLinkEl) {
-        profileLinkEl.href = buildProfileHref();
+      // Show/hide date field when frequency changes
+      if (taskFrequencySelect) {
+        taskFrequencySelect.addEventListener('change', syncTaskDateField);
       }
 
+      // Handle adding a new task
+      if (taskAdminForm) {
+        taskAdminForm.addEventListener('submit', async function(event) {
+          event.preventDefault();
+          const title = taskTitleInput.value.trim();
+          const description = taskDescriptionInput ? taskDescriptionInput.value.trim() : '';
+          const frequency = taskFrequencySelect ? taskFrequencySelect.value : 'daily';
+          const activeDate = (frequency === 'one_time' && taskDateInput) ? taskDateInput.value : '';
+          const dueTime = taskDeadlineInput ? taskDeadlineInput.value : '';
+          const dueDate = taskDeadlineDateInput ? taskDeadlineDateInput.value : '';
+
+          if (!title) {
+            alert('Please enter a task title.');
+            return;
+          }
+          if (frequency === 'one_time' && !activeDate) {
+            alert('Please select a date for the one-time task.');
+            return;
+          }
+
+          try {
+            const newTask = await addTaskDefinition({
+              title: title,
+              description: description,
+              frequency: frequency,
+              activeDate: activeDate,
+              dueTime: dueTime,
+              dueDate: dueDate
+            });
+            taskDefinitions.push(newTask);
+            renderTaskAdminList(taskDefinitions);
+            // Reset the form
+            taskTitleInput.value = '';
+            if (taskDescriptionInput) taskDescriptionInput.value = '';
+            if (taskDateInput) taskDateInput.value = '';
+            if (taskDeadlineInput) taskDeadlineInput.value = '';
+            if (taskDeadlineDateInput) taskDeadlineDateInput.value = '';
+            if (taskFrequencySelect) taskFrequencySelect.value = 'daily';
+            syncTaskDateField();
+            renderPharmacies();
+          } catch (error) {
+            alert(error.message || 'Unable to add task.');
+          }
+        });
+      }
+
+      // Handle deleting a task from the admin list
+      if (taskAdminList) {
+        taskAdminList.addEventListener('click', async function(event) {
+          const deleteBtn = event.target.closest('.task-admin-delete');
+          if (!deleteBtn) return;
+          const taskId = deleteBtn.dataset.taskId;
+          if (!taskId) return;
+          if (!confirm('Delete this task?')) return;
+          try {
+            await deleteTaskDefinition(taskId);
+            taskDefinitions = taskDefinitions.filter(function(task) {
+              return String(task.id) !== String(taskId);
+            });
+            renderTaskAdminList(taskDefinitions);
+            renderPharmacies();
+          } catch (error) {
+            alert(error.message || 'Unable to delete task.');
+          }
+        });
+      }
+
+      // Update the profile chip in the header
+      chipName.textContent = (firstName + ' ' + lastName).trim() || '—';
+      chipEmail.textContent = email;
+      profileInitials.textContent = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || 'R';
+      if (profileLinkEl) profileLinkEl.href = 'profile.html';
+
+      // If no pharmacies assigned, show a message and stop
       if (!pharmacies.length) {
         grid.innerHTML = '<p style="color:#64748b;">No pharmacies assigned yet.</p>';
         return;
       }
 
-      dashboardTitle.textContent = `${firstName || lastName ? `${firstName} ${lastName}`.trim() + '\'s' : 'RGA'} Dashboard`;
-      dashboardSubtitle.textContent = '';
+      // Set the dashboard title with the user's name
+      const namePrefix = (firstName || lastName) ? (firstName + ' ' + lastName).trim() + "'s" : 'RGA';
+      dashboardTitle.textContent = namePrefix + ' Dashboard';
 
+      // Render pharmacies and load submission data
       currentPharmacies = pharmacies;
       renderPharmacies();
-      await hydrateRgaState(currentPharmacies);
+      await loadSubmissions(currentPharmacies);
       renderPharmacies();
 
+      // ===== EVENT HANDLERS =====
 
-      grid.addEventListener('click', async (event) => {
-        if (event.target.closest('.status-chip')) {
+      // Handle all clicks on the pharmacy grid
+      grid.addEventListener('click', async function(event) {
+        // Handle status chip click - open the submitted file
+        const chip = event.target.closest('.status-chip');
+        if (chip) {
+          const state = chip.dataset.state;
+          if (state !== 'waiting' && state !== 'approved' && state !== 'rejected') {
+            alert('No submission available to review yet.');
+            return;
+          }
+          const taskKey = chip.dataset.task;
+          const pharmacyIndex = chip.dataset.pharmacyIndex;
+          const store = ensurePharmacyState(pharmacyIndex);
+          const entry = normalizeEntry(store[taskKey]);
+          if (entry.fileUrl) {
+            window.open(entry.fileUrl, '_blank');
+          } else {
+            alert('Employee uploaded: ' + (entry.fileName || 'Submitted file'));
+          }
           return;
         }
 
+        // Handle action button click (Open, Approve, Reject)
         const actionBtn = event.target.closest('.task-action-btn');
         if (actionBtn) {
           const action = actionBtn.dataset.action;
@@ -1400,22 +1374,23 @@
           const store = ensurePharmacyState(pharmacyIndex);
           const entry = normalizeEntry(store[taskKey]);
 
+          // Open the submitted file
           if (action === 'open') {
             if (entry.fileUrl) {
-              openFileUrl(entry.fileUrl, entry.fileName || 'submission');
+              window.open(entry.fileUrl, '_blank');
             } else {
-              const fileName = entry.fileName || 'Submitted file';
-              alert(`Employee uploaded: ${fileName}`);
+              alert('Employee uploaded: ' + (entry.fileName || 'Submitted file'));
             }
             return;
           }
 
+          // Approve or reject the submission
           if (action === 'approve' || action === 'reject') {
             if (!entry.employeeEmail) {
               alert('Unable to locate the employee who submitted this task.');
               return;
             }
-            const nextState = action === 'approve' ? 'approved' : 'rejected';
+            const nextState = (action === 'approve') ? 'approved' : 'rejected';
             const reviewNote = prompt('Add a note for the employee (optional):', '') || '';
             try {
               const response = await fetch('/api/update-submission-status', {
@@ -1424,134 +1399,86 @@
                 body: JSON.stringify({
                   employeeEmail: entry.employeeEmail,
                   pharmacyIndex: Number(pharmacyIndex),
-                  taskKey,
+                  taskKey: taskKey,
                   status: nextState,
                   reviewerEmail: email || '',
-                  reviewNote
+                  reviewNote: reviewNote
                 })
               });
               const data = await response.json();
-              if (!response.ok || !data?.ok) {
-                throw new Error(data?.error || 'Failed to update status');
+              if (!response.ok || !data || !data.ok) {
+                throw new Error((data && data.error) || 'Failed to update status');
               }
+              // Update local state with the response
               if (data.submission) {
-                mergeSubmissionsIntoState(submissionState, [data.submission]);
+                mergeSubmissions([data.submission]);
               } else {
-                store[taskKey] = createEmptyTaskEntry({
-                  state: nextState,
-                  submitted: true,
-                  fileName: entry.fileName,
-                  fileUrl: entry.fileUrl,
-                  employeeEmail: entry.employeeEmail,
-                  reviewerEmail: email || '',
-                  reviewedAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString()
-                });
+                const updated = createEmptyEntry();
+                updated.state = nextState;
+                updated.submitted = true;
+                updated.fileName = entry.fileName;
+                updated.fileUrl = entry.fileUrl;
+                updated.employeeEmail = entry.employeeEmail;
+                updated.reviewerEmail = email || '';
+                updated.reviewedAt = new Date().toISOString();
+                updated.updatedAt = new Date().toISOString();
+                store[taskKey] = updated;
               }
               renderPharmacies();
             } catch (error) {
-            console.error('Unable to update submission status', error);
-            const parentTask = actionBtn.closest('.task-item');
-            const statusNoteEl = parentTask?.querySelector('.task-status p');
-            if (statusNoteEl) {
-              statusNoteEl.textContent = 'Unable to update status. Please try again later.';
-              statusNoteEl.style.color = '#b91c1c';
-              statusNoteEl.style.fontWeight = '600';
-            }
+              console.error('Unable to update submission status', error);
+              const parentTask = actionBtn.closest('.task-item');
+              if (parentTask) {
+                const statusNote = parentTask.querySelector('.task-status p');
+                if (statusNote) {
+                  statusNote.textContent = 'Unable to update status. Please try again later.';
+                  statusNote.style.color = '#b91c1c';
+                  statusNote.style.fontWeight = '600';
+                }
+              }
             }
             return;
           }
         }
 
+        // Handle card click - open the pharmacy detail modal
         const card = event.target.closest('.pharmacy-card');
         const isActionArea = event.target.closest('.task-actions');
         if (card && !isActionArea) {
           const indexKey = card.dataset.index;
-          const pharmacy = currentPharmacies.find(item => String(item.index) === indexKey);
-          if (pharmacy) {
-            openPharmacyModal(pharmacy);
-          }
+          const pharmacy = currentPharmacies.find(function(item) {
+            return String(item.index) === indexKey;
+          });
+          if (pharmacy) openPharmacyModal(pharmacy);
         }
       });
 
-      function openPharmacyModal(pharmacy) {
-        if (!modalBackdrop) return;
-        modalBackdrop.classList.add('active');
-        modalTitle.textContent = transliterate(pharmacy.address || 'Pharmacy');
-        modalAddress.textContent = [
-          pharmacy.region ? transliterate(pharmacy.region) : '',
-          pharmacy.phone || '',
-          pharmacy.hours || ''
-        ].filter(Boolean).join(' • ');
-
-        const taskStatuses = getTaskStatusFor(String(pharmacy.index));
-        const employeeEmails = new Set();
-        Object.values(taskStatuses).forEach(entry => {
-          const normalized = normalizeEntry(entry);
-          if (normalized.employeeEmail) {
-            employeeEmails.add(normalized.employeeEmail);
-          }
+      // Close modal when clicking the backdrop or the X button
+      if (modalBackdrop) {
+        modalBackdrop.addEventListener('click', function(event) {
+          if (event.target === modalBackdrop) closeModal();
         });
-
-        if (!employeeEmails.size) {
-          modalEmployees.innerHTML = '<li>No employees assigned yet.</li>';
-        } else {
-          modalEmployees.innerHTML = Array.from(employeeEmails)
-            .map(email => `<li>${email}</li>`)
-            .join('');
-        }
-        modalTasks.innerHTML = getActiveTaskDefinitions(String(pharmacy.index)).map(task => {
-          const entry = normalizeEntry(taskStatuses[task.key]);
-          const status = entry.state || 'not_submitted';
-          const label = STATUS_LABELS[status] || STATUS_LABELS.waiting;
-          return `<li><strong>${task.title}:</strong> ${label}</li>`;
-        }).join('');
+      }
+      if (modalClose) {
+        modalClose.addEventListener('click', closeModal);
       }
 
-      function closeModal() {
-        modalBackdrop?.classList.remove('active');
-      }
-
-      modalBackdrop?.addEventListener('click', (event) => {
-        if (event.target === modalBackdrop) {
-          closeModal();
-        }
-      });
-
-      modalClose?.addEventListener('click', closeModal);
-
-      setInterval(() => {
+      // Refresh data every 30 seconds to catch new submissions
+      setInterval(async function() {
         if (!currentPharmacies.length) return;
-        refreshForNewDay()
-          .then(() => hydrateRgaState(currentPharmacies))
-          .then(() => {
-            renderPharmacies();
-          })
-          .catch(err => console.warn('Periodic refresh failed', err));
+        try {
+          await refreshForNewDay();
+          await loadSubmissions(currentPharmacies);
+          renderPharmacies();
+        } catch (err) {
+          console.warn('Periodic refresh failed', err);
+        }
       }, 30000);
+    }
 
-      grid.addEventListener('click', async (event) => {
-        const chip = event.target.closest('.status-chip');
-        if (!chip) return;
-        const state = chip.dataset.state;
-        if (state !== 'waiting' && state !== 'approved' && state !== 'rejected') {
-          alert('No submission available to review yet.');
-          return;
-        }
-        const taskKey = chip.dataset.task;
-        const pharmacyIndex = chip.dataset.pharmacyIndex;
-        const store = ensurePharmacyState(pharmacyIndex);
-        const entry = normalizeEntry(store[taskKey]);
-        if (entry.fileUrl) {
-          openFileUrl(entry.fileUrl, entry.fileName || 'submission');
-        } else {
-          const fileName = entry.fileName || 'Submitted file';
-          alert(`Employee uploaded: ${fileName}`);
-        }
-      });
-    })();
+    // Start the dashboard
+    init();
   </script>
   <script src="cookie-consent.js"></script>
 </body>
 </html>
-

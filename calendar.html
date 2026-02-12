@@ -405,7 +405,7 @@
     </div>
   </nav>
 
-  <main class="calendar-page">
+  <main class="calendar-page" style="display:none;" id="mainContent">
     <div class="page-header">
       <div>
         <h1>Submission Calendar</h1>
@@ -438,553 +438,606 @@
   </main>
 
   <script>
-    (function() {
-      const DEFAULT_TASK_DEFINITIONS = [
-        { key: 'window', title: 'Send photo of a window' },
-        { key: 'trash', title: 'Send photo of trash cans' },
-        { key: 'outfit', title: 'Send photo of an outfit' }
-      ];
-      let taskDefinitions = DEFAULT_TASK_DEFINITIONS;
+    // ===== CONSTANTS =====
 
-      const STATUS_LABELS = {
-        not_submitted: 'Not submitted',
-        waiting: 'Waiting for approval',
-        approved: 'Approved',
-        rejected: 'Not approved'
-      };
+    var DEFAULT_TASK_DEFINITIONS = [
+      { key: 'window', title: 'Send photo of a window' },
+      { key: 'trash', title: 'Send photo of trash cans' },
+      { key: 'outfit', title: 'Send photo of an outfit' }
+    ];
 
-      const NETWORK_DIAGNOSTICS_LIMIT = 5;
+    var STATUS_LABELS = {
+      not_submitted: 'Not submitted',
+      waiting: 'Waiting for approval',
+      approved: 'Approved',
+      rejected: 'Not approved'
+    };
 
-      function ensureNetworkDiagnosticsPanel() {
-        let panel = document.getElementById('networkDiagnostics');
-        if (panel) return panel;
-        panel = document.createElement('div');
-        panel.id = 'networkDiagnostics';
-        panel.style.position = 'fixed';
-        panel.style.bottom = '16px';
-        panel.style.right = '16px';
-        panel.style.maxWidth = '360px';
-        panel.style.background = '#ffffff';
-        panel.style.border = '1px solid #e5e7eb';
-        panel.style.borderRadius = '10px';
-        panel.style.boxShadow = '0 10px 25px rgba(15, 23, 42, 0.15)';
-        panel.style.padding = '12px 14px';
-        panel.style.fontSize = '12px';
-        panel.style.color = '#1f2937';
-        panel.style.zIndex = '9999';
-        panel.style.display = 'none';
-        panel.innerHTML = '<strong style="display:block;margin-bottom:6px;">Network diagnostics</strong><div id="networkDiagnosticsList" style="display:flex;flex-direction:column;gap:6px;"></div>';
-        document.body.appendChild(panel);
-        return panel;
+    var MONTH_NAMES = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    var WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+    // ===== TRANSLITERATION MAP =====
+
+    var TRANSLIT_MAP = {
+      'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'e','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m',
+      'н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'shch',
+      'ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya',
+      'А':'A','Б':'B','В':'V','Г':'G','Д':'D','Е':'E','Ё':'E','Ж':'Zh','З':'Z','И':'I','Й':'Y','К':'K','Л':'L','М':'M',
+      'Н':'N','О':'O','П':'P','Р':'R','С':'S','Т':'T','У':'U','Ф':'F','Х':'Kh','Ц':'Ts','Ч':'Ch','Ш':'Sh','Щ':'Shch',
+      'Ъ':'','Ы':'Y','Ь':'','Э':'E','Ю':'Yu','Я':'Ya'
+    };
+
+    // ===== DOM ELEMENTS =====
+
+    var dashboardLink = document.getElementById('dashboardLink');
+    var pharmacyFilter = document.getElementById('pharmacyFilter');
+    var monthLabel = document.getElementById('monthLabel');
+    var calendarDays = document.getElementById('calendarDays');
+    var weekdayRow = document.getElementById('weekdayRow');
+    var historyList = document.getElementById('historyList');
+    var historyTitle = document.getElementById('historyTitle');
+    var subtitleEl = document.getElementById('pageSubtitle');
+    var prevMonthBtn = document.getElementById('prevMonth');
+    var nextMonthBtn = document.getElementById('nextMonth');
+
+    // ===== STATE =====
+
+    var currentMonth = new Date();
+    currentMonth.setDate(1);
+    var selectedDateKey = null;
+    var submissions = [];
+    var pharmacies = [];
+    var role = '';
+    var pharmacyLookup = {};
+    var eventsByDate = {};
+    var filteredPharmacyIndex = 'all';
+    var taskTitles = {};
+    var taskDefinitions = DEFAULT_TASK_DEFINITIONS;
+
+    // ===== HELPER FUNCTIONS =====
+
+    // Returns a date string like "2025-01-05"
+    function getDateKey(date) {
+      var year = date.getFullYear();
+      var month = String(date.getMonth() + 1).padStart(2, '0');
+      var day = String(date.getDate()).padStart(2, '0');
+      return year + '-' + month + '-' + day;
+    }
+
+    // Parses a date string, returns null if invalid
+    function parseDate(value) {
+      if (!value) return null;
+      var date = new Date(value);
+      if (isNaN(date.getTime())) return null;
+      return date;
+    }
+
+    // Formats time as "HH:MM"
+    function formatTime(date) {
+      return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // Transliterates Cyrillic characters to Latin
+    function transliterate(value) {
+      if (!value) return '';
+      var text = String(value);
+      var result = '';
+      for (var i = 0; i < text.length; i++) {
+        var char = text[i];
+        if (TRANSLIT_MAP[char] !== undefined) {
+          result += TRANSLIT_MAP[char];
+        } else {
+          result += char;
+        }
+      }
+      return result.replace(/\s+/g, ' ').trim();
+    }
+
+    // Builds a lookup of task key -> task title
+    function buildTaskTitles(definitions) {
+      var result = {};
+      for (var i = 0; i < definitions.length; i++) {
+        var task = definitions[i];
+        if (task && task.key) {
+          result[task.key] = task.title || task.key;
+        }
+      }
+      return result;
+    }
+
+    // Builds a label like "Region - Address" for a pharmacy
+    function buildPharmacyLabel(pharmacy) {
+      var parts = [];
+      if (pharmacy && pharmacy.region) parts.push(transliterate(pharmacy.region));
+      if (pharmacy && pharmacy.address) parts.push(transliterate(pharmacy.address));
+      if (parts.length > 0) return parts.join(' - ');
+      return 'Pharmacy';
+    }
+
+    // Returns the weekday offset (Monday = 0, Sunday = 6)
+    function getWeekdayOffset(date) {
+      var day = date.getDay();
+      return (day + 6) % 7;
+    }
+
+    // ===== EVENT BUILDING =====
+
+    // Builds a list of calendar events from submissions
+    function buildEvents(filteredSubmissions) {
+      var events = [];
+
+      for (var i = 0; i < filteredSubmissions.length; i++) {
+        var item = filteredSubmissions[i];
+        if (!item || item.pharmacy_index === undefined || item.pharmacy_index === null) {
+          continue;
+        }
+
+        var status = item.status || 'waiting';
+        if (status === 'not_submitted' && !item.file_url) {
+          continue;
+        }
+
+        var pharmacyIndex = String(item.pharmacy_index);
+        var pharmacyLabel = pharmacyLookup[pharmacyIndex] || ('Pharmacy #' + pharmacyIndex);
+        var taskTitle = taskTitles[item.task_key] || item.task_key || 'Task';
+        var updatedAt = parseDate(item.updated_at);
+        var reviewedAt = parseDate(item.reviewed_at);
+
+        // Add submission event
+        if (updatedAt) {
+          events.push({
+            type: 'submission',
+            status: status,
+            date: updatedAt,
+            pharmacyIndex: pharmacyIndex,
+            pharmacyLabel: pharmacyLabel,
+            taskTitle: taskTitle,
+            fileName: item.file_name || '',
+            fileUrl: item.file_url || '',
+            employeeEmail: item.employee_email || '',
+            reviewerEmail: item.reviewer_email || '',
+            reviewNote: item.review_note || ''
+          });
+        }
+
+        // Add decision event (approved or rejected)
+        if (reviewedAt && (status === 'approved' || status === 'rejected')) {
+          events.push({
+            type: 'decision',
+            status: status,
+            date: reviewedAt,
+            pharmacyIndex: pharmacyIndex,
+            pharmacyLabel: pharmacyLabel,
+            taskTitle: taskTitle,
+            fileName: item.file_name || '',
+            fileUrl: item.file_url || '',
+            employeeEmail: item.employee_email || '',
+            reviewerEmail: item.reviewer_email || '',
+            reviewNote: item.review_note || ''
+          });
+        }
       }
 
-      function resolveServiceLabel(url, errorText = '') {
-        const text = `${errorText || ''}`.toLowerCase();
-        if (url.includes('supabase.co') || text.includes('supabase') || text.includes('database')) {
-          return 'Supabase';
-        }
-        if (url.includes('resend.com')) {
-          return 'Resend';
-        }
-        if (url.startsWith('/api/')) {
-          return 'App server (Vercel)';
-        }
-        if (url.includes('vercel')) {
-          return 'Vercel';
-        }
-        return 'Network';
-      }
+      // Sort events newest first
+      events.sort(function(a, b) {
+        return b.date.getTime() - a.date.getTime();
+      });
 
-      function reportNetworkError(url, status, errorText) {
-        const panel = ensureNetworkDiagnosticsPanel();
-        const list = panel.querySelector('#networkDiagnosticsList');
-        if (!list) return;
-        const item = document.createElement('div');
-        const service = resolveServiceLabel(url, errorText);
-        const statusText = status ? `Status ${status}` : 'No response';
-        item.textContent = `${service}: ${statusText} • ${url}${errorText ? ` • ${errorText}` : ''}`;
-        list.prepend(item);
-        while (list.children.length > NETWORK_DIAGNOSTICS_LIMIT) {
-          list.removeChild(list.lastChild);
-        }
-        panel.style.display = 'block';
-      }
+      return events;
+    }
 
-      function wrapFetchWithDiagnostics() {
-        if (window.__networkDiagnosticsInstalled) return;
-        window.__networkDiagnosticsInstalled = true;
-        const originalFetch = window.fetch.bind(window);
-        window.fetch = async (input, init) => {
-          const url = typeof input === 'string' ? input : input?.url || 'unknown';
-          try {
-            const response = await originalFetch(input, init);
-            if (!response.ok) {
-              let errorText = '';
-              try {
-                errorText = await response.clone().text();
-              } catch (err) {
-                errorText = '';
-              }
-              reportNetworkError(url, response.status, errorText);
-            }
-            return response;
-          } catch (error) {
-            reportNetworkError(url, null, error?.message || 'Network error');
-            throw error;
+    // Groups events by date key into eventsByDate object
+    function refreshEvents() {
+      var filtered;
+      if (filteredPharmacyIndex === 'all') {
+        filtered = submissions;
+      } else {
+        filtered = [];
+        for (var i = 0; i < submissions.length; i++) {
+          if (String(submissions[i].pharmacy_index) === filteredPharmacyIndex) {
+            filtered.push(submissions[i]);
           }
-        };
-      }
-
-      wrapFetchWithDiagnostics();
-
-      const MONTH_NAMES = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
-      ];
-
-      const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-      const dashboardLink = document.getElementById('dashboardLink');
-      const pharmacyFilter = document.getElementById('pharmacyFilter');
-      const monthLabel = document.getElementById('monthLabel');
-      const calendarDays = document.getElementById('calendarDays');
-      const weekdayRow = document.getElementById('weekdayRow');
-      const historyList = document.getElementById('historyList');
-      const historyTitle = document.getElementById('historyTitle');
-      const subtitleEl = document.getElementById('pageSubtitle');
-      const prevMonthBtn = document.getElementById('prevMonth');
-      const nextMonthBtn = document.getElementById('nextMonth');
-
-      let currentMonth = new Date();
-      currentMonth.setDate(1);
-      let selectedDateKey = null;
-      let submissions = [];
-      let pharmacies = [];
-      let role = '';
-      let pharmacyLookup = {};
-      let eventsByDate = new Map();
-      let filteredPharmacyIndex = 'all';
-      let taskTitles = {};
-
-      function getDateKey(date) {
-        const year = date.getFullYear();
-        const month = `${date.getMonth() + 1}`.padStart(2, '0');
-        const day = `${date.getDate()}`.padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      }
-
-      function parseDate(value) {
-        if (!value) return null;
-        const date = new Date(value);
-        if (Number.isNaN(date.getTime())) return null;
-        return date;
-      }
-
-      function formatTime(date) {
-        return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-      }
-
-      function openFileUrl(fileUrl, fileName = 'submission') {
-        if (!fileUrl) return;
-        try {
-          const link = document.createElement('a');
-          link.href = fileUrl;
-          link.download = fileName;
-          link.rel = 'noopener';
-          link.style.display = 'none';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        } catch (err) {
-          console.warn('Unable to open file via anchor, falling back to location', err);
-          window.location.href = fileUrl;
         }
       }
 
-      function normalizeSpacing(value) {
-        return `${value || ''}`.replace(/\s+/g, ' ').trim();
+      var allEvents = buildEvents(filtered);
+      eventsByDate = {};
+
+      for (var i = 0; i < allEvents.length; i++) {
+        var event = allEvents[i];
+        var key = getDateKey(event.date);
+        if (!eventsByDate[key]) {
+          eventsByDate[key] = [];
+        }
+        eventsByDate[key].push(event);
+      }
+    }
+
+    // ===== RENDERING =====
+
+    // Renders the weekday header row
+    function renderWeekdays() {
+      var html = '';
+      for (var i = 0; i < WEEKDAYS.length; i++) {
+        html += '<div class="weekday">' + WEEKDAYS[i] + '</div>';
+      }
+      weekdayRow.innerHTML = html;
+    }
+
+    // Renders the calendar grid for the current month
+    function renderCalendar() {
+      if (!calendarDays || !monthLabel) return;
+
+      var year = currentMonth.getFullYear();
+      var month = currentMonth.getMonth();
+      monthLabel.textContent = MONTH_NAMES[month] + ' ' + year;
+
+      var firstDay = new Date(year, month, 1);
+      var startOffset = getWeekdayOffset(firstDay);
+      var daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      var html = '';
+
+      // Empty cells before the first day
+      for (var i = 0; i < startOffset; i++) {
+        html += '<div class="day-cell is-empty"></div>';
       }
 
-      function transliterate(value) {
-        if (!value) return '';
-        const map = {
-          'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'e','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m',
-          'н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'shch',
-          'ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya',
-          'А':'A','Б':'B','В':'V','Г':'G','Д':'D','Е':'E','Ё':'E','Ж':'Zh','З':'Z','И':'I','Й':'Y','К':'K','Л':'L','М':'M',
-          'Н':'N','О':'O','П':'P','Р':'R','С':'S','Т':'T','У':'U','Ф':'F','Х':'Kh','Ц':'Ts','Ч':'Ch','Ш':'Sh','Щ':'Shch',
-          'Ъ':'','Ы':'Y','Ь':'','Э':'E','Ю':'Yu','Я':'Ya'
-        };
-        return normalizeSpacing(`${value}`.split('').map(char => (map[char] !== undefined ? map[char] : char)).join(''));
-      }
+      // Day cells
+      for (var day = 1; day <= daysInMonth; day++) {
+        var date = new Date(year, month, day);
+        var dateKey = getDateKey(date);
+        var events = eventsByDate[dateKey] || [];
 
-      function buildTaskTitles(definitions) {
-        return (definitions || []).reduce((acc, task) => {
-          if (task?.key) {
-            acc[task.key] = task.title || task.key;
-          }
-          return acc;
-        }, {});
-      }
-
-      function buildPharmacyLabel(pharmacy) {
-        const parts = [];
-        if (pharmacy?.region) parts.push(transliterate(pharmacy.region));
-        if (pharmacy?.address) parts.push(transliterate(pharmacy.address));
-        return parts.length ? parts.join(' - ') : 'Pharmacy';
-      }
-
-      function formatPharmacyOption(pharmacy) {
-        return buildPharmacyLabel(pharmacy);
-      }
-
-      function getWeekdayOffset(date) {
-        const day = date.getDay();
-        return (day + 6) % 7;
-      }
-
-      function buildEvents(filteredSubmissions) {
-        const events = [];
-        filteredSubmissions.forEach(item => {
-          if (!item || item.pharmacy_index === undefined || item.pharmacy_index === null) {
-            return;
-          }
-          const status = item.status || 'waiting';
-          if (status === 'not_submitted' && !item.file_url) {
-            return;
-          }
-          const pharmacyIndex = String(item.pharmacy_index);
-          const pharmacyLabel = pharmacyLookup[pharmacyIndex] || `Pharmacy #${pharmacyIndex}`;
-          const taskTitle = taskTitles[item.task_key] || item.task_key || 'Task';
-          const updatedAt = parseDate(item.updated_at);
-          const reviewedAt = parseDate(item.reviewed_at);
-
-          if (updatedAt) {
-            events.push({
-              type: 'submission',
-              status,
-              date: updatedAt,
-              pharmacyIndex,
-              pharmacyLabel,
-              taskTitle,
-              fileName: item.file_name || '',
-              fileUrl: item.file_url || '',
-              employeeEmail: item.employee_email || '',
-              reviewerEmail: item.reviewer_email || '',
-              reviewNote: item.review_note || ''
-            });
-          }
-
-          if (reviewedAt && (status === 'approved' || status === 'rejected')) {
-            events.push({
-              type: 'decision',
-              status,
-              date: reviewedAt,
-              pharmacyIndex,
-              pharmacyLabel,
-              taskTitle,
-              fileName: item.file_name || '',
-              fileUrl: item.file_url || '',
-              employeeEmail: item.employee_email || '',
-              reviewerEmail: item.reviewer_email || '',
-              reviewNote: item.review_note || ''
-            });
-          }
-        });
-
-        events.sort((a, b) => b.date.getTime() - a.date.getTime());
-        return events;
-      }
-
-      function refreshEvents() {
-        const filtered = filteredPharmacyIndex === 'all'
-          ? submissions
-          : submissions.filter(item => String(item.pharmacy_index) === filteredPharmacyIndex);
-
-        const allEvents = buildEvents(filtered);
-        eventsByDate = new Map();
-        allEvents.forEach(event => {
-          const key = getDateKey(event.date);
-          if (!eventsByDate.has(key)) {
-            eventsByDate.set(key, []);
-          }
-          eventsByDate.get(key).push(event);
-        });
-      }
-
-      function renderWeekdays() {
-        weekdayRow.innerHTML = WEEKDAYS.map(day => `<div class="weekday">${day}</div>`).join('');
-      }
-
-      function renderCalendar() {
-        if (!calendarDays || !monthLabel) return;
-        const year = currentMonth.getFullYear();
-        const month = currentMonth.getMonth();
-        monthLabel.textContent = `${MONTH_NAMES[month]} ${year}`;
-
-        const firstDay = new Date(year, month, 1);
-        const startOffset = getWeekdayOffset(firstDay);
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-        const cells = [];
-        for (let i = 0; i < startOffset; i++) {
-          cells.push('<div class="day-cell is-empty"></div>');
+        // Build dots for events (max 6)
+        var dots = '';
+        var dotCount = Math.min(events.length, 6);
+        for (var d = 0; d < dotCount; d++) {
+          var statusClass = events[d].status || 'waiting';
+          dots += '<span class="event-dot ' + statusClass + '"></span>';
         }
 
-        for (let day = 1; day <= daysInMonth; day++) {
-          const date = new Date(year, month, day);
-          const dateKey = getDateKey(date);
-          const events = eventsByDate.get(dateKey) || [];
-          const dots = events.slice(0, 6).map(event => {
-            const statusClass = event.status || 'waiting';
-            return `<span class="event-dot ${statusClass}"></span>`;
-          }).join('');
-          const countLabel = events.length ? `<span class="event-count">${events.length} event${events.length > 1 ? 's' : ''}</span>` : '';
-          const selectedClass = selectedDateKey === dateKey ? ' is-selected' : '';
-          cells.push(`
-            <div class="day-cell${selectedClass}" data-date="${dateKey}">
-              <div class="day-number">${day}</div>
-              <div class="day-events">${dots}</div>
-              ${countLabel}
-            </div>
-          `);
+        // Event count label
+        var countLabel = '';
+        if (events.length > 0) {
+          countLabel = '<span class="event-count">' + events.length + ' event' + (events.length > 1 ? 's' : '') + '</span>';
         }
 
-        calendarDays.innerHTML = cells.join('');
+        var selectedClass = (selectedDateKey === dateKey) ? ' is-selected' : '';
+
+        html += '<div class="day-cell' + selectedClass + '" data-date="' + dateKey + '">'
+          + '<div class="day-number">' + day + '</div>'
+          + '<div class="day-events">' + dots + '</div>'
+          + countLabel
+          + '</div>';
       }
 
-      function renderHistory(dateKey) {
-        const events = eventsByDate.get(dateKey) || [];
-        const formattedDate = dateKey ? dateKey.split('-').reverse().join('.') : '';
-        historyTitle.textContent = dateKey ? `Events on ${formattedDate}` : 'Events';
+      calendarDays.innerHTML = html;
+    }
 
-        if (!events.length) {
-          historyList.innerHTML = '<div class="empty-state">No submissions or decisions on this date.</div>';
-          return;
+    // Renders the history panel for the selected date
+    function renderHistory(dateKey) {
+      var events = eventsByDate[dateKey] || [];
+      var formattedDate = dateKey ? dateKey.split('-').reverse().join('.') : '';
+      historyTitle.textContent = dateKey ? 'Events on ' + formattedDate : 'Events';
+
+      if (events.length === 0) {
+        historyList.innerHTML = '<div class="empty-state">No submissions or decisions on this date.</div>';
+        return;
+      }
+
+      var html = '';
+      for (var i = 0; i < events.length; i++) {
+        var event = events[i];
+        var timeLabel = formatTime(event.date);
+        var chipClass = event.status || 'waiting';
+        var statusLabel = STATUS_LABELS[event.status] || STATUS_LABELS.waiting;
+
+        var eventTitle;
+        if (event.type === 'decision') {
+          eventTitle = 'Decision: ' + statusLabel;
+        } else {
+          eventTitle = 'Submission';
         }
 
-        historyList.innerHTML = events.map(event => {
-          const timeLabel = formatTime(event.date);
-          const chipClass = event.status || 'waiting';
-          const statusLabel = STATUS_LABELS[event.status] || STATUS_LABELS.waiting;
-          const eventTitle = event.type === 'decision'
-            ? `Decision: ${statusLabel}`
-            : 'Submission';
-          const emailLine = event.type === 'decision'
-            ? (event.reviewerEmail ? `Reviewed by ${event.reviewerEmail}` : 'Reviewed by RGA')
-            : (event.employeeEmail ? `Submitted by ${event.employeeEmail}` : 'Submitted by employee');
-          const noteLine = event.reviewNote
-            ? `<p>Note: ${event.reviewNote}</p>`
-            : '';
-          const fileLink = event.fileUrl
-            ? `<div class="history-actions"><button type="button" data-action="download" data-fileurl="${event.fileUrl}" data-filename="${event.fileName || 'submission'}">Download photo</button></div>`
-            : '';
+        var emailLine;
+        if (event.type === 'decision') {
+          emailLine = event.reviewerEmail ? 'Reviewed by ' + event.reviewerEmail : 'Reviewed by RGA';
+        } else {
+          emailLine = event.employeeEmail ? 'Submitted by ' + event.employeeEmail : 'Submitted by employee';
+        }
 
-          return `
-            <div class="history-item">
-              <h3>${event.taskTitle}</h3>
-              <div class="history-meta">
-                <span class="history-chip ${chipClass}">${statusLabel}</span>
-                <span>${eventTitle}</span>
-                <span>${timeLabel}</span>
-              </div>
-              <p>${event.pharmacyLabel}</p>
-              <p>${emailLine}</p>
-              ${noteLine}
-              ${fileLink}
-            </div>
-          `;
-        }).join('');
+        var noteLine = '';
+        if (event.reviewNote) {
+          noteLine = '<p>Note: ' + event.reviewNote + '</p>';
+        }
+
+        var fileLink = '';
+        if (event.fileUrl) {
+          fileLink = '<div class="history-actions">'
+            + '<button type="button" data-action="download" data-fileurl="' + event.fileUrl + '" data-filename="' + (event.fileName || 'submission') + '">Download photo</button>'
+            + '</div>';
+        }
+
+        html += '<div class="history-item">'
+          + '<h3>' + event.taskTitle + '</h3>'
+          + '<div class="history-meta">'
+          + '<span class="history-chip ' + chipClass + '">' + statusLabel + '</span>'
+          + '<span>' + eventTitle + '</span>'
+          + '<span>' + timeLabel + '</span>'
+          + '</div>'
+          + '<p>' + event.pharmacyLabel + '</p>'
+          + '<p>' + emailLine + '</p>'
+          + noteLine
+          + fileLink
+          + '</div>';
       }
 
-      function updateSelectedDate(dateKey) {
-        selectedDateKey = dateKey;
+      historyList.innerHTML = html;
+    }
+
+    // Updates the selected date and re-renders
+    function updateSelectedDate(dateKey) {
+      selectedDateKey = dateKey;
+      renderCalendar();
+      renderHistory(dateKey);
+    }
+
+    // ===== CALENDAR INTERACTIONS =====
+
+    function setupCalendarInteractions() {
+      // Click on a day cell to select it
+      calendarDays.addEventListener('click', function(e) {
+        var cell = e.target.closest('.day-cell');
+        if (!cell || cell.classList.contains('is-empty')) return;
+        var dateKey = cell.dataset.date;
+        updateSelectedDate(dateKey);
+      });
+
+      // Click download button in history panel
+      historyList.addEventListener('click', function(e) {
+        var button = e.target.closest('button[data-action="download"]');
+        if (!button) return;
+        var fileUrl = button.dataset.fileurl;
+        if (fileUrl) {
+          window.open(fileUrl, '_blank');
+        }
+      });
+
+      // Previous month button
+      prevMonthBtn.addEventListener('click', function() {
+        currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
         renderCalendar();
-        renderHistory(dateKey);
+      });
+
+      // Next month button
+      nextMonthBtn.addEventListener('click', function() {
+        currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
+        renderCalendar();
+      });
+    }
+
+    // ===== PHARMACY FILTER =====
+
+    function buildPharmacyFilter() {
+      if (!pharmacyFilter) return;
+      pharmacyFilter.innerHTML = '';
+
+      // Add "All pharmacies" option if more than one
+      if (pharmacies.length > 1) {
+        var allOption = document.createElement('option');
+        allOption.value = 'all';
+        allOption.textContent = 'All pharmacies';
+        pharmacyFilter.appendChild(allOption);
       }
 
-      function setupCalendarInteractions() {
-        calendarDays.addEventListener('click', event => {
-          const cell = event.target.closest('.day-cell');
-          if (!cell || cell.classList.contains('is-empty')) return;
-          const dateKey = cell.dataset.date;
-          updateSelectedDate(dateKey);
-        });
-
-        historyList.addEventListener('click', event => {
-          const button = event.target.closest('button[data-action="download"]');
-          if (!button) return;
-          openFileUrl(button.dataset.fileurl, button.dataset.filename || 'submission');
-        });
-
-        prevMonthBtn.addEventListener('click', () => {
-          currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
-          renderCalendar();
-        });
-
-        nextMonthBtn.addEventListener('click', () => {
-          currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
-          renderCalendar();
-        });
+      // Add each pharmacy option
+      for (var i = 0; i < pharmacies.length; i++) {
+        var option = document.createElement('option');
+        option.value = String(pharmacies[i].index);
+        option.textContent = buildPharmacyLabel(pharmacies[i]);
+        pharmacyFilter.appendChild(option);
       }
 
-      function buildPharmacyFilter() {
-        if (!pharmacyFilter) return;
-        pharmacyFilter.innerHTML = '';
-        if (pharmacies.length > 1) {
-          const option = document.createElement('option');
-          option.value = 'all';
-          option.textContent = 'All pharmacies';
-          pharmacyFilter.appendChild(option);
-        }
-        pharmacies.forEach(pharmacy => {
-          const option = document.createElement('option');
-          option.value = String(pharmacy.index);
-          option.textContent = formatPharmacyOption(pharmacy);
-          pharmacyFilter.appendChild(option);
-        });
-        if (pharmacies.length <= 1) {
-          pharmacyFilter.disabled = true;
-          filteredPharmacyIndex = pharmacies[0] ? String(pharmacies[0].index) : 'all';
-          pharmacyFilter.value = filteredPharmacyIndex;
+      // Disable if only one pharmacy
+      if (pharmacies.length <= 1) {
+        pharmacyFilter.disabled = true;
+        filteredPharmacyIndex = pharmacies[0] ? String(pharmacies[0].index) : 'all';
+        pharmacyFilter.value = filteredPharmacyIndex;
+      } else {
+        pharmacyFilter.disabled = false;
+        filteredPharmacyIndex = 'all';
+        pharmacyFilter.value = 'all';
+      }
+    }
+
+    // ===== API FUNCTIONS =====
+
+    // Fetches the current session from the server
+    async function fetchSession() {
+      try {
+        var response = await fetch('/api/session');
+        if (!response.ok) return null;
+        var data = await response.json();
+        if (data && data.session) return data.session;
+        return null;
+      } catch (error) {
+        console.warn('Unable to load session', error);
+        return null;
+      }
+    }
+
+    // Fetches the user profile from the server
+    async function fetchProfile() {
+      try {
+        var response = await fetch('/api/profile');
+        if (!response.ok) return null;
+        var data = await response.json();
+        if (data && data.profile) return data.profile;
+        return null;
+      } catch (error) {
+        console.warn('Unable to fetch profile', error);
+        return null;
+      }
+    }
+
+    // Fetches submissions with optional query parameters
+    async function fetchSubmissions(query) {
+      var params = new URLSearchParams();
+      var keys = Object.keys(query || {});
+      for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
+        var value = query[key];
+        if (value === undefined || value === null || value === '') continue;
+        if (Array.isArray(value)) {
+          params.append(key, value.join(','));
         } else {
-          pharmacyFilter.disabled = false;
-          filteredPharmacyIndex = 'all';
-          pharmacyFilter.value = 'all';
+          params.append(key, value);
         }
       }
 
-      async function fetchSession() {
-        try {
-          const response = await fetch('/api/session');
-          if (!response.ok) return null;
-          const data = await response.json();
-          return data?.session || null;
-        } catch (error) {
-          console.warn('Unable to load session', error);
-          return null;
+      var response = await fetch('/api/get-submissions?' + params.toString());
+      if (!response.ok) {
+        var text = await response.text();
+        throw new Error(text || 'Unable to fetch submissions');
+      }
+      var data = await response.json();
+      if (!data || !data.ok) throw new Error('Unexpected response');
+      return data.submissions || [];
+    }
+
+    // Fetches task definitions from the server
+    async function fetchTaskDefinitions() {
+      try {
+        var response = await fetch('/api/task-definitions');
+        if (!response.ok) return DEFAULT_TASK_DEFINITIONS;
+        var data = await response.json();
+        if (data && Array.isArray(data.tasks)) return data.tasks;
+        return DEFAULT_TASK_DEFINITIONS;
+      } catch (error) {
+        console.warn('Unable to fetch task definitions', error);
+        return DEFAULT_TASK_DEFINITIONS;
+      }
+    }
+
+    // Sets the dashboard link to the correct page based on role
+    function updateDashboardLink() {
+      if (!dashboardLink) return;
+      if ((role || '').toLowerCase() === 'rga') {
+        dashboardLink.href = 'rga-dashboard.html';
+      } else {
+        dashboardLink.href = 'welcome.html';
+      }
+    }
+
+    // ===== MAIN INIT =====
+
+    async function init() {
+      renderWeekdays();
+      setupCalendarInteractions();
+
+      // Check session
+      var session = await fetchSession();
+      if (!session) {
+        window.location.href = 'register.html';
+        return;
+      }
+      role = session.role || '';
+      updateDashboardLink();
+
+      // Show main content
+      var mainEl = document.getElementById('mainContent');
+      if (mainEl) mainEl.style.display = '';
+
+      // Check profile
+      var profile = await fetchProfile();
+      if (!profile) {
+        window.location.href = 'profile.html';
+        return;
+      }
+
+      // Load task definitions
+      taskDefinitions = await fetchTaskDefinitions();
+      taskTitles = buildTaskTitles(taskDefinitions);
+
+      // Set up pharmacies
+      pharmacies = Array.isArray(profile.pharmacies) ? profile.pharmacies : [];
+      if (pharmacies.length === 0) {
+        subtitleEl.textContent = 'No pharmacies assigned yet. Please update your profile.';
+        historyList.innerHTML = '<div class="empty-state">No pharmacy data available.</div>';
+        calendarDays.innerHTML = '<div class="empty-state">No data to display.</div>';
+        return;
+      }
+
+      // Build pharmacy lookup
+      pharmacyLookup = {};
+      for (var i = 0; i < pharmacies.length; i++) {
+        var pharmacy = pharmacies[i];
+        if (pharmacy && pharmacy.index !== undefined && pharmacy.index !== null) {
+          pharmacyLookup[String(pharmacy.index)] = buildPharmacyLabel(pharmacy);
         }
       }
 
-      async function fetchProfile() {
-        try {
-          const response = await fetch('/api/profile');
-          if (!response.ok) return null;
-          const data = await response.json();
-          return data?.profile || null;
-        } catch (error) {
-          console.warn('Unable to fetch profile', error);
-          return null;
+      buildPharmacyFilter();
+
+      // Get pharmacy indexes for fetching submissions
+      var pharmacyIndexes = [];
+      for (var i = 0; i < pharmacies.length; i++) {
+        if (pharmacies[i].index !== undefined && pharmacies[i].index !== null) {
+          pharmacyIndexes.push(pharmacies[i].index);
         }
       }
 
-      async function fetchSubmissions(query) {
-        const params = new URLSearchParams();
-        Object.entries(query || {}).forEach(([key, value]) => {
-          if (value === undefined || value === null || value === '') return;
-          params.append(key, Array.isArray(value) ? value.join(',') : value);
-        });
-        const response = await fetch(`/api/get-submissions?${params.toString()}`);
-        if (!response.ok) {
-          const text = await response.text();
-          throw new Error(text || 'Unable to fetch submissions');
-        }
-        const data = await response.json();
-        if (!data?.ok) throw new Error('Unexpected response');
-        return data.submissions || [];
+      // Fetch submissions
+      try {
+        submissions = await fetchSubmissions({ pharmacies: pharmacyIndexes });
+      } catch (error) {
+        console.warn('Unable to load submissions', error);
+        subtitleEl.textContent = 'Unable to load history right now.';
+        historyList.innerHTML = '<div class="empty-state">Please try again later.</div>';
       }
 
-      async function fetchTaskDefinitions() {
-        try {
-          const response = await fetch('/api/task-definitions');
-          if (!response.ok) return DEFAULT_TASK_DEFINITIONS;
-          const data = await response.json();
-          return Array.isArray(data?.tasks) ? data.tasks : DEFAULT_TASK_DEFINITIONS;
-        } catch (error) {
-          console.warn('Unable to fetch task definitions', error);
-          return DEFAULT_TASK_DEFINITIONS;
-        }
+      // Build events and select initial date
+      refreshEvents();
+      var todayKey = getDateKey(new Date());
+      var dateKeys = Object.keys(eventsByDate).sort();
+      if (eventsByDate[todayKey]) {
+        selectedDateKey = todayKey;
+      } else if (dateKeys.length > 0) {
+        selectedDateKey = dateKeys[dateKeys.length - 1];
+      } else {
+        selectedDateKey = todayKey;
       }
 
-      function updateDashboardLink() {
-        if (!dashboardLink) return;
-        if ((role || '').toLowerCase() === 'rga') {
-          dashboardLink.href = 'rga-dashboard.html';
-        } else {
-          dashboardLink.href = 'welcome.html';
-        }
-      }
+      renderCalendar();
+      renderHistory(selectedDateKey);
 
-      async function init() {
-        renderWeekdays();
-        setupCalendarInteractions();
-
-        const session = await fetchSession();
-        if (!session) {
-          window.location.href = 'register.html';
-          return;
-        }
-        role = session.role || '';
-        updateDashboardLink();
-
-        const profile = await fetchProfile();
-        if (!profile) {
-          window.location.href = 'profile.html';
-          return;
-        }
-
-        taskDefinitions = await fetchTaskDefinitions();
-        taskTitles = buildTaskTitles(taskDefinitions);
-
-        pharmacies = Array.isArray(profile.pharmacies) ? profile.pharmacies : [];
-        if (!pharmacies.length) {
-          subtitleEl.textContent = 'No pharmacies assigned yet. Please update your profile.';
-          historyList.innerHTML = '<div class="empty-state">No pharmacy data available.</div>';
-          calendarDays.innerHTML = '<div class="empty-state">No data to display.</div>';
-          return;
-        }
-
-        pharmacyLookup = pharmacies.reduce((acc, pharmacy) => {
-          if (pharmacy && pharmacy.index !== undefined && pharmacy.index !== null) {
-            acc[String(pharmacy.index)] = buildPharmacyLabel(pharmacy);
-          }
-          return acc;
-        }, {});
-
-        buildPharmacyFilter();
-
-        const pharmacyIndexes = pharmacies.map(pharmacy => pharmacy.index).filter(index => index !== undefined && index !== null);
-        try {
-          submissions = await fetchSubmissions({ pharmacies: pharmacyIndexes });
-        } catch (error) {
-          console.warn('Unable to load submissions', error);
-          subtitleEl.textContent = 'Unable to load history right now.';
-          historyList.innerHTML = '<div class="empty-state">Please try again later.</div>';
-        }
-
+      // Pharmacy filter change handler
+      pharmacyFilter.addEventListener('change', function() {
+        filteredPharmacyIndex = pharmacyFilter.value;
         refreshEvents();
-        const todayKey = getDateKey(new Date());
-        selectedDateKey = eventsByDate.has(todayKey)
-          ? todayKey
-          : Array.from(eventsByDate.keys()).sort().pop() || todayKey;
 
-        renderCalendar();
-        renderHistory(selectedDateKey);
+        var nextKey;
+        if (eventsByDate[selectedDateKey]) {
+          nextKey = selectedDateKey;
+        } else {
+          var keys = Object.keys(eventsByDate).sort();
+          if (keys.length > 0) {
+            nextKey = keys[keys.length - 1];
+          } else {
+            nextKey = getDateKey(new Date());
+          }
+        }
+        updateSelectedDate(nextKey);
+      });
+    }
 
-        pharmacyFilter.addEventListener('change', () => {
-          filteredPharmacyIndex = pharmacyFilter.value;
-          refreshEvents();
-          const nextKey = eventsByDate.has(selectedDateKey)
-            ? selectedDateKey
-            : Array.from(eventsByDate.keys()).sort().pop() || getDateKey(new Date());
-          updateSelectedDate(nextKey);
-        });
-      }
-
-      init();
-    })();
+    init();
   </script>
   <script src="cookie-consent.js"></script>
 </body>
 </html>
-

@@ -780,9 +780,13 @@
           let html = '';
           for (let i = 0; i < data.pharmacies.length; i++) {
             const info = data.pharmacies[i];
+            // Match by phone to get English version from pharmacies array
+            const match = info && info.phone ? pharmacies.find(p => p.phone === info.phone) : null;
+            const region = match ? match.region : (info && info.region || '');
+            const address = match ? match.address : (info && info.address || '');
             const parts = [];
-            if (info && info.region) parts.push(info.region);
-            if (info && info.address) parts.push(info.address);
+            if (region) parts.push(region);
+            if (address) parts.push(address);
             html += '<div>' + (parts.length ? parts.join(' — ') : '—') + '</div>';
           }
           summaryPharmacy.innerHTML = html;
@@ -995,13 +999,15 @@
         for (let i = 0; i < savedProfileData.pharmacies.length; i++) {
           const pharmacy = savedProfileData.pharmacies[i];
           if (pharmacy.index === undefined || pharmacy.index === null) continue;
+          const idx = parseInt(pharmacy.index, 10);
+          const eng = pharmacies[idx] || pharmacy;
           selectedPharmacyData.push({
             selectId: 'restored-' + pharmacy.index + '-' + i,
             index: String(pharmacy.index),
-            region: pharmacy.region,
-            address: pharmacy.address,
-            phone: pharmacy.phone,
-            hours: pharmacy.hours
+            region: eng.region,
+            address: eng.address,
+            phone: eng.phone,
+            hours: eng.hours
           });
         }
 

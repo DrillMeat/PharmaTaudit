@@ -42,9 +42,43 @@ export default async function handler(req, res) {
     }
 
     const payloadBytes = Buffer.byteLength(fileUrl, 'utf8');
-    if (payloadBytes > maxPayloadBytes) {
+    if (payloadBytes > MAX_SUBMISSION_PAYLOAD_BYTES) {
       fail(res, 413, 'File payload too large. Please upload a smaller image.');
       return;
+    }
+
+    // Upload file to Supabase Storage instead of storing base64 in DB
+    let storedFileUrl = fileUrl;
+    if (fileUrl.startsWith('data:')) {
+      const match = fileUrl.match(/^data:([^;]+);base64,(.+)$/);
+      if (match) {
+        const mimeType = match[1];
+        const base64Data = match[2];
+        const buffer = Buffer.from(base64Data, 'base64');
+
+        const ext = (fileName || '').split('.').pop() || 'jpg';
+        const storagePath = `${email}/${pharmacyIndex}/${taskKey}-${Date.now()}.${ext}`;
+
+        const uploadResp = await fetch(`${SUPABASE_URL}/storage/v1/object/submissions/${storagePath}`, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Content-Type': mimeType,
+            'x-upsert': 'true'
+          },
+          body: buffer
+        });
+
+        if (uploadResp.ok) {
+          storedFileUrl = `${SUPABASE_URL}/storage/v1/object/public/submissions/${storagePath}`;
+        } else {
+          const uploadErr = await uploadResp.text();
+          console.error('Storage upload error:', uploadErr);
+          fail(res, 500, 'Failed to upload file');
+          return;
+        }
+      }
     }
 
     const payload = [{
@@ -53,7 +87,7 @@ export default async function handler(req, res) {
       task_key: taskKey,
       status: 'waiting',
       file_name: fileName || '',
-      file_url: fileUrl,
+      file_url: storedFileUrl,
       updated_at: new Date().toISOString()
     }];
 
@@ -82,4 +116,3 @@ export default async function handler(req, res) {
     fail(res, 500, 'Internal server error');
   }
 }
-

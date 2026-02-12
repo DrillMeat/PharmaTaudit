@@ -22,6 +22,30 @@ export default async function handler(req, res) {
       return;
     }
 
+    // Validate password matches the required password for the role
+    const ROLE_PASSWORDS = { rga: 'PharmaTRGA', employee: 'PharmaTEmployee' };
+    const expectedPassword = ROLE_PASSWORDS[role.toLowerCase()];
+    if (!expectedPassword || password !== expectedPassword) {
+      fail(res, 403, 'Invalid registration password for this role');
+      return;
+    }
+
+    // Server-side check: email must have a verified (used) code
+    const codeResp = await fetch(
+      `${SUPABASE_URL}/rest/v1/email_codes?email=eq.${encodeURIComponent(email)}&used=eq.true&select=email&limit=1`,
+      {
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        }
+      }
+    );
+    const codeRows = await codeResp.json().catch(() => []);
+    if (!Array.isArray(codeRows) || codeRows.length === 0) {
+      fail(res, 403, 'Email not verified. Please verify your email first.');
+      return;
+    }
+
     const passwordHash = await bcrypt.hash(password, 10);
 
     const response = await fetch(`${SUPABASE_URL}/rest/v1/users`, {
@@ -48,5 +72,4 @@ export default async function handler(req, res) {
     fail(res, 500, 'Internal server error');
   }
 }
-
 

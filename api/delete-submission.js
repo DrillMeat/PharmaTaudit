@@ -34,7 +34,6 @@ export default async function handler(req, res) {
 
     const url = `${SUPABASE_URL}/rest/v1/task_submissions?employee_email=eq.${encodeURIComponent(email)}&pharmacy_index=eq.${encodeURIComponent(pharmacyIndex)}&task_key=eq.${encodeURIComponent(taskKey)}`;
 
-    // Fetch the submission first to get the file_url for storage cleanup
     const getResp = await fetch(`${url}&select=file_url`, {
       headers: {
         'apikey': SUPABASE_ANON_KEY,
@@ -59,7 +58,6 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Clean up file from Storage if it's a storage URL
     for (const row of rows) {
       if (row.file_url && row.file_url.includes('/storage/v1/object/public/submissions/')) {
         const storagePath = row.file_url.split('/storage/v1/object/public/submissions/')[1];

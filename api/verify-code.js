@@ -25,7 +25,6 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Lookup code with better error handling
     const lookupUrl = `${SUPABASE_URL}/rest/v1/email_codes?email=eq.${encodeURIComponent(email)}&code=eq.${encodeURIComponent(code)}&used=eq.false&select=*`;
     
     
@@ -60,7 +59,6 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Mark used
     await fetch(`${SUPABASE_URL}/rest/v1/email_codes?email=eq.${encodeURIComponent(email)}`, {
       method: 'PATCH',
       headers: {

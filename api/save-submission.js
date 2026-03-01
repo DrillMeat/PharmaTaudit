@@ -47,7 +47,6 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Upload file to Supabase Storage instead of storing base64 in DB
     let storedFileUrl = fileUrl;
     if (fileUrl.startsWith('data:')) {
       const match = fileUrl.match(/^data:([^;]+);base64,(.+)$/);

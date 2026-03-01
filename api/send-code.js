@@ -27,7 +27,6 @@ export default async function handler(req, res) {
     const code = Math.floor(minValue + Math.random() * (maxValue - minValue)).toString();
     const expires = new Date(Date.now() + CODE_EXPIRY_MINUTES * 60 * 1000).toISOString();
 
-    // Upsert code for this email
     const upsertResp = await fetch(`${SUPABASE_URL}/rest/v1/email_codes`, {
       method: 'POST',
       headers: {
@@ -49,7 +48,6 @@ export default async function handler(req, res) {
     const RESEND_API_KEY = process.env.RESEND_API_KEY;
     
     
-    // Always try to send email first, with better error handling
     if (RESEND_API_KEY) {
       try {
         const emailResp = await fetch('https://api.resend.com/emails', {
@@ -88,7 +86,6 @@ export default async function handler(req, res) {
           return;
         } else {
           console.error('Email sending failed:', emailJson);
-          // Don't fail completely, show dev code as fallback
           ok(res, { 
             devCode: code, 
             emailError: emailJson,
@@ -98,7 +95,6 @@ export default async function handler(req, res) {
         }
       } catch (emailError) {
         console.error('Email service error:', emailError);
-        // Don't fail completely, show dev code as fallback
         ok(res, { 
           devCode: code, 
           emailError: emailError.message,
@@ -108,7 +104,6 @@ export default async function handler(req, res) {
       }
     }
 
-    // Dev fallback when email provider not configured
     ok(res, { 
       devCode: code, 
       message: 'Development mode - code shown below',

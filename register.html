@@ -352,7 +352,6 @@
   <script src="supabase-client.js"></script>
   <script src="app.js"></script>
   <script>
-    // Get all the elements from the page
     const step1Form = document.getElementById('step1Form');
     const errorMsg = document.getElementById('errorMsg');
     const sendCodeBtn = document.getElementById('sendCodeBtn');
@@ -369,7 +368,6 @@
     const loginPassword = document.getElementById('loginPassword');
     const toggleLoginPassword = document.getElementById('toggleLoginPassword');
 
-    // Only allow numbers in the code input, max 6 digits
     codeInput.addEventListener('input', function(e) {
       e.target.value = e.target.value.replace(/[^0-9]/g, '');
       if (e.target.value.length > 6) {
@@ -377,14 +375,12 @@
       }
     });
 
-    // Block non-number keys in the code input
     codeInput.addEventListener('keypress', function(e) {
       if (!/[0-9]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
         e.preventDefault();
       }
     });
 
-    // Toggle password visibility on the registration form
     togglePassword.addEventListener('click', function() {
       if (passportInput.type === 'password') {
         passportInput.type = 'text';
@@ -395,7 +391,6 @@
       }
     });
 
-    // Toggle password visibility on the login form
     toggleLoginPassword.addEventListener('click', function() {
       if (loginPassword.type === 'password') {
         loginPassword.type = 'text';
@@ -406,29 +401,24 @@
       }
     });
 
-    // Open the login modal
     function openLoginModal() {
       loginModal.style.display = 'flex';
     }
 
-    // Close the login modal and reset the form
     function closeLoginModal() {
       loginModal.style.display = 'none';
       loginErrorMsg.style.display = 'none';
       loginForm.reset();
     }
 
-    // Open login modal when the Log In button is clicked
     loginBtnBottom.addEventListener('click', openLoginModal);
 
-    // Close modal when clicking outside the white box
     loginModal.addEventListener('click', function(e) {
       if (e.target === loginModal) {
         closeLoginModal();
       }
     });
 
-    // Handle registration form submission
     step1Form.addEventListener('submit', function(event) {
       event.preventDefault();
       errorMsg.style.display = 'none';
@@ -437,28 +427,24 @@
       const email = document.getElementById('emailInput').value.trim();
       const password = document.getElementById('passportInput').value.trim();
 
-      // Check that a role is selected
       if (!role) {
         errorMsg.textContent = 'Please select a role.';
         errorMsg.style.display = 'block';
         return;
       }
 
-      // Check that email is entered
       if (!email) {
         errorMsg.textContent = 'Please enter your email.';
         errorMsg.style.display = 'block';
         return;
       }
 
-      // Check that password is entered
       if (!password) {
         errorMsg.textContent = 'Please enter a password.';
         errorMsg.style.display = 'block';
         return;
       }
 
-      // Check that email has been verified
       if (codeGroup.dataset.verified !== 'true') {
         verifyMsg.style.display = 'block';
         verifyMsg.style.background = '#fff3cd';
@@ -468,11 +454,9 @@
         return;
       }
 
-      // All checks passed - save the user
       saveUserToDatabase(role, email, password);
     });
 
-    // Send verification code to the user's email
     sendCodeBtn.addEventListener('click', async function() {
       const email = document.getElementById('emailInput').value.trim();
       errorMsg.style.display = 'none';
@@ -489,7 +473,6 @@
       sendCodeBtn.textContent = 'Sending...';
 
       try {
-        // First check if this email is already registered
         const checkResponse = await fetch('/api/check-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -503,11 +486,9 @@
           return;
         }
       } catch (err) {
-        // If email check fails, continue with sending the code anyway
       }
 
       try {
-        // Send the verification code
         const response = await fetch('/api/send-code', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -520,7 +501,6 @@
           throw new Error(result.error || 'Failed to send code');
         }
 
-        // Show success message and the code input field
         codeGroup.classList.remove('hidden');
         verifyMsg.style.display = 'block';
         verifyMsg.style.background = '#d4edda';
@@ -537,7 +517,6 @@
       sendCodeBtn.textContent = 'Send verification code';
     });
 
-    // Verify the code the user entered
     verifyCodeBtn.addEventListener('click', async function() {
       const email = document.getElementById('emailInput').value.trim();
       const code = document.getElementById('codeInput').value.trim();
@@ -549,7 +528,6 @@
         return;
       }
 
-      // Check that code is exactly 6 digits
       if (!/^[0-9]{6}$/.test(code)) {
         verifyMsg.style.display = 'block';
         verifyMsg.style.background = '#fee2e2';
@@ -575,7 +553,6 @@
           throw new Error(result.error || 'Verification failed');
         }
 
-        // Code is correct - mark email as verified
         codeGroup.dataset.verified = 'true';
         verifyMsg.style.display = 'block';
         verifyMsg.style.background = '#e8f5e8';
@@ -595,7 +572,6 @@
       verifyCodeBtn.textContent = 'Verify code';
     });
 
-    // Save user data to the database
     async function saveUserToDatabase(role, email, password) {
       const submitBtn = document.querySelector('button[type="submit"]');
       submitBtn.textContent = 'Saving...';
@@ -614,11 +590,9 @@
           throw new Error(result.error || 'Registration failed');
         }
 
-        // Registration successful - go to profile page
         window.location.href = 'profile.html';
 
       } catch (err) {
-        // Show error message to the user
         if (err.message.includes('duplicate') || err.message.includes('already registered')) {
           errorMsg.textContent = 'This email is already registered. Use the Log In button below.';
         } else {
@@ -631,7 +605,6 @@
       submitBtn.disabled = false;
     }
 
-    // Handle login form submission
     loginForm.addEventListener('submit', async function(event) {
       event.preventDefault();
       loginErrorMsg.style.display = 'none';
@@ -639,7 +612,6 @@
       const email = document.getElementById('loginEmail').value.trim();
       const password = document.getElementById('loginPassword').value.trim();
 
-      // Check that both fields are filled in
       if (!email || !password) {
         loginErrorMsg.textContent = 'Please fill in all fields.';
         loginErrorMsg.style.display = 'block';
@@ -647,7 +619,6 @@
       }
 
       try {
-        // Send login request to the server
         const response = await fetch('/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -656,20 +627,17 @@
 
         const result = await response.json();
 
-        // If login failed, show the error message
         if (!response.ok) {
           loginErrorMsg.textContent = result.error || 'Login failed';
           loginErrorMsg.style.display = 'block';
           return;
         }
 
-        // Login successful - check if user already has a profile
         try {
           const profileResponse = await fetch('/api/profile');
           if (profileResponse.ok) {
             const profileData = await profileResponse.json();
             if (profileData.profile) {
-              // Profile exists - redirect based on role
               if (result.role && result.role.toLowerCase() === 'rga') {
                 window.location.href = 'rga-dashboard.html';
               } else {
@@ -679,10 +647,8 @@
             }
           }
         } catch (err) {
-          // If profile check fails, just go to profile page
         }
 
-        // No profile yet - go to profile completion page
         window.location.href = 'profile.html';
 
       } catch (error) {

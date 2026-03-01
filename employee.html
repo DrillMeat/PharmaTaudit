@@ -542,14 +542,12 @@
 
   <script>
     async function init() {
-      // Default tasks that employees need to complete each day
       const DEFAULT_TASKS = [
         { key: 'window', title: 'Send photo of a window', description: 'Capture the main storefront window from street level. Ensure branding and promotional materials are visible.' },
         { key: 'trash', title: 'Send photo of trash cans', description: 'Take a picture of the waste disposal area, confirming bins are clean, labeled, and positioned correctly.' },
         { key: 'outfit', title: 'Send photo of an outfit', description: 'Photograph the staff uniform from head to toe. Make sure the name badge and company logo are visible.' }
       ];
 
-      // Labels and CSS classes for each submission status
       const STATUS_LABELS = {
         not_submitted: 'Not submitted',
         waiting: 'Waiting for approval',
@@ -564,10 +562,8 @@
         rejected: 'status-rejected'
       };
 
-      // Maximum file size for uploads (in MB)
       const MAX_FILE_MB = 10;
 
-      // Get all elements from the page
       const profileLink = document.getElementById('profileLink');
       const dashboardContainer = document.getElementById('dashboardContainer');
       const taskCards = document.getElementById('taskCards');
@@ -576,7 +572,6 @@
       const profileInitials = document.getElementById('profileInitials');
       if (!profileLink || !dashboardContainer) return;
 
-      // State variables
       let taskDefinitions = DEFAULT_TASKS;
       let userEmail = '';
       let activePharmacyIndex = null;
@@ -584,14 +579,11 @@
       let isUploading = false;
       let lastDateKey = getTodayKey();
 
-      // ===== HELPER FUNCTIONS =====
 
-      // Get today's date as YYYY-MM-DD
       function getTodayKey() {
         return new Date().toISOString().slice(0, 10);
       }
 
-      // Check if a date string is today
       function isSameDay(dateValue) {
         if (!dateValue) return false;
         const date = new Date(dateValue);
@@ -599,7 +591,6 @@
         return date.toISOString().slice(0, 10) === getTodayKey();
       }
 
-      // Create an empty task entry with default values
       function createEmptyEntry() {
         return {
           state: 'not_submitted',
@@ -614,7 +605,6 @@
         };
       }
 
-      // Create an empty task map for a pharmacy (one entry per active task)
       function createEmptyTaskMap() {
         const map = {};
         const tasks = getActiveTaskDefinitions();
@@ -624,7 +614,6 @@
         return map;
       }
 
-      // Get task definitions that are active today
       function getActiveTaskDefinitions(pharmacyIndex) {
         const today = getTodayKey();
         const result = [];
@@ -641,7 +630,6 @@
         return result;
       }
 
-      // Normalize entry and reset if it's from a previous day
       function normalizeEntry(entry) {
         if (!entry) return createEmptyEntry();
         if (entry.updatedAt && !isSameDay(entry.updatedAt)) {
@@ -650,7 +638,6 @@
         return entry;
       }
 
-      // Get the due date/time for a task
       function getTaskDueDate(task) {
         if (!task || !task.due_time) return null;
         const baseDate = (task.frequency === 'one_time' && task.active_date)
@@ -659,7 +646,6 @@
         return new Date(baseDate + 'T' + task.due_time);
       }
 
-      // Check if a submission was sent after the deadline
       function isLateSubmission(entry, task) {
         if (!entry || !entry.updatedAt || !task || !task.due_time) return false;
         const dueDate = getTaskDueDate(task);
@@ -669,7 +655,6 @@
         return submittedAt.getTime() > dueDate.getTime();
       }
 
-      // Format a status note for display under each task
       function formatStatusNote(status, entry) {
         if (status === 'waiting') {
           return 'Submitted by ' + (entry.employeeEmail || 'employee') + ' • Awaiting review by RGA.';
@@ -685,9 +670,7 @@
         return 'No submission yet.';
       }
 
-      // ===== API FUNCTIONS =====
 
-      // Fetch session data from the server
       async function fetchSession() {
         try {
           const response = await fetch('/api/session');
@@ -699,7 +682,6 @@
         }
       }
 
-      // Fetch profile data from the server
       async function fetchProfile() {
         try {
           const response = await fetch('/api/profile');
@@ -711,7 +693,6 @@
         }
       }
 
-      // Fetch submissions from the server
       async function fetchSubmissions(pharmacyIndex) {
         const response = await fetch('/api/get-submissions?pharmacies=' + pharmacyIndex);
         if (!response.ok) throw new Error('Unable to fetch submissions');
@@ -720,7 +701,6 @@
         return data.submissions || [];
       }
 
-      // Fetch task definitions from the server
       async function fetchTaskDefinitions() {
         try {
           const response = await fetch('/api/task-definitions');
@@ -732,9 +712,7 @@
         }
       }
 
-      // ===== IMAGE COMPRESSION =====
 
-      // Compress an image file using canvas to reduce upload size
       function compressImage(file, maxWidth, maxHeight, quality) {
         return new Promise(function(resolve, reject) {
           const reader = new FileReader();
@@ -743,7 +721,6 @@
             const img = new Image();
             img.onerror = function() { reject(new Error('Failed to load image')); };
             img.onload = function() {
-              // Calculate new dimensions while keeping aspect ratio
               let width = img.width;
               let height = img.height;
               if (width > maxWidth || height > maxHeight) {
@@ -752,14 +729,12 @@
                 height = height * ratio;
               }
 
-              // Draw the image on a canvas at the new size
               const canvas = document.createElement('canvas');
               canvas.width = width;
               canvas.height = height;
               const ctx = canvas.getContext('2d');
               ctx.drawImage(img, 0, 0, width, height);
 
-              // Convert to a compressed JPEG blob
               canvas.toBlob(function(blob) {
                 if (blob) {
                   resolve(blob);
@@ -774,9 +749,7 @@
         });
       }
 
-      // ===== STATE MANAGEMENT =====
 
-      // Merge submission data from the database into local state
       function mergeSubmissions(submissions) {
         for (let i = 0; i < submissions.length; i++) {
           const item = submissions[i];
@@ -791,7 +764,6 @@
           const existingTime = existing.updatedAt ? new Date(existing.updatedAt).getTime() : 0;
           const incomingTime = item.updated_at ? new Date(item.updated_at).getTime() : 0;
 
-          // Only update if the incoming data is newer
           if (!existingTime || incomingTime >= existingTime) {
             const newEntry = createEmptyEntry();
             newEntry.state = item.status || 'waiting';
@@ -808,7 +780,6 @@
         }
       }
 
-      // Load submissions for a pharmacy from the server
       async function loadSubmissions(indexKey) {
         if (!userEmail || indexKey === null) return;
         try {
@@ -827,7 +798,6 @@
         }
       }
 
-      // Refresh data when the day changes
       async function refreshForNewDay(indexKey) {
         const todayKey = getTodayKey();
         if (todayKey === lastDateKey) return;
@@ -839,9 +809,7 @@
         renderEmployeeTasks(indexKey);
       }
 
-      // ===== UI FUNCTIONS =====
 
-      // Update the status note text under a task card
       function setTaskStatusMessage(taskKey, message, color, fontWeight) {
         const card = document.querySelector('.task-card[data-task-key="' + taskKey + '"]');
         if (!card) return;
@@ -852,7 +820,6 @@
         if (fontWeight) note.style.fontWeight = fontWeight;
       }
 
-      // Show or hide the upload loading state on a task card
       function showUploadProgress(taskKey, loading) {
         const card = document.querySelector('.task-card[data-task-key="' + taskKey + '"]');
         if (!card) return;
@@ -880,7 +847,6 @@
         }
       }
 
-      // Render the task cards into the page
       function renderTaskCards(definitions) {
         if (!taskCards) return;
         if (!definitions.length) {
@@ -905,7 +871,6 @@
         taskCards.innerHTML = html;
       }
 
-      // Update the status chips and action buttons on each task card
       function renderEmployeeTasks(indexKey) {
         const cards = document.querySelectorAll('.task-card');
         const taskState = submissionState[indexKey] || createEmptyTaskMap();
@@ -925,7 +890,6 @@
           const isLate = isLateSubmission(entry, task);
           const canUpload = (status === 'not_submitted');
 
-          // Update status chip
           if (statusChip) {
             statusChip.textContent = STATUS_LABELS[status] || STATUS_LABELS.waiting;
             statusChip.className = 'status-chip ' + (STATUS_CLASSES[status] || STATUS_CLASSES.waiting);
@@ -934,7 +898,6 @@
             statusChip.dataset.pharmacyIndex = indexKey;
           }
 
-          // Update status note
           if (statusNote) {
             const noteText = formatStatusNote(status, entry) + (isLate ? ' • Late' : '');
             statusNote.textContent = noteText;
@@ -950,7 +913,6 @@
             }
           }
 
-          // Enable or disable the upload button
           if (uploadInput) uploadInput.disabled = !canUpload;
           if (uploadLabel) {
             uploadLabel.style.opacity = canUpload ? '1' : '0.5';
@@ -958,7 +920,6 @@
             uploadLabel.title = canUpload ? '' : 'Upload locked after submission';
           }
 
-          // Show Open and Delete buttons if a file was submitted
           let actions = card.querySelector('.task-actions');
           const shouldShowActions = entry.submitted && entry.fileUrl;
 
@@ -978,18 +939,14 @@
         }
       }
 
-      // ===== UPLOAD AND DELETE HANDLERS =====
 
-      // Handle uploading a photo for a task
       async function handleUpload(file, taskKey, indexKey, input) {
         if (!file || isUploading) return;
         isUploading = true;
 
-        // Show loading state
         showUploadProgress(taskKey, true);
 
         try {
-          // Compress image if it's larger than 500KB
           let processedFile = file;
           let fileName = file.name;
 
@@ -997,7 +954,6 @@
             try {
               const maxSize = (window.innerWidth <= 768) ? 1024 : 1280;
               processedFile = await compressImage(file, maxSize, maxSize, 0.75);
-              // Change extension to .jpg since we compressed to JPEG
               if (fileName && !fileName.toLowerCase().endsWith('.jpg') && !fileName.toLowerCase().endsWith('.jpeg')) {
                 fileName = fileName.replace(/\.[^/.]+$/, '') + '.jpg';
               }
@@ -1006,7 +962,6 @@
             }
           }
 
-          // Convert file to a data URL (base64 string)
           const fileUrl = await new Promise(function(resolve, reject) {
             const reader = new FileReader();
             reader.onload = function() { resolve(reader.result); };
@@ -1014,7 +969,6 @@
             reader.readAsDataURL(processedFile);
           });
 
-          // Send the photo to the server
           const response = await fetch('/api/save-submission', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1035,7 +989,6 @@
             throw new Error((data && data.error) || 'Failed to save submission');
           }
 
-          // Update state with server response
           if (data.submission) {
             mergeSubmissions([data.submission]);
           } else {
@@ -1053,13 +1006,10 @@
           renderEmployeeTasks(indexKey);
           showUploadProgress(taskKey, false);
 
-          // Clear the file input
           if (input) input.value = '';
 
-          // Show success message
           setTaskStatusMessage(taskKey, 'Photo uploaded successfully!', '#047857', '600');
 
-          // Refresh state from server after a short delay
           setTimeout(function() {
             loadSubmissions(indexKey);
           }, 1000);
@@ -1068,7 +1018,6 @@
           console.error('Upload error:', error);
           showUploadProgress(taskKey, false);
 
-          // Reset state if upload failed
           if (submissionState[indexKey] && submissionState[indexKey][taskKey]) {
             const prev = submissionState[indexKey][taskKey];
             if (!prev.submitted || !prev.fileUrl) {
@@ -1086,7 +1035,6 @@
         isUploading = false;
       }
 
-      // Handle deleting a submission
       async function handleDelete(taskKey, indexKey) {
         try {
           const response = await fetch('/api/delete-submission', {
@@ -1103,7 +1051,6 @@
             if (response.status === 403) throw new Error('Only employee accounts can delete submissions.');
             throw new Error((data && data.error) || 'Failed to delete submission');
           }
-          // Reset the task state
           if (!submissionState[indexKey]) submissionState[indexKey] = createEmptyTaskMap();
           submissionState[indexKey][taskKey] = createEmptyEntry();
           renderEmployeeTasks(indexKey);
@@ -1113,11 +1060,8 @@
         }
       }
 
-      // ===== EVENT BINDING =====
 
-      // Attach event listeners for file uploads and action buttons
       function bindEvents(indexKey) {
-        // Listen for file selection on each upload input
         const fileInputs = document.querySelectorAll('.task-card input[type="file"]');
         for (let i = 0; i < fileInputs.length; i++) {
           fileInputs[i].addEventListener('change', async function() {
@@ -1127,7 +1071,6 @@
             const file = this.files[0];
             if (!file) return;
 
-            // Check file size
             const maxSize = MAX_FILE_MB * 1024 * 1024;
             if (file.size > maxSize) {
               setTaskStatusMessage(taskKey, 'File too large. Please use an image smaller than 10MB.', '#b91c1c', '600');
@@ -1139,9 +1082,7 @@
           });
         }
 
-        // Listen for clicks on action buttons and status chips
         dashboardContainer.addEventListener('click', async function(event) {
-          // Handle action buttons (Open, Delete)
           const btn = event.target.closest('.task-action-btn');
           if (btn) {
             const action = btn.dataset.action;
@@ -1162,7 +1103,6 @@
             return;
           }
 
-          // Handle status chip click
           const chip = event.target.closest('.status-chip');
           if (!chip) return;
           const chipState = chip.dataset.state;
@@ -1184,9 +1124,7 @@
         });
       }
 
-      // ===== MAIN PAGE SETUP =====
 
-      // Check session - redirect if not logged in
       const session = await fetchSession();
       if (!session) {
         window.location.href = 'register.html';
@@ -1196,16 +1134,13 @@
       userEmail = session.email || '';
       profileLink.href = 'profile.html';
 
-      // Redirect RGA users to their dashboard
       if (session.role && session.role.toLowerCase() === 'rga') {
         window.location.href = 'rga-dashboard.html';
         return;
       }
 
-      // Load profile data
       const profileData = await fetchProfile();
 
-      // Update the profile chip in the header
       if (profileData) {
         const firstName = profileData.first_name || '';
         const lastName = profileData.last_name || '';
@@ -1218,13 +1153,11 @@
         profileInitials.textContent = userEmail ? userEmail.charAt(0).toUpperCase() : 'E';
       }
 
-      // If no profile, redirect to profile completion
       if (!profileData) {
         window.location.href = 'profile.html';
         return;
       }
 
-      // Get the employee's assigned pharmacy
       const pharmacies = Array.isArray(profileData.pharmacies) ? profileData.pharmacies : [];
       const assigned = pharmacies.length > 0 ? pharmacies[0] : null;
       const indexKey = (assigned && assigned.index !== undefined) ? String(assigned.index) : null;
@@ -1234,7 +1167,6 @@
         return;
       }
 
-      // Set up the dashboard
       activePharmacyIndex = indexKey;
       taskDefinitions = await fetchTaskDefinitions();
       const activeDefs = getActiveTaskDefinitions(indexKey);
@@ -1242,16 +1174,12 @@
       submissionState[indexKey] = createEmptyTaskMap();
       renderEmployeeTasks(indexKey);
 
-      // Load existing submissions from the server
       await loadSubmissions(indexKey);
 
-      // Bind event listeners
       bindEvents(indexKey);
 
-      // Show the dashboard
       dashboardContainer.style.display = '';
 
-      // Refresh data every 30 seconds to catch status updates from RGA
       setInterval(async function() {
         try {
           await refreshForNewDay(indexKey);
@@ -1262,7 +1190,6 @@
       }, 30000);
     }
 
-    // Start the dashboard
     init();
   </script>
   <script src="cookie-consent.js"></script>

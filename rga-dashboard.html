@@ -655,14 +655,12 @@
 
   <script>
     async function init() {
-      // Default tasks that employees need to complete
       const DEFAULT_TASKS = [
         { key: 'window', title: 'Send photo of a window', description: 'Confirm storefront visibility and merchandising.' },
         { key: 'trash', title: 'Send photo of trash cans', description: 'Ensure the waste disposal area is clean and labelled.' },
         { key: 'outfit', title: 'Send photo of an outfit', description: 'Confirm staff uniform compliance.' }
       ];
 
-      // Labels and CSS classes for each submission status
       const STATUS_LABELS = {
         not_submitted: 'Not submitted',
         waiting: 'Waiting for approval',
@@ -677,7 +675,6 @@
         rejected: 'status-rejected'
       };
 
-      // Get all elements from the page
       const grid = document.getElementById('pharmaciesGrid');
       const chipName = document.getElementById('chipName');
       const chipEmail = document.getElementById('chipEmail');
@@ -701,20 +698,16 @@
       const taskDeadlineDateInput = document.getElementById('taskDeadlineDate');
       const taskDeadlineInput = document.getElementById('taskDeadline');
 
-      // State variables
       let taskDefinitions = DEFAULT_TASKS;
       let currentPharmacies = [];
       const submissionState = {};
       let lastDateKey = new Date().toISOString().slice(0, 10);
 
-      // ===== HELPER FUNCTIONS =====
 
-      // Get today's date as YYYY-MM-DD
       function getTodayKey() {
         return new Date().toISOString().slice(0, 10);
       }
 
-      // Check if a date string is today
       function isSameDay(dateValue) {
         if (!dateValue) return false;
         const date = new Date(dateValue);
@@ -722,7 +715,6 @@
         return date.toISOString().slice(0, 10) === getTodayKey();
       }
 
-      // Convert Russian characters to Latin letters
       function transliterate(value) {
         if (!value) return '';
         const map = {
@@ -741,7 +733,6 @@
         return result.replace(/\s+/g, ' ').trim();
       }
 
-      // Create an empty task entry with default values
       function createEmptyEntry() {
         return {
           state: 'not_submitted',
@@ -756,7 +747,6 @@
         };
       }
 
-      // Create an empty task map for a pharmacy (one entry per active task)
       function createEmptyTaskMap() {
         const map = {};
         const tasks = getActiveTaskDefinitions();
@@ -766,16 +756,13 @@
         return map;
       }
 
-      // Get task definitions that are active today
       function getActiveTaskDefinitions(pharmacyIndex) {
         const today = getTodayKey();
         const result = [];
         for (let i = 0; i < taskDefinitions.length; i++) {
           const task = taskDefinitions[i];
           if (!task) continue;
-          // Skip one-time tasks not scheduled for today
           if (task.frequency === 'one_time' && task.active_date !== today) continue;
-          // Skip tasks limited to other pharmacies
           if (pharmacyIndex !== undefined && pharmacyIndex !== null
               && Array.isArray(task.pharmacy_indexes) && task.pharmacy_indexes.length > 0) {
             if (!task.pharmacy_indexes.map(String).includes(String(pharmacyIndex))) continue;
@@ -785,11 +772,9 @@
         return result;
       }
 
-      // Normalize a submission entry from the database into a standard format
       function normalizeEntry(entry) {
         if (!entry) return createEmptyEntry();
 
-        // Handle simple string state (legacy format)
         if (typeof entry !== 'object') {
           const result = createEmptyEntry();
           result.state = entry;
@@ -797,7 +782,6 @@
           return result;
         }
 
-        // Build normalized entry from database fields
         const normalized = createEmptyEntry();
         normalized.state = entry.state || 'not_submitted';
         normalized.submitted = entry.submitted || (normalized.state !== 'not_submitted');
@@ -809,12 +793,10 @@
         normalized.updatedAt = entry.updatedAt || entry.updated_at || null;
         normalized.reviewedAt = entry.reviewedAt || entry.reviewed_at || null;
 
-        // Reset if the submission is from a previous day
         if (normalized.updatedAt && !isSameDay(normalized.updatedAt)) {
           return createEmptyEntry();
         }
 
-        // Normalize "submitted" state to "waiting"
         if (normalized.state === 'submitted') {
           normalized.state = 'waiting';
         }
@@ -822,7 +804,6 @@
         return normalized;
       }
 
-      // Make sure a pharmacy has a state object in submissionState
       function ensurePharmacyState(indexKey) {
         if (!submissionState[indexKey]) {
           submissionState[indexKey] = createEmptyTaskMap();
@@ -830,7 +811,6 @@
         return submissionState[indexKey];
       }
 
-      // Get normalized task statuses for a pharmacy
       function getTaskStatusFor(indexKey) {
         const store = ensurePharmacyState(indexKey);
         const keys = Object.keys(store);
@@ -840,7 +820,6 @@
         return store;
       }
 
-      // Get the due date/time for a task as a Date object
       function getTaskDueDate(task) {
         if (!task || !task.due_time) return null;
         const baseDate = task.due_date
@@ -848,7 +827,6 @@
         return new Date(baseDate + 'T' + task.due_time);
       }
 
-      // Check if a submission was sent after the deadline
       function isLateSubmission(entry, task) {
         if (!entry || !entry.updatedAt || !task || !task.due_time) return false;
         const dueDate = getTaskDueDate(task);
@@ -858,7 +836,6 @@
         return submittedAt.getTime() > dueDate.getTime();
       }
 
-      // Format a status note for display under each task
       function formatStatusNote(status, entry) {
         if (status === 'waiting') {
           return entry.employeeEmail
@@ -876,9 +853,7 @@
         return 'No submission yet.';
       }
 
-      // ===== API FUNCTIONS =====
 
-      // Fetch session data from the server
       async function fetchSession() {
         try {
           const response = await fetch('/api/session');
@@ -890,7 +865,6 @@
         }
       }
 
-      // Fetch profile data from the server
       async function fetchProfile() {
         try {
           const response = await fetch('/api/profile');
@@ -902,7 +876,6 @@
         }
       }
 
-      // Fetch submissions from the server
       async function fetchSubmissions(query) {
         let url = '/api/get-submissions';
         const params = [];
@@ -921,7 +894,6 @@
         return data.submissions || [];
       }
 
-      // Fetch task definitions from the server
       async function fetchTaskDefinitions() {
         try {
           const response = await fetch('/api/task-definitions');
@@ -933,7 +905,6 @@
         }
       }
 
-      // Add a new task definition to the server
       async function addTaskDefinition(payload) {
         const response = await fetch('/api/task-definitions', {
           method: 'POST',
@@ -947,7 +918,6 @@
         return data.task;
       }
 
-      // Delete a task definition from the server
       async function deleteTaskDefinition(taskId) {
         const response = await fetch('/api/task-definitions', {
           method: 'POST',
@@ -961,14 +931,11 @@
         return data.task;
       }
 
-      // ===== STATE MANAGEMENT =====
 
-      // Merge submission data from the database into local state
       function mergeSubmissions(submissions) {
         const existingTasks = new Set();
         const pharmaciesWithData = new Set();
 
-        // Update state with each submission from the database
         for (let i = 0; i < submissions.length; i++) {
           const item = submissions[i];
           if (!item || !item.task_key) continue;
@@ -982,7 +949,6 @@
           const existingTime = (existing && existing.updatedAt) ? new Date(existing.updatedAt).getTime() : 0;
           const incomingTime = item.updated_at ? new Date(item.updated_at).getTime() : 0;
 
-          // Only update if the incoming data is newer
           if (!existingTime || incomingTime >= existingTime) {
             const newEntry = createEmptyEntry();
             newEntry.state = item.status || 'waiting';
@@ -998,7 +964,6 @@
           }
         }
 
-        // Reset tasks that were deleted by the employee
         pharmaciesWithData.forEach(function(indexKey) {
           const store = ensurePharmacyState(indexKey);
           const activeTasks = getActiveTaskDefinitions();
@@ -1012,7 +977,6 @@
         });
       }
 
-      // Load submissions for all assigned pharmacies
       async function loadSubmissions(pharmacies) {
         const indexes = [];
         for (let i = 0; i < pharmacies.length; i++) {
@@ -1029,9 +993,7 @@
         }
       }
 
-      // ===== RENDERING FUNCTIONS =====
 
-      // Show or hide the date field depending on task frequency
       function syncTaskDateField() {
         if (!taskFrequencySelect || !taskDateField) return;
         const isOneTime = (taskFrequencySelect.value === 'one_time');
@@ -1039,7 +1001,6 @@
         if (!isOneTime && taskDateInput) taskDateInput.value = '';
       }
 
-      // Render the list of task definitions in the admin panel
       function renderTaskAdminList(definitions) {
         if (!taskAdminList) return;
         if (!definitions.length) {
@@ -1076,26 +1037,22 @@
         taskAdminList.innerHTML = html;
       }
 
-      // Build the HTML for one pharmacy card
       function renderPharmacyCard(pharmacy) {
         const indexKey = String(pharmacy.index);
         const taskStatuses = getTaskStatusFor(indexKey);
 
-        // Build the address/meta line
         const metaParts = [];
         if (pharmacy.region) metaParts.push(transliterate(pharmacy.region));
         if (pharmacy.address) metaParts.push(transliterate(pharmacy.address));
         if (pharmacy.phone) metaParts.push('Tel.: ' + pharmacy.phone);
         const meta = metaParts.join(' • ');
 
-        // Build HTML for each task in this pharmacy
         let taskItems = '';
         const activeTasks = getActiveTaskDefinitions(indexKey);
         for (let i = 0; i < activeTasks.length; i++) {
           const task = activeTasks[i];
           const entry = normalizeEntry(taskStatuses[task.key]);
 
-          // If there is no file, the submission was deleted
           let status = entry.state || 'not_submitted';
           if (!entry.fileUrl && status !== 'not_submitted') {
             status = 'not_submitted';
@@ -1108,7 +1065,6 @@
           const note = formatStatusNote(status, entry);
           const isLate = isLateSubmission(entry, task);
 
-          // Build action buttons (Open, Approve, Reject)
           let actionsHtml = '';
           const buttons = [];
           if (entry.fileUrl) {
@@ -1122,7 +1078,6 @@
             actionsHtml = '<div class="task-actions">' + buttons.join('') + '</div>';
           }
 
-          // Pick color for the note text
           let noteColor = '#64748b';
           let noteWeight = '400';
           if (isLate) { noteColor = '#b91c1c'; noteWeight = '600'; }
@@ -1143,7 +1098,6 @@
           + '</article>';
       }
 
-      // Render all pharmacy cards into the grid
       function renderPharmacies() {
         if (!grid) return;
         let html = '';
@@ -1153,7 +1107,6 @@
         grid.innerHTML = html;
       }
 
-      // Open the pharmacy detail modal
       function openPharmacyModal(pharmacy) {
         if (!modalBackdrop) return;
         modalBackdrop.classList.add('active');
@@ -1165,7 +1118,6 @@
         if (pharmacy.hours) parts.push(pharmacy.hours);
         modalAddress.textContent = parts.join(' • ');
 
-        // Find all employee emails from submissions
         const taskStatuses = getTaskStatusFor(String(pharmacy.index));
         const employeeEmails = new Set();
         const statusKeys = Object.keys(taskStatuses);
@@ -1184,7 +1136,6 @@
           modalEmployees.innerHTML = employeeHtml;
         }
 
-        // Show task statuses in the modal
         const activeTasks = getActiveTaskDefinitions(String(pharmacy.index));
         let tasksHtml = '';
         for (let i = 0; i < activeTasks.length; i++) {
@@ -1197,12 +1148,10 @@
         modalTasks.innerHTML = tasksHtml;
       }
 
-      // Close the pharmacy detail modal
       function closeModal() {
         if (modalBackdrop) modalBackdrop.classList.remove('active');
       }
 
-      // Refresh data when the day changes
       async function refreshForNewDay() {
         const todayKey = getTodayKey();
         if (todayKey === lastDateKey) return false;
@@ -1213,9 +1162,7 @@
         return true;
       }
 
-      // ===== MAIN PAGE SETUP =====
 
-      // Check session - redirect if not logged in or not RGA
       const session = await fetchSession();
       if (!session) {
         window.location.href = 'register.html';
@@ -1226,10 +1173,8 @@
         return;
       }
 
-      // Show the page (hidden initially to prevent flash of content)
       document.querySelector('.page-shell').style.display = '';
 
-      // Load profile data
       const profileData = await fetchProfile();
       if (!profileData) {
         grid.innerHTML = '<p style="color:#64748b;">No profile data found. Please complete your profile first.</p>';
@@ -1242,17 +1187,14 @@
       const email = profileData.email || session.email || '';
       const pharmacies = Array.isArray(profileData.pharmacies) ? profileData.pharmacies : [];
 
-      // Load task definitions and set up the admin panel
       taskDefinitions = await fetchTaskDefinitions();
       renderTaskAdminList(taskDefinitions);
       syncTaskDateField();
 
-      // Show/hide date field when frequency changes
       if (taskFrequencySelect) {
         taskFrequencySelect.addEventListener('change', syncTaskDateField);
       }
 
-      // Handle adding a new task
       if (taskAdminForm) {
         taskAdminForm.addEventListener('submit', async function(event) {
           event.preventDefault();
@@ -1283,7 +1225,6 @@
             });
             taskDefinitions.push(newTask);
             renderTaskAdminList(taskDefinitions);
-            // Reset the form
             taskTitleInput.value = '';
             if (taskDescriptionInput) taskDescriptionInput.value = '';
             if (taskDateInput) taskDateInput.value = '';
@@ -1298,7 +1239,6 @@
         });
       }
 
-      // Handle deleting a task from the admin list
       if (taskAdminList) {
         taskAdminList.addEventListener('click', async function(event) {
           const deleteBtn = event.target.closest('.task-admin-delete');
@@ -1319,33 +1259,26 @@
         });
       }
 
-      // Update the profile chip in the header
       chipName.textContent = (firstName + ' ' + lastName).trim() || '—';
       chipEmail.textContent = email;
       profileInitials.textContent = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || 'R';
       if (profileLinkEl) profileLinkEl.href = 'profile.html';
 
-      // If no pharmacies assigned, show a message and stop
       if (!pharmacies.length) {
         grid.innerHTML = '<p style="color:#64748b;">No pharmacies assigned yet.</p>';
         return;
       }
 
-      // Set the dashboard title with the user's name
       const namePrefix = (firstName || lastName) ? (firstName + ' ' + lastName).trim() + "'s" : 'RGA';
       dashboardTitle.textContent = namePrefix + ' Dashboard';
 
-      // Render pharmacies and load submission data
       currentPharmacies = pharmacies;
       renderPharmacies();
       await loadSubmissions(currentPharmacies);
       renderPharmacies();
 
-      // ===== EVENT HANDLERS =====
 
-      // Handle all clicks on the pharmacy grid
       grid.addEventListener('click', async function(event) {
-        // Handle status chip click - open the submitted file
         const chip = event.target.closest('.status-chip');
         if (chip) {
           const state = chip.dataset.state;
@@ -1365,7 +1298,6 @@
           return;
         }
 
-        // Handle action button click (Open, Approve, Reject)
         const actionBtn = event.target.closest('.task-action-btn');
         if (actionBtn) {
           const action = actionBtn.dataset.action;
@@ -1374,7 +1306,6 @@
           const store = ensurePharmacyState(pharmacyIndex);
           const entry = normalizeEntry(store[taskKey]);
 
-          // Open the submitted file
           if (action === 'open') {
             if (entry.fileUrl) {
               window.open(entry.fileUrl, '_blank');
@@ -1384,7 +1315,6 @@
             return;
           }
 
-          // Approve or reject the submission
           if (action === 'approve' || action === 'reject') {
             if (!entry.employeeEmail) {
               alert('Unable to locate the employee who submitted this task.');
@@ -1409,7 +1339,6 @@
               if (!response.ok || !data || !data.ok) {
                 throw new Error((data && data.error) || 'Failed to update status');
               }
-              // Update local state with the response
               if (data.submission) {
                 mergeSubmissions([data.submission]);
               } else {
@@ -1441,7 +1370,6 @@
           }
         }
 
-        // Handle card click - open the pharmacy detail modal
         const card = event.target.closest('.pharmacy-card');
         const isActionArea = event.target.closest('.task-actions');
         if (card && !isActionArea) {
@@ -1453,7 +1381,6 @@
         }
       });
 
-      // Close modal when clicking the backdrop or the X button
       if (modalBackdrop) {
         modalBackdrop.addEventListener('click', function(event) {
           if (event.target === modalBackdrop) closeModal();
@@ -1463,7 +1390,6 @@
         modalClose.addEventListener('click', closeModal);
       }
 
-      // Refresh data every 30 seconds to catch new submissions
       setInterval(async function() {
         if (!currentPharmacies.length) return;
         try {
@@ -1476,7 +1402,6 @@
       }, 30000);
     }
 
-    // Start the dashboard
     init();
   </script>
   <script src="cookie-consent.js"></script>

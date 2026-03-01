@@ -602,7 +602,6 @@
   </div>
 
   <script>
-    // Get all elements from the page
     const profileForm = document.getElementById('profileForm');
     const errorMsg = document.getElementById('errorMsg');
     const successMsg = document.getElementById('successMsg');
@@ -621,7 +620,6 @@
     const backToTasksBtn = document.getElementById('backToTasksBtn');
     const logoutButton = document.getElementById('logoutButton');
 
-    // State variables
     let savedProfileData = null;
     let selectedPharmacyData = [];
     let userRole = 'employee';
@@ -629,13 +627,11 @@
     let maxPharmacies = 1;
     let selectIdCounter = 0;
 
-    // Pharmacy limits per role
     const pharmacyLimits = {
       'employee': 1,
       'rga': 5
     };
 
-    // List of all pharmacies
     const pharmacies = [
       { region: "Moscow", address: "Moscow, Khimkinskiy Blvd., 14, bldg. 4", phone: "8-499-176-22-04", hours: "09:00-21:00" },
       { region: "Moscow", address: "Moscow, Yana Rainisa Blvd., 30, bldg. 1", phone: "8-495-949-27-21", hours: "08:00-22:00" },
@@ -728,9 +724,7 @@
       { region: "Lipetsk Oblast", address: "Troitskoye, Gagarina St., 72", phone: "8-958-653-82-27", hours: "08:30-19:30" }
     ];
 
-    // ===== API FUNCTIONS =====
 
-    // Fetch session data from the server
     async function fetchSession() {
       try {
         const response = await fetch('/api/session');
@@ -742,7 +736,6 @@
       }
     }
 
-    // Fetch profile data from the server
     async function fetchProfile() {
       try {
         const response = await fetch('/api/profile');
@@ -754,13 +747,10 @@
       }
     }
 
-    // ===== SUMMARY VIEW =====
 
-    // Show the profile summary and hide the form
     function showSummary(data) {
       if (!profileSummary) return;
 
-      // Fill in summary fields
       const firstName = (data && data.first_name) || '';
       const lastName = (data && data.last_name) || '';
       const email = (data && data.email) || userEmail || '—';
@@ -780,7 +770,6 @@
           let html = '';
           for (let i = 0; i < data.pharmacies.length; i++) {
             const info = data.pharmacies[i];
-            // Match by phone to get English version from pharmacies array
             const match = info && info.phone ? pharmacies.find(p => p.phone === info.phone) : null;
             const region = match ? match.region : (info && info.region || '');
             const address = match ? match.address : (info && info.address || '');
@@ -799,28 +788,23 @@
       if (profileForm) profileForm.style.display = 'none';
     }
 
-    // Hide the summary and show the form
     function hideSummary() {
       if (profileSummary) profileSummary.style.display = 'none';
       if (profileForm) profileForm.style.display = 'block';
     }
 
-    // ===== PHARMACY SELECTION =====
 
-    // Generate a unique ID for each select element
     function generateSelectId() {
       selectIdCounter++;
       return 'select-' + Date.now() + '-' + selectIdCounter;
     }
 
-    // Update the pharmacy limit based on role
     function updateRoleLimits() {
       maxPharmacies = pharmacyLimits[userRole] || 1;
       if (pharmacyLimitSpan) pharmacyLimitSpan.textContent = maxPharmacies;
       if (pharmacyLimitInfo) pharmacyLimitInfo.style.display = 'block';
     }
 
-    // Fill a select element with pharmacy options
     function populatePharmacyDropdown(selectElement) {
       if (!selectElement) return;
       selectElement.innerHTML = '<option value="">Select your pharmacy</option>';
@@ -833,7 +817,6 @@
       }
     }
 
-    // Create a pharmacy selection row (dropdown + remove button)
     function createPharmacyItem() {
       const pharmacyItem = document.createElement('div');
       pharmacyItem.className = 'pharmacy-item';
@@ -855,7 +838,6 @@
       return pharmacyItem;
     }
 
-    // Update the "Add Another Pharmacy" button state
     function updateAddButton() {
       const addBtn = document.getElementById('addPharmacyBtn');
       if (!addBtn) return;
@@ -868,7 +850,6 @@
       }
     }
 
-    // Render the list of selected pharmacies below the dropdown
     function renderSelectedPharmacies() {
       if (!selectedPharmaciesPanel || !selectedPharmaciesList) return;
       selectedPharmaciesList.innerHTML = '';
@@ -901,12 +882,10 @@
       }
     }
 
-    // Handle when a user selects a pharmacy from the dropdown
     function handlePharmacySelection(selectElement) {
       const selectedIndex = selectElement.value;
       const selectId = selectElement.dataset.selectId;
 
-      // Remove previous selection for this dropdown
       selectedPharmacyData = selectedPharmacyData.filter(function(p) { return p.selectId !== selectId; });
 
       if (!selectedIndex) {
@@ -918,7 +897,6 @@
         return;
       }
 
-      // Check if this pharmacy is already selected
       for (let i = 0; i < selectedPharmacyData.length; i++) {
         if (selectedPharmacyData[i].index === selectedIndex) {
           alert('This pharmacy is already selected. Please choose a different one.');
@@ -927,14 +905,12 @@
         }
       }
 
-      // Check if user has reached the maximum
       if (selectedPharmacyData.length >= maxPharmacies) {
         alert('You can only select up to ' + maxPharmacies + (maxPharmacies > 1 ? ' pharmacies' : ' pharmacy') + '. Please remove a pharmacy first.');
         selectElement.value = selectElement.dataset.selectedIndex || '';
         return;
       }
 
-      // Add the selected pharmacy
       const pharmacy = pharmacies[parseInt(selectedIndex, 10)];
       selectedPharmacyData.push({
         selectId: selectId,
@@ -952,15 +928,12 @@
       renderSelectedPharmacies();
     }
 
-    // Set up the pharmacy dropdown and "Add" button
     function initializePharmacySelection() {
       pharmacyContainer.innerHTML = '';
 
-      // Create the first pharmacy dropdown
       const firstPharmacy = createPharmacyItem();
       pharmacyContainer.appendChild(firstPharmacy);
 
-      // Add "Add Another Pharmacy" button if role allows multiple pharmacies
       if (maxPharmacies > 1) {
         const addBtn = document.createElement('button');
         addBtn.type = 'button';
@@ -981,7 +954,6 @@
       updateAddButton();
     }
 
-    // Restore saved profile data into the form fields
     function restoreFormValues() {
       if (!savedProfileData) {
         hideSummary();
@@ -993,7 +965,6 @@
       if (savedProfileData.first_name && firstInput) firstInput.value = savedProfileData.first_name;
       if (savedProfileData.last_name && lastInput) lastInput.value = savedProfileData.last_name;
 
-      // Restore selected pharmacies
       if (Array.isArray(savedProfileData.pharmacies) && savedProfileData.pharmacies.length > 0) {
         selectedPharmacyData = [];
         for (let i = 0; i < savedProfileData.pharmacies.length; i++) {
@@ -1011,7 +982,6 @@
           });
         }
 
-        // Set the first dropdown to the first saved pharmacy
         if (selectedPharmacyData.length > 0) {
           const selectElement = document.querySelector('.pharmacy-select');
           if (selectElement) {
@@ -1033,23 +1003,19 @@
       showSummary(savedProfileData);
     }
 
-    // ===== EVENT HANDLERS =====
 
-    // Log out button
     if (logoutButton) {
       logoutButton.addEventListener('click', function() {
         window.location.href = 'register.html';
       });
     }
 
-    // Handle pharmacy dropdown changes
     pharmacyContainer.addEventListener('change', function(e) {
       if (e.target.classList.contains('pharmacy-select')) {
         handlePharmacySelection(e.target);
       }
     });
 
-    // Handle remove pharmacy button clicks in the dropdown area
     pharmacyContainer.addEventListener('click', function(e) {
       if (e.target.classList.contains('remove-pharmacy')) {
         const pharmacyItem = e.target.closest('.pharmacy-item');
@@ -1061,7 +1027,6 @@
         select.dataset.selectedIndex = '';
         e.target.disabled = true;
 
-        // For roles with multiple pharmacies, remove the row (except the first one)
         if (maxPharmacies > 1 && pharmacyContainer.children.length > 1) {
           pharmacyItem.remove();
         }
@@ -1071,14 +1036,12 @@
       }
     });
 
-    // Handle remove button clicks in the selected pharmacies panel
     if (selectedPharmaciesPanel) {
       selectedPharmaciesPanel.addEventListener('click', function(e) {
         if (e.target.classList.contains('selected-pharmacy-remove')) {
           const selectId = e.target.dataset.selectId;
           selectedPharmacyData = selectedPharmacyData.filter(function(p) { return p.selectId !== selectId; });
 
-          // Reset the related dropdown if it exists
           const relatedSelect = document.querySelector('select[data-select-id="' + selectId + '"]');
           if (relatedSelect) {
             relatedSelect.value = '';
@@ -1088,7 +1051,6 @@
               const btn = removeBtn.querySelector('.remove-pharmacy');
               if (btn) btn.disabled = true;
             }
-            // Remove the row if multiple pharmacies are allowed
             if (maxPharmacies > 1 && pharmacyContainer.children.length > 1) {
               const item = relatedSelect.closest('.pharmacy-item');
               if (item) item.remove();
@@ -1101,7 +1063,6 @@
       });
     }
 
-    // Edit profile button
     if (editProfileBtn) {
       editProfileBtn.addEventListener('click', function() {
         hideSummary();
@@ -1110,7 +1071,6 @@
       });
     }
 
-    // Back to tasks button
     if (backToTasksBtn) {
       backToTasksBtn.addEventListener('click', function() {
         if (userRole.toLowerCase() === 'rga') {
@@ -1121,7 +1081,6 @@
       });
     }
 
-    // Handle form submission
     profileForm.addEventListener('submit', async function(event) {
       event.preventDefault();
       errorMsg.style.display = 'none';
@@ -1130,26 +1089,22 @@
       const firstName = document.getElementById('firstName').value.trim();
       const lastName = document.getElementById('lastName').value.trim();
 
-      // Check that all required fields are filled
       if (!firstName || !lastName || selectedPharmacyData.length === 0) {
         errorMsg.textContent = 'Please fill in all required fields.';
         errorMsg.style.display = 'block';
         return;
       }
 
-      // Check pharmacy count
       if (selectedPharmacyData.length > maxPharmacies) {
         errorMsg.textContent = 'You can only select up to ' + maxPharmacies + (maxPharmacies > 1 ? ' pharmacies' : ' pharmacy') + '.';
         errorMsg.style.display = 'block';
         return;
       }
 
-      // Show loading state
       submitBtn.disabled = true;
       submitBtn.textContent = 'Saving...';
 
       try {
-        // Save profile to the server
         const profileData = {
           first_name: firstName,
           last_name: lastName,
@@ -1168,12 +1123,10 @@
           throw new Error(result.error || 'Failed to save profile');
         }
 
-        // Success - show message and redirect
         successMsg.textContent = 'Profile completed successfully! Welcome ' + firstName + ' ' + lastName + '!';
         successMsg.style.display = 'block';
         savedProfileData = profileData;
 
-        // Redirect to the right dashboard after a short delay
         setTimeout(function() {
           if (userRole.toLowerCase() === 'rga') {
             window.location.href = 'rga-dashboard.html';
@@ -1191,10 +1144,8 @@
       submitBtn.textContent = 'Complete Profile';
     });
 
-    // ===== INITIALIZATION =====
 
     async function initSessionAndProfile() {
-      // Check session - redirect if not logged in
       const session = await fetchSession();
       if (!session) {
         window.location.href = 'register.html';
@@ -1206,7 +1157,6 @@
       updateRoleLimits();
       initializePharmacySelection();
 
-      // Load existing profile data
       const profile = await fetchProfile();
       if (profile) {
         savedProfileData = profile;

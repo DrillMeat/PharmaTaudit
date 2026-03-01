@@ -15,7 +15,6 @@
     try {
       localStorage.setItem(CONSENT_KEY, value);
     } catch (error) {
-      // Ignore storage errors (private mode, blocked, etc.)
     }
     document.cookie = `${CONSENT_COOKIE}=${value}; Path=/; Max-Age=${ONE_YEAR_SECONDS}`;
   }

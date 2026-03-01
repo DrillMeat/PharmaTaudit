@@ -438,7 +438,6 @@
   </main>
 
   <script>
-    // ===== CONSTANTS =====
 
     var DEFAULT_TASK_DEFINITIONS = [
       { key: 'window', title: 'Send photo of a window' },
@@ -460,7 +459,6 @@
 
     var WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-    // ===== TRANSLITERATION MAP =====
 
     var TRANSLIT_MAP = {
       'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'e','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m',
@@ -471,7 +469,6 @@
       'Ъ':'','Ы':'Y','Ь':'','Э':'E','Ю':'Yu','Я':'Ya'
     };
 
-    // ===== DOM ELEMENTS =====
 
     var dashboardLink = document.getElementById('dashboardLink');
     var pharmacyFilter = document.getElementById('pharmacyFilter');
@@ -484,7 +481,6 @@
     var prevMonthBtn = document.getElementById('prevMonth');
     var nextMonthBtn = document.getElementById('nextMonth');
 
-    // ===== STATE =====
 
     var currentMonth = new Date();
     currentMonth.setDate(1);
@@ -498,9 +494,7 @@
     var taskTitles = {};
     var taskDefinitions = DEFAULT_TASK_DEFINITIONS;
 
-    // ===== HELPER FUNCTIONS =====
 
-    // Returns a date string like "2025-01-05"
     function getDateKey(date) {
       var year = date.getFullYear();
       var month = String(date.getMonth() + 1).padStart(2, '0');
@@ -508,7 +502,6 @@
       return year + '-' + month + '-' + day;
     }
 
-    // Parses a date string, returns null if invalid
     function parseDate(value) {
       if (!value) return null;
       var date = new Date(value);
@@ -516,12 +509,10 @@
       return date;
     }
 
-    // Formats time as "HH:MM"
     function formatTime(date) {
       return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
     }
 
-    // Transliterates Cyrillic characters to Latin
     function transliterate(value) {
       if (!value) return '';
       var text = String(value);
@@ -537,7 +528,6 @@
       return result.replace(/\s+/g, ' ').trim();
     }
 
-    // Builds a lookup of task key -> task title
     function buildTaskTitles(definitions) {
       var result = {};
       for (var i = 0; i < definitions.length; i++) {
@@ -549,7 +539,6 @@
       return result;
     }
 
-    // Builds a label like "Region - Address" for a pharmacy
     function buildPharmacyLabel(pharmacy) {
       var parts = [];
       if (pharmacy && pharmacy.region) parts.push(transliterate(pharmacy.region));
@@ -558,15 +547,12 @@
       return 'Pharmacy';
     }
 
-    // Returns the weekday offset (Monday = 0, Sunday = 6)
     function getWeekdayOffset(date) {
       var day = date.getDay();
       return (day + 6) % 7;
     }
 
-    // ===== EVENT BUILDING =====
 
-    // Builds a list of calendar events from submissions
     function buildEvents(filteredSubmissions) {
       var events = [];
 
@@ -587,7 +573,6 @@
         var updatedAt = parseDate(item.updated_at);
         var reviewedAt = parseDate(item.reviewed_at);
 
-        // Add submission event
         if (updatedAt) {
           events.push({
             type: 'submission',
@@ -604,7 +589,6 @@
           });
         }
 
-        // Add decision event (approved or rejected)
         if (reviewedAt && (status === 'approved' || status === 'rejected')) {
           events.push({
             type: 'decision',
@@ -622,7 +606,6 @@
         }
       }
 
-      // Sort events newest first
       events.sort(function(a, b) {
         return b.date.getTime() - a.date.getTime();
       });
@@ -630,7 +613,6 @@
       return events;
     }
 
-    // Groups events by date key into eventsByDate object
     function refreshEvents() {
       var filtered;
       if (filteredPharmacyIndex === 'all') {
@@ -657,9 +639,7 @@
       }
     }
 
-    // ===== RENDERING =====
 
-    // Renders the weekday header row
     function renderWeekdays() {
       var html = '';
       for (var i = 0; i < WEEKDAYS.length; i++) {
@@ -668,7 +648,6 @@
       weekdayRow.innerHTML = html;
     }
 
-    // Renders the calendar grid for the current month
     function renderCalendar() {
       if (!calendarDays || !monthLabel) return;
 
@@ -682,18 +661,15 @@
 
       var html = '';
 
-      // Empty cells before the first day
       for (var i = 0; i < startOffset; i++) {
         html += '<div class="day-cell is-empty"></div>';
       }
 
-      // Day cells
       for (var day = 1; day <= daysInMonth; day++) {
         var date = new Date(year, month, day);
         var dateKey = getDateKey(date);
         var events = eventsByDate[dateKey] || [];
 
-        // Build dots for events (max 6)
         var dots = '';
         var dotCount = Math.min(events.length, 6);
         for (var d = 0; d < dotCount; d++) {
@@ -701,7 +677,6 @@
           dots += '<span class="event-dot ' + statusClass + '"></span>';
         }
 
-        // Event count label
         var countLabel = '';
         if (events.length > 0) {
           countLabel = '<span class="event-count">' + events.length + ' event' + (events.length > 1 ? 's' : '') + '</span>';
@@ -719,7 +694,6 @@
       calendarDays.innerHTML = html;
     }
 
-    // Renders the history panel for the selected date
     function renderHistory(dateKey) {
       var events = eventsByDate[dateKey] || [];
       var formattedDate = dateKey ? dateKey.split('-').reverse().join('.') : '';
@@ -780,17 +754,14 @@
       historyList.innerHTML = html;
     }
 
-    // Updates the selected date and re-renders
     function updateSelectedDate(dateKey) {
       selectedDateKey = dateKey;
       renderCalendar();
       renderHistory(dateKey);
     }
 
-    // ===== CALENDAR INTERACTIONS =====
 
     function setupCalendarInteractions() {
-      // Click on a day cell to select it
       calendarDays.addEventListener('click', function(e) {
         var cell = e.target.closest('.day-cell');
         if (!cell || cell.classList.contains('is-empty')) return;
@@ -798,7 +769,6 @@
         updateSelectedDate(dateKey);
       });
 
-      // Click download button in history panel
       historyList.addEventListener('click', function(e) {
         var button = e.target.closest('button[data-action="download"]');
         if (!button) return;
@@ -808,26 +778,22 @@
         }
       });
 
-      // Previous month button
       prevMonthBtn.addEventListener('click', function() {
         currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
         renderCalendar();
       });
 
-      // Next month button
       nextMonthBtn.addEventListener('click', function() {
         currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
         renderCalendar();
       });
     }
 
-    // ===== PHARMACY FILTER =====
 
     function buildPharmacyFilter() {
       if (!pharmacyFilter) return;
       pharmacyFilter.innerHTML = '';
 
-      // Add "All pharmacies" option if more than one
       if (pharmacies.length > 1) {
         var allOption = document.createElement('option');
         allOption.value = 'all';
@@ -835,7 +801,6 @@
         pharmacyFilter.appendChild(allOption);
       }
 
-      // Add each pharmacy option
       for (var i = 0; i < pharmacies.length; i++) {
         var option = document.createElement('option');
         option.value = String(pharmacies[i].index);
@@ -843,7 +808,6 @@
         pharmacyFilter.appendChild(option);
       }
 
-      // Disable if only one pharmacy
       if (pharmacies.length <= 1) {
         pharmacyFilter.disabled = true;
         filteredPharmacyIndex = pharmacies[0] ? String(pharmacies[0].index) : 'all';
@@ -855,9 +819,7 @@
       }
     }
 
-    // ===== API FUNCTIONS =====
 
-    // Fetches the current session from the server
     async function fetchSession() {
       try {
         var response = await fetch('/api/session');
@@ -871,7 +833,6 @@
       }
     }
 
-    // Fetches the user profile from the server
     async function fetchProfile() {
       try {
         var response = await fetch('/api/profile');
@@ -885,7 +846,6 @@
       }
     }
 
-    // Fetches submissions with optional query parameters
     async function fetchSubmissions(query) {
       var params = new URLSearchParams();
       var keys = Object.keys(query || {});
@@ -910,7 +870,6 @@
       return data.submissions || [];
     }
 
-    // Fetches task definitions from the server
     async function fetchTaskDefinitions() {
       try {
         var response = await fetch('/api/task-definitions');
@@ -924,7 +883,6 @@
       }
     }
 
-    // Sets the dashboard link to the correct page based on role
     function updateDashboardLink() {
       if (!dashboardLink) return;
       if ((role || '').toLowerCase() === 'rga') {
@@ -934,13 +892,11 @@
       }
     }
 
-    // ===== MAIN INIT =====
 
     async function init() {
       renderWeekdays();
       setupCalendarInteractions();
 
-      // Check session
       var session = await fetchSession();
       if (!session) {
         window.location.href = 'register.html';
@@ -949,22 +905,18 @@
       role = session.role || '';
       updateDashboardLink();
 
-      // Show main content
       var mainEl = document.getElementById('mainContent');
       if (mainEl) mainEl.style.display = '';
 
-      // Check profile
       var profile = await fetchProfile();
       if (!profile) {
         window.location.href = 'profile.html';
         return;
       }
 
-      // Load task definitions
       taskDefinitions = await fetchTaskDefinitions();
       taskTitles = buildTaskTitles(taskDefinitions);
 
-      // Set up pharmacies
       pharmacies = Array.isArray(profile.pharmacies) ? profile.pharmacies : [];
       if (pharmacies.length === 0) {
         subtitleEl.textContent = 'No pharmacies assigned yet. Please update your profile.';
@@ -973,7 +925,6 @@
         return;
       }
 
-      // Build pharmacy lookup
       pharmacyLookup = {};
       for (var i = 0; i < pharmacies.length; i++) {
         var pharmacy = pharmacies[i];
@@ -984,7 +935,6 @@
 
       buildPharmacyFilter();
 
-      // Get pharmacy indexes for fetching submissions
       var pharmacyIndexes = [];
       for (var i = 0; i < pharmacies.length; i++) {
         if (pharmacies[i].index !== undefined && pharmacies[i].index !== null) {
@@ -992,7 +942,6 @@
         }
       }
 
-      // Fetch submissions
       try {
         submissions = await fetchSubmissions({ pharmacies: pharmacyIndexes });
       } catch (error) {
@@ -1001,7 +950,6 @@
         historyList.innerHTML = '<div class="empty-state">Please try again later.</div>';
       }
 
-      // Build events and select initial date
       refreshEvents();
       var todayKey = getDateKey(new Date());
       var dateKeys = Object.keys(eventsByDate).sort();
@@ -1016,7 +964,6 @@
       renderCalendar();
       renderHistory(selectedDateKey);
 
-      // Pharmacy filter change handler
       pharmacyFilter.addEventListener('change', function() {
         filteredPharmacyIndex = pharmacyFilter.value;
         refreshEvents();

@@ -23,7 +23,6 @@ export default async function handler(req, res) {
       return;
     }
     
-    // Look up user by email
     const response = await fetch(`${SUPABASE_URL}/rest/v1/users?email=eq.${encodeURIComponent(email)}&select=*`, {
       headers: {
         'apikey': SUPABASE_ANON_KEY,
@@ -35,7 +34,6 @@ export default async function handler(req, res) {
       const errorText = await response.text();
       console.error('Supabase error:', response.status, errorText);
       
-      // Check if project might be paused
       if (response.status === 503 || response.status === 502) {
         fail(res, 503, 'Database service unavailable. Your Supabase project may be paused. Please check your Supabase dashboard and restart the project if needed.');
         return;

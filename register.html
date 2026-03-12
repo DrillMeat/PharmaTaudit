@@ -301,7 +301,14 @@
 
       <div class="form-group">
         <label>
-          Password:
+          Invite code:
+          <input type="text" id="inviteCodeInput" placeholder="Enter invite code from your manager" required />
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label>
+          Create your password:
           <div style="position: relative;">
             <input type="password" id="passportInput" required style="padding-right: 40px;" />
             <button type="button" id="togglePassword" class="password-toggle">Show</button>
@@ -425,6 +432,7 @@
 
       const role = document.getElementById('roleSelect').value;
       const email = document.getElementById('emailInput').value.trim();
+      const inviteCode = document.getElementById('inviteCodeInput').value.trim();
       const password = document.getElementById('passportInput').value.trim();
 
       if (!role) {
@@ -439,8 +447,14 @@
         return;
       }
 
+      if (!inviteCode) {
+        errorMsg.textContent = 'Please enter the invite code.';
+        errorMsg.style.display = 'block';
+        return;
+      }
+
       if (!password) {
-        errorMsg.textContent = 'Please enter a password.';
+        errorMsg.textContent = 'Please create a password.';
         errorMsg.style.display = 'block';
         return;
       }
@@ -454,7 +468,7 @@
         return;
       }
 
-      saveUserToDatabase(role, email, password);
+      saveUserToDatabase(role, email, inviteCode, password);
     });
 
     sendCodeBtn.addEventListener('click', async function() {
@@ -572,7 +586,7 @@
       verifyCodeBtn.textContent = 'Verify code';
     });
 
-    async function saveUserToDatabase(role, email, password) {
+    async function saveUserToDatabase(role, email, inviteCode, password) {
       const submitBtn = document.querySelector('button[type="submit"]');
       submitBtn.textContent = 'Saving...';
       submitBtn.disabled = true;
@@ -581,7 +595,7 @@
         const response = await fetch('/api/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ role: role, email: email, password: password })
+          body: JSON.stringify({ role: role, email: email, inviteCode: inviteCode, password: password })
         });
 
         const result = await response.json();

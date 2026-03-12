@@ -9,9 +9,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { role, email, password } = req.body || {};
-    if (!role || !email || !password) {
-      fail(res, 400, 'Missing role, email, or password');
+    const { role, email, inviteCode, password } = req.body || {};
+    if (!role || !email || !inviteCode || !password) {
+      fail(res, 400, 'Missing role, email, invite code, or password');
       return;
     }
 
@@ -22,10 +22,10 @@ export default async function handler(req, res) {
       return;
     }
 
-    const ROLE_PASSWORDS = { rga: 'PharmaTRGA', employee: 'PharmaTEmployee' };
-    const expectedPassword = ROLE_PASSWORDS[role.toLowerCase()];
-    if (!expectedPassword || password !== expectedPassword) {
-      fail(res, 403, 'Invalid registration password for this role');
+    const INVITE_CODES = { rga: 'PharmaTRGA2026', employee: 'PharmaTEmployee2026' };
+    const expectedCode = INVITE_CODES[role.toLowerCase()];
+    if (!expectedCode || inviteCode !== expectedCode) {
+      fail(res, 403, 'Invalid invite code for this role');
       return;
     }
 
